@@ -1,0 +1,43 @@
+const mongoose=require('mongoose');
+const bcrypt=require('bcryptJs');
+
+const userSchema=new mongoose.Schema({
+    username:{
+        type:String,
+        required:true,
+    },
+    email:{
+        type:String,
+        required:true,
+        unique:true
+    },
+    password:{
+        type:String,
+        required:true
+    },
+    role:{
+        type:String,
+        enum:['USER','ADMIN'],
+        default:'USER'
+    },
+    otp:String,
+    otpExpiresAt:Date,
+    isVerified:{
+        type:Boolean,
+        default:false
+    }
+});
+
+// hadshing of password before saving 
+userSchema.pre('save',async function(){
+    if(!this.isModified('password')) return;
+    this.password=await bcrypt.hash(this.password,10);
+});
+
+// compare given one and hashed one 
+userSchema.methods.comparePassword=async function(enteredPassword){
+    return await bcrypt.compare(enteredPassword,this.password);
+};
+
+module.exports=mongoose.model('User',userSchema);
+

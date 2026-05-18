@@ -6,6 +6,7 @@ const cors=require('cors')
 const app=express()
 
 // routes imports below !
+const authRoutes=require("./routes/auth.routes");
 
 // middleware
 app.use(express.json());
@@ -21,7 +22,7 @@ app.use(
 );
 
 // routing below !
-
+app.use('/api/auth',authRoutes);
 
 //test route 
 app.get("/", (req, res) => {
