@@ -7,6 +7,7 @@ const app=express()
 
 // routes imports below !
 const authRoutes=require("./routes/auth.routes");
+const itemRoutes = require("./routes/item.routes");
 
 // middleware
 app.use(express.json());
@@ -23,6 +24,8 @@ app.use(
 
 // routing below !
 app.use('/api/auth',authRoutes);
+app.use('/api/items',itemRoutes);
+
 
 //test route 
 app.get("/", (req, res) => {
