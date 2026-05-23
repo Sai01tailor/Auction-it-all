@@ -7,7 +7,7 @@
 
 const crypto = require('crypto');
 const generateOtp = require('./generateOtp');
-const redisClient = require('../config/redis');
+const {redisClient} = require('../config/redis');
 const { sendEmail } = require('./mailer');
 
 class AadhaarAPI {

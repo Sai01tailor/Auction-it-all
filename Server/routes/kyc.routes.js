@@ -1,6 +1,6 @@
 const express = require('express');
 const KYCController = require('../controllers/kyc.controller');
-const { authenticate } = require('../middlewares/auth.middleware');
+const authmiddleware = require('../middlewares/auth.middleware');
 
 const router = express.Router();
 
@@ -10,15 +10,15 @@ const router = express.Router();
  */
 
 // Initiate KYC verification
-router.post('/initiate', authenticate, KYCController.initiateVerification);
+router.post('/initiate', authmiddleware, KYCController.initiateVerification);
 
 // Verify OTP
-router.post('/verify-otp', authenticate, KYCController.verifyOTP);
+router.post('/verify-otp', authmiddleware , KYCController.verifyOTP);
 
 // Get verification status
-router.get('/status', authenticate, KYCController.getVerificationStatus);
+router.get('/status', authmiddleware, KYCController.getVerificationStatus);
 
 // Get audit logs (admin only - check role in controller)
-router.get('/audit-logs', authenticate, KYCController.getAuditLogs);
+router.get('/audit-logs', authmiddleware  , KYCController.getAuditLogs);
 
 module.exports = router;

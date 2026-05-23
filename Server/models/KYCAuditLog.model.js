@@ -25,7 +25,6 @@ const kycAuditLogSchema = new mongoose.Schema({
   timestamp: {
     type: Date,
     default: Date.now,
-    index: true
   },
   immutable: {
     type: Boolean,
