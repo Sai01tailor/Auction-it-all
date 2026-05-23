@@ -1,5 +1,5 @@
 const mongoose=require('mongoose');
-const bcrypt=require('bcryptJs');
+const bcrypt=require('bcryptjs');
 
 const userSchema=new mongoose.Schema({
     username:{
@@ -25,7 +25,17 @@ const userSchema=new mongoose.Schema({
     isVerified:{
         type:Boolean,
         default:false
-    }
+    },
+    // KYC fields
+    kycStatus:{
+        type:String,
+        enum:['Unverified','Pending','Verified','Failed'],
+        default:'Unverified',
+        index:true
+    },
+    kycVerifiedAt:Date,
+    kycFailureReason:String,
+    kycLastAttemptAt:Date
 });
 
 // hadshing of password before saving 

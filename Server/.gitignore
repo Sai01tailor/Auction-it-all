@@ -7,6 +7,10 @@ node_modules/
 testPdf.js
 MyPersonal.txt
 cluster.js
+test_invoice.js
+preview_invoice.html
+preview_invoice.pdf
+test_kyc.js
 
 # Logs
 npm-debug.log*
