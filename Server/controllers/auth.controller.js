@@ -34,7 +34,7 @@ exports.sendSignupOtp = async (req, res) => {
         password,
         role: role || "USER", // Defaults to USER if not provided
         otp,
-        otpExpiresAt: Date.now() + 2 * 60 * 1000, // 2 minutes
+        otpExpiresAt: Date.now() + 10 * 60 * 1000, // 10 minutes
       });
     } else {
       // If they tried to sign up before but didn't verify, update their details and new OTP
