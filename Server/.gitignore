@@ -7,6 +7,9 @@ node_modules/
 testPdf.js
 MyPersonal.txt
 cluster.js
+uploads/
+templates/
+
 
 
 
