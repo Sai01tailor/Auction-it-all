@@ -163,3 +163,92 @@ exports.getProfile = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
+// ** New additions-1 for forget Password
+exports.forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ success: false, message: "Email is required" });
+    }
+
+    // 1. Check if user exists
+    const user = await User.findOne({ email });
+    if (!user) {
+      // Security tip: Don't explicitly say "User not found" to prevent email enumeration attacks,
+      // but for an internal app, a clear message helps debugging.
+      return res.status(404).json({ success: false, message: "User with this email does not exist" });
+    }
+
+    if (!user.isVerified) {
+      return res.status(400).json({ success: false, message: "Please verify your email first before resetting password" });
+    }
+
+    // 2. Generate and assign OTP
+    const otp = generateOtp();
+    user.otp = otp;
+    user.otpExpiresAt = Date.now() + 10 * 60 * 1000; // Valid for 10 minutes
+    await user.save();
+
+    // 3. Send email to user (FIXED PARAMETERS)
+    const subject = "Password Reset Request - BidKar";
+    const htmlContent = `
+      <h2>Password Reset Request</h2>
+      <p>Your OTP for resetting your BidKar password is: <strong style="font-size: 24px;">${otp}</strong></p>
+      <p>This code is valid for exactly 10 minutes. If you did not request this, please ignore this email.</p>
+    `;
+
+    await sendEmail(email, subject, htmlContent);
+    
+    res.status(200).json({
+      success: true,
+      message: "Password reset OTP sent successfully to your email",
+    });
+
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// Reset Password (Verify & Update)
+exports.resetPassword=async(req,res)=>{
+  try{
+    const { email, otp, newPassword } = req.body;
+
+    if (!email || !otp || !newPassword) {
+      return res.status(400).json({ success: false, message: "All fields (email, otp, newPassword) are required" });
+    }
+
+    // 1. Find user by email and match OTP
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    // 2. Validate OTP accuracy and timeline
+    if (!user.otp || user.otp !== otp) {
+      return res.status(400).json({ success: false, message: "Invalid OTP" });
+    }
+
+    if (Date.now() > user.otpExpiresAt) {
+      return res.status(400).json({ success: false, message: "OTP has expired. Please request a new one" });
+    }
+
+    // 3. update Password
+    user.password = newPassword;
+
+    // 4. Clear Otp so that it cannot be reused 
+    user.otp = undefined;
+    user.otpExpiresAt = undefined;
+    
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Password reset successful. You can now login with your new password",
+    });
+  }catch(err){
+    res.status(500).json({ success: false, message: err.message });
+  }
+}
