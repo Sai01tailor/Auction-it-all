@@ -1,373 +1,245 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 
-/* ─────────────────────────────────────────────────────────────
-   DESIGN TOKENS
-───────────────────────────────────────────────────────────── */
-const C = {
-  navy:      '#002366',
-  navyLight: '#1a3c7a',
-  gold:      '#fece44',
-  goldLight: '#feda75',
-  goldDark:  '#e5b630',
-  textRich:  '#0a0a0a',
-  textMuted: '#525252',
-  surface:   '#ffffff',
-  surfaceBg: '#f0f4ff',
-  border:    '#e5e7eb',
-  green:     '#10b981',
-  orange:    '#f59e0b',
-  red:       '#ef4444',
-};
-const font = "'Inter', system-ui, -apple-system, sans-serif";
-
-/* ─────────────────────────────────────────────────────────────
+/* ─────────────────────────────────────────
    HELPERS
-───────────────────────────────────────────────────────────── */
-function formatINR(num) {
-  if (!num && num !== 0) return '—';
+───────────────────────────────────────── */
+function formatINR(n) {
+  if (n == null) return '—';
   return new Intl.NumberFormat('en-IN', {
-    style: 'currency', currency: 'INR', maximumFractionDigits: 0,
-  }).format(num);
+    style: 'currency',
+    currency: 'INR',
+    maximumFractionDigits: 0,
+  }).format(n);
 }
 
-function getTimeInfo(startTime, endTime) {
+function getTimer(startTime, endTime) {
   const now   = Date.now();
   const start = new Date(startTime).getTime();
   const end   = new Date(endTime).getTime();
 
   if (now < start) {
     const diff = start - now;
-    const h = Math.floor(diff / 3600000);
-    const m = Math.floor((diff % 3600000) / 60000);
-    return { label: `Starts in ${h}h ${m}m`, status: 'upcoming', pct: 0, color: C.navy };
+    const h = Math.floor(diff / 3_600_000);
+    const m = Math.floor((diff % 3_600_000) / 60_000);
+    return { phase: 'upcoming', text: `Starts in ${h}h ${m}m`, pct: 0 };
   }
-  if (now > end) {
-    return { label: 'Auction Ended', status: 'ended', pct: 100, color: C.textMuted };
+  if (now >= end) {
+    return { phase: 'ended', text: 'Ended', pct: 100 };
   }
 
-  const total     = end - start;
-  const elapsed   = now - start;
   const remaining = end - now;
-  const pct = Math.min(100, Math.round((elapsed / total) * 100));
+  const total     = end - start;
+  const pct       = Math.min(100, Math.round(((now - start) / total) * 100));
 
-  let label, color;
-  if (remaining > 7200000) {       // > 2h  → green
-    const d = Math.floor(remaining / 86400000);
-    const h = Math.floor((remaining % 86400000) / 3600000);
-    const m = Math.floor((remaining % 3600000) / 60000);
-    label = d > 0 ? `${d}d ${h}h left` : `${h}h ${m}m left`;
-    color = C.green;
-  } else if (remaining > 600000) { // > 10m → orange
-    const h = Math.floor(remaining / 3600000);
-    const m = Math.floor((remaining % 3600000) / 60000);
-    label = h > 0 ? `${h}h ${m}m left` : `${m}m left`;
-    color = C.orange;
-  } else {                         // ≤ 10m → red
-    const m = Math.floor(remaining / 60000);
-    const s = Math.floor((remaining % 60000) / 1000);
-    label = `${m}m ${s}s`;
-    color = C.red;
+  let text;
+  if (remaining >= 3_600_000) {
+    const h = Math.floor(remaining / 3_600_000);
+    const m = Math.floor((remaining % 3_600_000) / 60_000);
+    text = `${h}h ${m}m left`;
+  } else if (remaining >= 60_000) {
+    const m = Math.floor(remaining / 60_000);
+    const s = Math.floor((remaining % 60_000) / 1_000);
+    text = `${m}m ${s}s left`;
+  } else {
+    const s = Math.floor(remaining / 1_000);
+    text = `${s}s left`;
   }
 
-  return { label, status: 'live', pct, color };
+  return { phase: 'live', text, pct, urgent: remaining < 5 * 60_000 };
 }
 
-/* ─────────────────────────────────────────────────────────────
-   AUCTION TYPE CONFIG
-───────────────────────────────────────────────────────────── */
-const TYPE_STYLE = {
-  ENGLISH: { bg: '#ecfdf5', color: '#065f46', border: '#a7f3d0', icon: '📈', label: 'English' },
-  DUTCH:   { bg: '#eff6ff', color: '#1e40af', border: '#bfdbfe', icon: '📉', label: 'Dutch' },
-  BLIND:   { bg: '#fdf4ff', color: '#7e22ce', border: '#e9d5ff', icon: '🎭', label: 'Blind' },
+/* ─────────────────────────────────────────
+   STATUS CONFIG  (matches Item schema enum)
+───────────────────────────────────────── */
+const STATUS = {
+  ACTIVE:    { label: 'Live',       bg: '#10b981', text: '#fff'     },
+  SOLD:      { label: 'Sold',       bg: '#6b7280', text: '#fff'     },
+  CANCELLED: { label: 'Cancelled',  bg: '#ef4444', text: '#fff'     },
+  DRAFT:     { label: 'Draft',      bg: '#f59e0b', text: '#fff'     },
 };
 
-/* ─────────────────────────────────────────────────────────────
-   PRODUCT CARD  (Auction Card)
-   Props:
-     product    – auction object from API
-     watchlist  – string[] of watched auction IDs
-     onWatch    – (id) => void   toggle watchlist
-───────────────────────────────────────────────────────────── */
-const ProductCard = ({ product, watchlist = [], onWatch }) => {
-  const navigate  = useNavigate();
-  const prevBid   = useRef(product.currentHighestBid);
-  const [timeInfo, setTimeInfo]   = useState(() => getTimeInfo(product.startTime, product.endTime));
-  const [pricePulse, setPricePulse] = useState(false);
+/* ─────────────────────────────────────────
+   PRODUCT CARD
+   Props from Item schema:
+     item._id, item.title, item.description,
+     item.startingPrice, item.currentHighestBid,
+     item.photos[], item.status,
+     item.startTime, item.endTime
+───────────────────────────────────────── */
+export default function ProductCard({ item = {} }) {
+  const navigate = useNavigate();
+  const prevBid  = useRef(item.currentHighestBid);
 
-  // ── Live countdown ──────────────────────────────────────────
+  const [timer,     setTimer]     = useState(() => getTimer(item.startTime, item.endTime));
+  const [bidPulse,  setBidPulse]  = useState(false);
+
+  // Live countdown
   useEffect(() => {
-    const t = setInterval(
-      () => setTimeInfo(getTimeInfo(product.startTime, product.endTime)),
-      1000
+    const id = setInterval(
+      () => setTimer(getTimer(item.startTime, item.endTime)),
+      1000,
     );
-    return () => clearInterval(t);
-  }, [product.startTime, product.endTime]);
+    return () => clearInterval(id);
+  }, [item.startTime, item.endTime]);
 
-  // ── Bid-update pulse ────────────────────────────────────────
+  // Bid price pulse when updated via socket / prop change
   useEffect(() => {
-    if (product.currentHighestBid !== prevBid.current) {
-      prevBid.current = product.currentHighestBid;
-      setPricePulse(true);
-      const t = setTimeout(() => setPricePulse(false), 950);
+    if (item.currentHighestBid !== prevBid.current) {
+      prevBid.current = item.currentHighestBid;
+      setBidPulse(true);
+      const t = setTimeout(() => setBidPulse(false), 800);
       return () => clearTimeout(t);
     }
-  }, [product.currentHighestBid]);
+  }, [item.currentHighestBid]);
 
-  const isWatched  = watchlist.includes(product._id);
-  const typeStyle  = TYPE_STYLE[product.auctionType] || TYPE_STYLE.ENGLISH;
-  const photo      = product.photos?.[0]
-    || `https://placehold.co/400x300/002366/fece44?text=No+Image`;
-  const barPulse   = timeInfo.color === C.red && timeInfo.status === 'live';
+  const photo    = item.photos?.[0] || null;
+  const status   = STATUS[item.status] ?? STATUS.ACTIVE;
+  const isActive = item.status === 'ACTIVE';
+  const isSold   = item.status === 'SOLD';
+  const canBid   = isActive && timer.phase === 'live';
 
-  const goToDetail = () => navigate(`/auction/${product._id}`);
+  /* ── timer colour ── */
+  let timerColor = '#10b981';                           // green  — plenty of time
+  if (timer.phase === 'ended' || isSold) timerColor = '#9ca3af';
+  else if (timer.urgent)                timerColor = '#ef4444'; // red < 5 min
+  else if (timer.pct >= 70)             timerColor = '#f59e0b'; // orange
+
+  const go = () => navigate(`/auction/${item._id}`);
 
   return (
-    <motion.div
-      layout
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, scale: 0.95 }}
-      whileHover={{ y: -4, boxShadow: '0 12px 40px rgba(0,35,102,0.15)' }}
-      transition={{ duration: 0.2 }}
-      style={{
-        background: C.surface,
-        borderRadius: 14,
-        border: `1px solid ${C.border}`,
-        overflow: 'hidden',
-        cursor: 'pointer',
-        boxShadow: '0 2px 12px rgba(0,35,102,0.06)',
-        display: 'flex',
-        flexDirection: 'column',
-        fontFamily: font,
-      }}
+    <article
+      className="bg-white rounded-xl border border-[var(--color-border-subtle)] overflow-hidden flex flex-col cursor-pointer transition-all duration-200 hover:-translate-y-1 hover:shadow-lg"
+      style={{ boxShadow: '0 2px 10px rgba(0,35,102,0.06)' }}
+      onClick={go}
     >
-      {/* ── Image Section ────────────────────────────────────── */}
-      <div style={{ position: 'relative', overflow: 'hidden' }} onClick={goToDetail}>
-        <img
-          src={photo}
-          alt={product.title}
-          style={{
-            width: '100%',
-            aspectRatio: '4/3',
-            objectFit: 'cover',
-            display: 'block',
-            transition: 'transform 0.35s ease',
-          }}
-          onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.06)'; }}
-          onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; }}
-        />
-
-        {/* Auction type badge */}
-        <div style={{
-          position: 'absolute', top: 10, left: 10,
-          background: typeStyle.bg, color: typeStyle.color,
-          border: `1px solid ${typeStyle.border}`,
-          fontSize: '0.68rem', fontWeight: 700,
-          padding: '3px 9px', borderRadius: 20,
-          textTransform: 'uppercase', letterSpacing: '0.06em',
-          backdropFilter: 'blur(4px)',
-        }}>
-          {typeStyle.icon} {typeStyle.label}
-        </div>
-
-        {/* Live / Soon / Ended status badge */}
-        {timeInfo.status === 'live' && (
-          <div style={{
-            position: 'absolute', top: 10, right: 10,
-            background: 'rgba(16,185,129,0.9)', color: '#fff',
-            fontSize: '0.65rem', fontWeight: 700,
-            padding: '3px 9px', borderRadius: 20,
-            display: 'flex', alignItems: 'center', gap: 5,
-            backdropFilter: 'blur(4px)',
-          }}>
-            <span style={{
-              width: 6, height: 6, borderRadius: '50%', background: '#fff',
-              display: 'inline-block',
-              animation: 'bid-pulse 0.9s ease-out infinite',
-            }} />
-            LIVE
-          </div>
-        )}
-        {timeInfo.status === 'upcoming' && (
-          <div style={{
-            position: 'absolute', top: 10, right: 10,
-            background: 'rgba(0,35,102,0.82)', color: C.goldLight,
-            fontSize: '0.65rem', fontWeight: 700,
-            padding: '3px 9px', borderRadius: 20,
-            backdropFilter: 'blur(4px)',
-          }}>
-            SOON
-          </div>
-        )}
-        {timeInfo.status === 'ended' && (
-          <div style={{
-            position: 'absolute', top: 10, right: 10,
-            background: 'rgba(239,68,68,0.88)', color: '#fff',
-            fontSize: '0.65rem', fontWeight: 700,
-            padding: '3px 9px', borderRadius: 20,
-            backdropFilter: 'blur(4px)',
-          }}>
-            ENDED
+      {/* ── Image ── */}
+      <div className="relative overflow-hidden bg-[var(--color-surface-bg)]">
+        {photo ? (
+          <img
+            src={photo}
+            alt={item.title}
+            className="w-full object-cover transition-transform duration-300 hover:scale-105"
+            style={{ aspectRatio: '4/3' }}
+            loading="lazy"
+          />
+        ) : (
+          <div
+            className="w-full flex items-center justify-center text-[var(--color-text-muted)] text-sm"
+            style={{ aspectRatio: '4/3', background: '#f0f4ff' }}
+          >
+            No photo
           </div>
         )}
 
-        {/* Quick Watch button */}
-        <motion.button
-          whileHover={{ scale: 1.12 }}
-          whileTap={{ scale: 0.9 }}
-          onClick={e => { e.stopPropagation(); onWatch?.(product._id); }}
-          id={`watch-btn-${product._id}`}
-          aria-label={isWatched ? 'Remove from watchlist' : 'Add to watchlist'}
-          style={{
-            position: 'absolute', bottom: 10, right: 10,
-            width: 34, height: 34, borderRadius: '50%',
-            background: isWatched ? C.gold : 'rgba(255,255,255,0.92)',
-            border: `1.5px solid ${isWatched ? C.goldDark : C.border}`,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            cursor: 'pointer', fontSize: '1rem',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
-            backdropFilter: 'blur(6px)',
-            transition: 'all 0.2s ease',
-          }}
+        {/* Status pill */}
+        <span
+          className="absolute top-2.5 left-2.5 text-[0.62rem] font-bold tracking-wider uppercase px-2.5 py-0.5 rounded-full flex items-center gap-1"
+          style={{ background: status.bg, color: status.text }}
         >
-          {isWatched ? '★' : '☆'}
-        </motion.button>
+          {status.label === 'Live' && (
+            <span
+              className="inline-block w-1.5 h-1.5 rounded-full bg-white"
+              style={{ animation: 'bid-pulse 1s ease-out infinite' }}
+            />
+          )}
+          {status.label}
+        </span>
       </div>
 
-      {/* ── Time Progress Bar ────────────────────────────────── */}
-      <div style={{ height: 4, background: '#e5e7eb' }}>
-        <motion.div
+      {/* ── Time progress bar ── */}
+      <div className="h-[3px] bg-[var(--color-border-subtle)]">
+        <div
+          className="h-full transition-all duration-1000 ease-linear"
           style={{
-            height: '100%',
-            background: timeInfo.color || C.green,
-            width: `${timeInfo.pct}%`,
-            borderRadius: '0 2px 2px 0',
+            width: `${timer.pct}%`,
+            background: timerColor,
+            animation: timer.urgent ? 'progress-pulse 1.2s ease-in-out infinite' : 'none',
           }}
-          animate={barPulse ? { opacity: [1, 0.55, 1] } : { opacity: 1 }}
-          transition={barPulse ? { duration: 1.1, repeat: Infinity } : {}}
         />
       </div>
 
-      {/* ── Card Body ────────────────────────────────────────── */}
-      <div
-        style={{ padding: '0.875rem', display: 'flex', flexDirection: 'column', flex: 1 }}
-        onClick={goToDetail}
-      >
+      {/* ── Body ── */}
+      <div className="p-3.5 flex flex-col flex-1 gap-2" onClick={go}>
+
         {/* Timer label */}
-        <div style={{
-          fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase',
-          letterSpacing: '0.06em', marginBottom: 5,
-          color: timeInfo.color || C.textMuted,
-          display: 'flex', alignItems: 'center', gap: 4,
-        }}>
-          {timeInfo.status === 'live'     && '⏱'}
-          {timeInfo.status === 'upcoming' && '🕐'}
-          {timeInfo.status === 'ended'    && '🔴'}
-          {' '}{timeInfo.label}
-        </div>
-
-        {/* Title */}
-        <h3 style={{
-          fontSize: '0.925rem', fontWeight: 700, color: C.textRich,
-          margin: '0 0 0.35rem 0', lineHeight: 1.35,
-          display: '-webkit-box', WebkitLineClamp: 2,
-          WebkitBoxOrient: 'vertical', overflow: 'hidden',
-        }}>
-          {product.title}
-        </h3>
-
-        {/* Description (2-line clamp) */}
-        <p style={{
-          fontSize: '0.78rem', color: C.textMuted,
-          margin: '0 0 0.5rem 0', lineHeight: 1.5,
-          display: '-webkit-box', WebkitLineClamp: 2,
-          WebkitBoxOrient: 'vertical', overflow: 'hidden',
-        }}>
-          {product.description}
+        <p
+          className="text-[0.68rem] font-bold uppercase tracking-wider m-0"
+          style={{ color: timerColor }}
+        >
+          {timer.phase === 'live' && '⏱ '}
+          {timer.phase === 'upcoming' && '🕐 '}
+          {timer.phase === 'ended' && '● '}
+          {timer.text}
         </p>
 
-        {/* Condition + Location chips */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: '0.75rem', flexWrap: 'wrap' }}>
-          {product.condition && (
-            <span style={{
-              fontSize: '0.67rem', color: C.textMuted,
-              background: C.surfaceBg, border: `1px solid ${C.border}`,
-              padding: '2px 7px', borderRadius: 4, fontWeight: 500,
-            }}>
-              {product.condition}
-            </span>
-          )}
-          {product.location && (
-            <span style={{ fontSize: '0.67rem', color: C.textMuted }}>
-              📍 {product.location}
-            </span>
-          )}
-        </div>
+        {/* Title */}
+        <h3
+          className="text-[0.9rem] font-bold text-[var(--color-text-rich)] m-0 leading-snug line-clamp-2"
+        >
+          {item.title}
+        </h3>
 
-        {/* Price row */}
-        <div style={{
-          display: 'flex', gap: 8, marginTop: 'auto',
-          borderTop: `1px solid ${C.border}`, paddingTop: '0.75rem', marginBottom: '0.75rem',
-        }}>
-          <div style={{ flex: 1 }}>
-            <div style={{ fontSize: '0.63rem', color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 2 }}>
+        {/* Description */}
+        <p className="text-[0.75rem] text-[var(--color-text-muted)] m-0 leading-relaxed line-clamp-2">
+          {item.description}
+        </p>
+
+        {/* Prices */}
+        <div
+          className="flex items-end justify-between mt-auto pt-2.5"
+          style={{ borderTop: '1px solid var(--color-border-subtle)' }}
+        >
+          <div>
+            <div className="text-[0.6rem] text-[var(--color-text-muted)] uppercase tracking-wider mb-0.5">
               Starting
             </div>
-            <div style={{ fontSize: '0.9rem', fontWeight: 700, color: C.textRich }}>
-              {formatINR(product.startingPrice)}
+            <div className="text-[0.88rem] font-semibold text-[var(--color-text-rich)]">
+              {formatINR(item.startingPrice)}
             </div>
           </div>
 
-          {product.currentHighestBid > 0 && (
-            <div style={{ flex: 1, textAlign: 'right' }}>
-              <div style={{ fontSize: '0.63rem', color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 2 }}>
-                Current Bid
+          {item.currentHighestBid > 0 && (
+            <div className="text-right">
+              <div className="text-[0.6rem] text-[var(--color-text-muted)] uppercase tracking-wider mb-0.5">
+                Top bid
               </div>
-              {/* Live bid — pulses when socket updates the price */}
-              <motion.div
-                key={product.currentHighestBid}
-                animate={pricePulse
-                  ? { scale: [1, 1.15, 1], color: [C.navy, C.green, C.navy] }
-                  : { scale: 1 }
-                }
-                transition={{ duration: 0.4 }}
+              <div
+                className="text-[0.88rem] font-extrabold transition-all duration-300"
                 style={{
-                  fontSize: '0.9rem', fontWeight: 800, color: C.navy,
-                  ...(pricePulse ? { animation: 'bid-pulse 0.9s ease-out' } : {}),
+                  color: bidPulse ? '#10b981' : 'var(--color-brand-primary)',
+                  transform: bidPulse ? 'scale(1.08)' : 'scale(1)',
                 }}
               >
-                {formatINR(product.currentHighestBid)}
-              </motion.div>
+                {formatINR(item.currentHighestBid)}
+              </div>
             </div>
           )}
         </div>
 
-        {/* CTA — Enter Warroom */}
-        <motion.button
-          whileHover={timeInfo.status !== 'ended' ? { scale: 1.02 } : {}}
-          whileTap={timeInfo.status !== 'ended'   ? { scale: 0.97 } : {}}
-          onClick={e => { e.stopPropagation(); goToDetail(); }}
-          id={`warroom-btn-${product._id}`}
+        {/* CTA */}
+        <button
+          onClick={e => { e.stopPropagation(); go(); }}
+          disabled={!canBid && !isSold}
+          id={`bid-btn-${item._id}`}
+          className="w-full py-2 rounded-lg text-[0.8rem] font-bold tracking-wide transition-all duration-200 mt-1"
           style={{
-            width: '100%', padding: '0.55rem',
-            background: timeInfo.status === 'ended'
-              ? '#f3f4f6'
-              : `linear-gradient(135deg, ${C.navy}, ${C.navyLight})`,
-            color: timeInfo.status === 'ended' ? C.textMuted : '#fff',
-            border: 'none', borderRadius: 8,
-            fontSize: '0.82rem', fontWeight: 700,
-            cursor: timeInfo.status === 'ended' ? 'default' : 'pointer',
-            fontFamily: font, letterSpacing: '0.02em',
-            transition: 'all 0.2s ease',
+            background: canBid
+              ? 'var(--color-brand-primary)'
+              : '#f3f4f6',
+            color: canBid ? '#fff' : 'var(--color-text-muted)',
+            cursor: canBid ? 'pointer' : 'default',
           }}
         >
-          {timeInfo.status === 'ended' ? '🔒 Auction Closed' : '⚡ Enter Warroom'}
-        </motion.button>
+          {isSold
+            ? '🔒 Sold'
+            : timer.phase === 'ended'
+            ? '🔒 Auction Closed'
+            : timer.phase === 'upcoming'
+            ? '🕐 Not Started'
+            : '⚡ Place Bid'}
+        </button>
       </div>
-    </motion.div>
+    </article>
   );
-};
-
-export default ProductCard;
+}
