@@ -1,13 +1,14 @@
 require("dotenv").config();
-const http = require("http"); // <-- ADDED: Node's native HTTP module
+const http = require("http"); 
 const connectDB = require("./connection");
 const app = require("./app");
-const { initSockets } = require("./sockets/socket"); // <-- ADDED: Import your socket engine
-
+const { initSockets } = require("./sockets/socket"); 
+const startCronJobs = require("./jobs/scheduler");
 const PORT = process.env.PORT || 3000;
 
-// Connect to MongoDB
+// Connect to MongoDB and start cron jobs
 connectDB();
+startCronJobs();
 
 // 1. Wrap the Express app in a standard Node HTTP server
 const server = http.createServer(app);
