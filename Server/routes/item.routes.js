@@ -5,6 +5,7 @@ const authMiddleware = require("../middlewares/auth.middleware");
 const { uploadImage } = require("../middlewares/multer.middleware");
 
 // Public Routes
+router.get("/filter-options", itemController.getFilterOptions); // must be before /:id
 router.get("/", itemController.getActiveItems);
 router.get("/:id", itemController.getItemById);
 

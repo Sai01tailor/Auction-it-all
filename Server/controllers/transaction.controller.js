@@ -40,7 +40,7 @@ exports.getMyTransactions=async(req,res)=>{
 
 
     }catch(err){    
-        console.error("Transaction Fetch Error:", error);
+        console.error("Transaction Fetch Error:", err);
         res.status(500).json({ success: false, message: "Could not fetch history."});
     }
 }

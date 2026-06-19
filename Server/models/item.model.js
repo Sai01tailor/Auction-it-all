@@ -41,6 +41,34 @@ const itemSchema=new mongoose.Schema({
         enum:['DRAFT','ACTIVE','SOLD','CANCELLED'],
         default:'ACTIVE'
     },
+    category:{
+        type:String,
+        enum:[
+            'Electronics',
+            'Art',
+            'Vehicles',
+            'Fashion',
+            'Furniture',
+            'Collectibles',
+            'Jewellery',
+            'Books',
+            'Sports',
+            'Other'
+        ],
+        required:true,
+        index:true
+    },
+    condition:{
+        type:String,
+        enum:['NEW','LIKE_NEW','GOOD','FAIR'],
+        required:true
+    },
+    location:{
+        type:String,
+        trim:true,
+        default:''
+    },
+
     // Bidding startTime and endTime
     startTime:{
         type:Date,
@@ -51,8 +79,13 @@ const itemSchema=new mongoose.Schema({
         required:true
     }
 },{
-    timeStamps:true //Autmomatically tracks createdAt and updatedat
+    timestamps:true // Automatically tracks createdAt and updatedAt
 });
+
+// Compound index for the most common browse query
+itemSchema.index({ status: 1, endTime: 1, category: 1 });
+// Text index for search on title + description
+itemSchema.index({ title: 'text', description: 'text' });
 
 module.exports=mongoose.model('Item',itemSchema);
 

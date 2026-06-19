@@ -2,6 +2,7 @@ console.log("app.js loaded")
 const express=require('express')
 const morgan=require('morgan')
 const cors=require('cors')
+const passport = require('./strategies/google.strategy');
 
 const app=express()
 
@@ -12,6 +13,7 @@ const paymentRoutes=require('./routes/payment.routes');
 const walletRoutes=require('./routes/wallet.routes');
 const transactionRoutes=require('./routes/transaction.routes');
 const settlementRoutes=require('./routes/auctionSettlement.routes');
+const reviewRoutes=require('./routes/review.routes');
 
 // middleware
 app.use(express.json());
@@ -26,6 +28,9 @@ app.use(
   })
 );
 
+// Initialize Passport (no session — we use JWT)
+app.use(passport.initialize());
+
 // routing below !
 app.use('/api/auth',authRoutes);
 app.use('/api/items',itemRoutes);
@@ -33,6 +38,7 @@ app.use('/api/payments',paymentRoutes);
 app.use('/api/wallet',walletRoutes);
 app.use('/api/transaction',transactionRoutes);
 app.use('/api/settlements',settlementRoutes);
+app.use('/api/reviews',reviewRoutes);
 
 //test route 
 app.get("/", (req, res) => {

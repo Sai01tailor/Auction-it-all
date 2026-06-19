@@ -24,7 +24,7 @@ exports.getWalletBalance=async(req,res)=>{
         // Save to cache for 1hr 
         await AuctionCache.setCache(cacheKey,3600,walletData);
 
-        res.status(200).json({success:true,data:walletdata})
+        res.status(200).json({success:true,data:walletData})
 
     }catch(err){
         console.error("Wallet Fetch Error:", err);

@@ -2,6 +2,7 @@ const User = require("../models/user.model");
 const jwt = require("jsonwebtoken");
 const generateOtp = require("../utils/generateOtp");
 const { sendEmail } = require("../utils/mailer"); // Importing your exact mailer utility
+const CLIENT_URL = process.env.CLIENT_URL || "http://localhost:5173";
 
 // Helper to enforce strict JWT payload naming
 const createToken = (user) => {
@@ -252,3 +253,24 @@ exports.resetPassword=async(req,res)=>{
     res.status(500).json({ success: false, message: err.message });
   }
 }
+
+// ================= GOOGLE OAUTH CALLBACK =================
+exports.googleCallback = async (req, res) => {
+  try {
+    // req.user is set by passport after successful Google auth
+    const user = req.user;
+
+    if (!user) {
+      return res.redirect(`${CLIENT_URL}/auth?error=google_failed`);
+    }
+
+    const token = createToken(user);
+
+    // Redirect to frontend with token as a query param.
+    // The frontend should store it and strip the URL.
+    res.redirect(`${CLIENT_URL}/auth/google/success?token=${token}`);
+  } catch (err) {
+    console.error("❌ Google OAuth Callback Error:", err);
+    res.redirect(`${CLIENT_URL}/auth?error=server_error`);
+  }
+};
