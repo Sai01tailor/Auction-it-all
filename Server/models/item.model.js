@@ -50,7 +50,6 @@ const itemSchema=new mongoose.Schema({
         type:Date,
         required:true
     }
-
 },{
     timeStamps:true //Autmomatically tracks createdAt and updatedat
 });

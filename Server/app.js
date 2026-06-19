@@ -8,7 +8,10 @@ const app=express()
 // routes imports below !
 const authRoutes=require("./routes/auth.routes");
 const itemRoutes = require("./routes/item.routes");
-const kycRoutes = require("./routes/kyc.routes");
+const paymentRoutes=require('./routes/payment.routes');
+const walletRoutes=require('./routes/wallet.routes');
+const transactionRoutes=require('./routes/transaction.routes');
+const settlementRoutes=require('./routes/auctionSettlement.routes');
 
 // middleware
 app.use(express.json());
@@ -26,8 +29,10 @@ app.use(
 // routing below !
 app.use('/api/auth',authRoutes);
 app.use('/api/items',itemRoutes);
-app.use('/api/kyc',kycRoutes);
-
+app.use('/api/payments',paymentRoutes);
+app.use('/api/wallet',walletRoutes);
+app.use('/api/transaction',transactionRoutes);
+app.use('/api/settlements',settlementRoutes);
 
 //test route 
 app.get("/", (req, res) => {
