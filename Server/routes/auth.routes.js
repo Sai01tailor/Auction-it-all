@@ -15,4 +15,7 @@ router.post('/reset-password',authController.resetPassword);
 // Protected Route
 router.get('/profile',authMiddleware,authController.getProfile);
 
+// New addition for resend OTP
+router.post('/resend-otp', authController.resendOtp);
+
 module.exports=router;

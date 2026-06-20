@@ -252,3 +252,45 @@ exports.resetPassword=async(req,res)=>{
     res.status(500).json({ success: false, message: err.message });
   }
 }
+
+// ================= RESEND OTP =================
+exports.resendOtp = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found. Please sign up first." });
+    }
+
+    if (user.isVerified) {
+      return res.status(400).json({ success: false, message: "This email is already verified. Please login." });
+    }
+
+    // Generate a new OTP and reset the 10-minute timer
+    const otp = generateOtp();
+    user.otp = otp;
+    user.otpExpiresAt = Date.now() + 10 * 60 * 1000; 
+    await user.save();
+
+    // Use your existing mailer utility
+    const subject = `Your New OTP is ${otp} (Valid for 10 Minutes)`;
+    const htmlContent = `
+      <h2>Hello ${user.username},</h2>
+      <p>Your new account verification code is: <strong style="font-size: 24px;">${otp}</strong></p>
+      <p>This code will expire in exactly 10 minutes. Do not share it with anyone.</p>
+    `;
+
+    await sendEmail(email, subject, htmlContent);
+
+    res.status(200).json({
+      success: true,
+      message: "A new OTP has been sent to your email",
+    });
+
+  } catch (error) {
+    console.error("❌ RESEND OTP ERROR:", error);
+    res.status(500).json({ success: false, message: "Internal server error" });
+  }
+};
