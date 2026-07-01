@@ -192,10 +192,11 @@ class KYCService {
       verificationRequest.verificationCompletedAt = new Date();
       await verificationRequest.save();
 
-      // Update user
+      // Update user — auto-upgrade to SELLER on KYC verification
       const user = await User.findByIdAndUpdate(userId, {
         kycStatus: 'Verified',
-        kycVerifiedAt: new Date()
+        kycVerifiedAt: new Date(),
+        role: 'SELLER'  // Auto-upgrade: KYC verified = can buy AND sell
       }, { new: true });
 
       // Log success

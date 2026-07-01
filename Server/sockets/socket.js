@@ -1,6 +1,7 @@
 const socketIo = require("socket.io");
 const jwt = require("jsonwebtoken");
 const DistributedLock = require("../redis/distributed.lock");
+const AuditLog = require("../models/auditLog.model");
 
 // Import all your exact models
 const Item = require("../models/item.model");
@@ -61,11 +62,41 @@ const initSockets = (server) => {
       const { auctionId, amount } = data;
       const userId = socket.user.userId;
       const lockKey = `lock:auction:${auctionId}`;
+      const serverReceivedAt = Date.now(); // Millisecond timestamp for tie-breaking
+
+      // Log bid attempt — BEFORE lock
+      await AuditLog.create({
+        userId,
+        action: 'BID_ATTEMPT',
+        ipAddress: socket.handshake.address,
+        deviceInfo: socket.handshake.headers['user-agent'],
+        metadata: {
+          auctionId,
+          amount,
+          serverReceivedAt,
+          serverId: process.pid,
+          socketId: socket.id
+        }
+      }).catch(err => console.error('Audit log failed:', err));
 
       // 1. Engage the Redis Shield
       const lockToken = await DistributedLock.acquireLock(lockKey, 500);
 
       if (!lockToken) {
+        // Log lock rejection
+        await AuditLog.create({
+          userId,
+          action: 'BID_REJECTED',
+          ipAddress: socket.handshake.address,
+          metadata: {
+            auctionId,
+            amount,
+            serverReceivedAt,
+            serverId: process.pid,
+            reason: 'LOCK_BUSY'
+          }
+        }).catch(err => console.error('Audit log failed:', err));
+
         return socket.emit("bid_rejected", {
           message: "Auction is busy processing a bid. Please try again!",
         });
@@ -200,6 +231,20 @@ const initSockets = (server) => {
           remainingBiddingPower: userWallet.availableMoney * 10
         });
 
+        // Log successful bid
+        await AuditLog.create({
+          userId,
+          action: 'BID_ACCEPTED',
+          ipAddress: socket.handshake.address,
+          metadata: {
+            auctionId,
+            amount,
+            serverReceivedAt,
+            serverId: process.pid,
+            previousWinnerId: previousHighestBidderId
+          }
+        }).catch(err => console.error('Audit log failed:', err));
+
       } catch (error) {
           // Log the failed attempt just in case you need it for audit
           await Bid.create({
@@ -208,6 +253,20 @@ const initSockets = (server) => {
               amount: amount,
               status: 'REJECTED'
           }).catch(err => console.error("Failed to log rejected bid", err));
+
+          // Audit log for validation failure
+          await AuditLog.create({
+            userId,
+            action: 'BID_REJECTED',
+            ipAddress: socket.handshake.address,
+            metadata: {
+              auctionId,
+              amount,
+              serverReceivedAt,
+              serverId: process.pid,
+              reason: error.message
+            }
+          }).catch(err => console.error('Audit log failed:', err));
 
           socket.emit("bid_rejected", { message: error.message });
       } finally {

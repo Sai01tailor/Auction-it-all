@@ -8,7 +8,8 @@ const auditLogSchema=new mongoose.Schema({
     },
     action:{
         type:String,
-        required:true
+        required:true,
+        index:true
     },
     ipAddress:{
         type:String,
@@ -17,23 +18,19 @@ const auditLogSchema=new mongoose.Schema({
     deviceInfo:{
         type:String,
     },
-    endPoint:{
+    endpoint:{
         type:String,
+    },
+    // For bid tracking — stores auctionId, amount, serverId, reason, etc.
+    metadata:{
+        type:mongoose.Schema.Types.Mixed,
+        default:{}
     }
 },{
     timestamps:true
 });
 
-module.exports=mongoose.model('AuditLog',auditLogSchema)
+// Index for fast auction bid queries
+auditLogSchema.index({ 'metadata.auctionId': 1, createdAt: 1 });
 
-
-// // src/routes/bid.routes.js
-// const express = require('express');
-// const router = express.Router();
-// const auditTracker = require('../middlewares/auditTracker.middleware');
-// const bidController = require('../controllers/bid.controller');
-
-// // Notice we pass exactly what action is happening
-// router.post('/place-bid', auditTracker('BID_PLACED'), bidController.placeBid);
-
-// module.exports = router;
+module.exports=mongoose.model('AuditLog',auditLogSchema);
