@@ -77,6 +77,11 @@ const itemSchema=new mongoose.Schema({
     endTime:{
         type:Date,
         required:true
+    },
+    auctionType:{
+        type: String,
+        enum: ['ENGLISH', 'DUTCH', 'BLIND'],
+        default: 'ENGLISH'
     }
 },{
     timestamps:true // Automatically tracks createdAt and updatedAt

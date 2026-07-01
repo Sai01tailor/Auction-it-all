@@ -7,6 +7,14 @@ const Item = require("../models/item.model");
 const Wallet = require("../models/wallet.model");
 const Bid = require("../models/bid.model"); // The history ledger
 
+// <-- NEW (Notifications): Import the Model and Mailer
+const Notification = require("../models/notification.model");
+const { sendEmail } = require("../utils/mailer");
+
+// Import User model and Leaderboard Service
+const User = require("../models/user.model"); 
+const LeaderboardService = require("../services/leaderboard.service");
+
 let io;
 
 const initSockets = (server) => {
@@ -35,9 +43,13 @@ const initSockets = (server) => {
     socket.join(`user:${socket.user.userId}`);
 
     // Join/Leave Auction Rooms
-    socket.on("join_auction", (auctionId) => {
+    socket.on("join_auction", async (auctionId) => {
       socket.join(`auction:${auctionId}`);
       console.log(`User ${socket.user.userId} joined room: auction:${auctionId}`);
+
+      // Instantly fetch and send Top 5 on join
+      const leaderboard = await LeaderboardService.getTopBidders(auctionId);
+      socket.emit("leaderboard_update", { leaderboard });
     });
 
     socket.on("leave_auction", (auctionId) => {
@@ -61,13 +73,15 @@ const initSockets = (server) => {
 
       try {
         // 2. Fetch Data concurrently
-        const [item, userWallet] = await Promise.all([
+        const [item, userWallet, user] = await Promise.all([
             Item.findById(auctionId),
-            Wallet.findOne({ userId: userId })
+            Wallet.findOne({ userId: userId }),
+            User.findById(userId).select("username") 
         ]);
 
         if (!item) throw new Error("Item not found.");
         if (!userWallet) throw new Error("Wallet not found. Please complete setup.");
+        if (!user) throw new Error("User not found."); 
 
         if (item.status !== "ACTIVE" || Date.now() > new Date(item.endTime).getTime()) {
           throw new Error("This auction has already ended.");
@@ -128,6 +142,9 @@ const initSockets = (server) => {
         item.winnerId = userId;
         await item.save();
 
+        // Update Redis and get the new rankings
+        const leaderboard = await LeaderboardService.updateLeaderboard(auctionId, user.username, amount);
+
         // 7. Broadcasts
         io.to(`auction:${auctionId}`).emit("new_bid_update", {
           auctionId,
@@ -136,12 +153,45 @@ const initSockets = (server) => {
           timestamp: new Date(),
         });
 
+        // Broadcast the Golden Leaderboard to everyone!
+        io.to(`auction:${auctionId}`).emit("leaderboard_update", { leaderboard });
+
+        // <-- NEW: SMART OUTBID NOTIFICATIONS -->
         if (previousHighestBidderId) {
+          const outbidMessage = `Someone just bid ₹${amount}. Your 10% deposit has been released. Re-bid now!`;
+
+          // A. Send Live Socket Popup (Always attempt)
           io.to(`user:${previousHighestBidderId}`).emit("outbid_alert", {
             title: "You've been outbid!",
-            message: `Someone just bid ₹${amount}. Your 10% deposit has been released. Re-bid now!`,
+            message: outbidMessage,
             auctionId: auctionId,
           });
+
+          // B. Save to Database Inbox (Always save for history)
+          await Notification.create({
+              userId: previousHighestBidderId,
+              type: 'OUTBID',
+              title: "You've been outbid!",
+              message: outbidMessage,
+              auctionId: auctionId
+          });
+
+          // C. Check if offline, if yes -> Send Email
+          const userRoom = io.sockets.adapter.rooms.get(`user:${previousHighestBidderId}`);
+          const isOnline = userRoom && userRoom.size > 0;
+
+          if (!isOnline) {
+              const previousUser = await User.findById(previousHighestBidderId).select("email username");
+              if (previousUser) {
+                  await sendEmail(
+                      previousUser.email,
+                      "You've been outbid! - BidKar",
+                      `<h2>Hello ${previousUser.username},</h2>
+                       <p>${outbidMessage}</p>
+                       <p>Log in now to reclaim your item before time runs out!</p>`
+                  );
+              }
+          }
         }
 
         socket.emit("bid_accepted", {
