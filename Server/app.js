@@ -12,6 +12,8 @@ const paymentRoutes=require('./routes/payment.routes');
 const walletRoutes=require('./routes/wallet.routes');
 const transactionRoutes=require('./routes/transaction.routes');
 const settlementRoutes=require('./routes/auctionSettlement.routes');
+const leaderboardRoutes = require('./routes/leaderboard.routes'); 
+const notificationRoutes=require('./routes/notification.routes');
 
 // middleware
 app.use(express.json());
@@ -33,6 +35,8 @@ app.use('/api/payments',paymentRoutes);
 app.use('/api/wallet',walletRoutes);
 app.use('/api/transaction',transactionRoutes);
 app.use('/api/settlements',settlementRoutes);
+app.use('/api/leaderboard', leaderboardRoutes); 
+app.use('/api/notifications',notificationRoutes);
 
 //test route 
 app.get("/", (req, res) => {
