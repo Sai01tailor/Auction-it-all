@@ -16,6 +16,7 @@ export function useSocket(auctionId, initialBid = 0, auctionType = 'ENGLISH', it
   const [totalBids, setTotalBids] = useState(0);
   const [lastBidder, setLastBidder] = useState(null);
   const [isConnected, setIsConnected] = useState(false);
+  const [socketError, setSocketError] = useState(null);
 
   // Dutch specific states
   const [quantityRemaining, setQuantityRemaining] = useState(
@@ -82,6 +83,7 @@ export function useSocket(auctionId, initialBid = 0, auctionType = 'ENGLISH', it
     socket.on('new_bid_update', (payload) => {
       if (payload.auctionId !== auctionId) return;
 
+      setSocketError(null);
       setCurrentBid(payload.newHighestBid);
       setTotalBids(prev => prev + 1);
       
@@ -89,6 +91,10 @@ export function useSocket(auctionId, initialBid = 0, auctionType = 'ENGLISH', it
       setLastBidder({
         username: isMe ? 'You' : `Bidder_${payload.bidderId.slice(-4)}`
       });
+    });
+
+    socket.on('bid_rejected', (payload) => {
+      setSocketError(payload.message);
     });
 
     // Dutch: client-side countdown display
@@ -168,16 +174,26 @@ export function useSocket(auctionId, initialBid = 0, auctionType = 'ENGLISH', it
     // No-op
   }, []);
 
+  const placeBidSocket = useCallback((amount) => {
+    setSocketError(null);
+    if (socketRef.current) {
+      socketRef.current.emit('place_bid', { auctionId, amount });
+    }
+  }, [auctionId]);
+
   return {
     currentBid,
     totalBids,
     lastBidder,
     isConnected,
+    socketError,
+    setSocketError,
     quantityRemaining,
     nextDropCountdown,
     blindBidsList,
     isRevealed,
     placeBidEvent,
+    placeBidSocket,
     buyNowDutchEvent,
     submitBlindBidEvent,
   };

@@ -19,20 +19,20 @@ import { getActiveAuctions } from '../services/auctionService';
 ───────────────────────────────────────────────────────────── */
 
 const DEFAULT_FILTERS = {
-  search:     '',
+  search: '',
   priceRange: [0, 10_00_000],
-  type:       'ACTIVE',
-  condition:  [],
-  category:   'all',
-  sort:       'ending',
-  engine:     'ALL',
+  type: 'ACTIVE',
+  condition: [],
+  category: 'all',
+  sort: 'ending',
+  engine: 'ALL',
 };
 
 const ENGINES = [
-  { id: 'ALL',      label: 'All Auctions',          icon: '🏛️' },
-  { id: 'ENGLISH',  label: 'English (Ascending)',    icon: '📈' },
-  { id: 'DUTCH',    label: 'Dutch (Buy Now)',       icon: '📉' },
-  { id: 'BLIND',    label: 'Blind (Sealed Bid)',    icon: '✉️' },
+  { id: 'ALL', label: 'All Auctions' },
+  { id: 'ENGLISH', label: 'English (Ascending)' },
+  { id: 'DUTCH', label: 'Dutch (Buy Now)' },
+  { id: 'BLIND', label: 'Blind (Sealed Bid)' },
 ];
 
 
@@ -44,28 +44,28 @@ export default function ListingGridPage() {
 
   const [filters, setFilters] = useState(() => ({
     ...DEFAULT_FILTERS,
-    search:   searchParams.get('search') ?? '',
+    search: searchParams.get('search') ?? '',
     category: searchParams.get('category') ?? 'all',
-    engine:   searchParams.get('engine') ?? 'ALL',
+    engine: searchParams.get('engine') ?? 'ALL',
   }));
 
-  const [items,   setItems]   = useState([]);
-  const [total,   setTotal]   = useState(0);
+  const [items, setItems] = useState([]);
+  const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [error,   setError]   = useState(null);
+  const [error, setError] = useState(null);
   const [hasMore, setHasMore] = useState(true);
-  const [offset,  setOffset]  = useState(0);
+  const [offset, setOffset] = useState(0);
 
   /* ── Sort items client-side ── */
   const sortItems = (list, sort) => {
     const arr = [...list];
     switch (sort) {
-      case 'newest':    return arr.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      case 'newest': return arr.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
       case 'price_asc': return arr.sort((a, b) => (a.currentHighestBid || a.startingPrice) - (b.currentHighestBid || b.startingPrice));
-      case 'price_desc':return arr.sort((a, b) => (b.currentHighestBid || b.startingPrice) - (a.currentHighestBid || a.startingPrice));
-      case 'bids':      return arr.sort((a, b) => (b.bidsCount ?? 0) - (a.bidsCount ?? 0));
+      case 'price_desc': return arr.sort((a, b) => (b.currentHighestBid || b.startingPrice) - (a.currentHighestBid || a.startingPrice));
+      case 'bids': return arr.sort((a, b) => (b.bidsCount ?? 0) - (a.bidsCount ?? 0));
       case 'ending':
-      default:          return arr.sort((a, b) => new Date(a.endTime) - new Date(b.endTime));
+      default: return arr.sort((a, b) => new Date(a.endTime) - new Date(b.endTime));
     }
   };
 
@@ -100,7 +100,7 @@ export default function ListingGridPage() {
 
     // Sync URL
     const params = {};
-    if (filters.search)   params.search   = filters.search;
+    if (filters.search) params.search = filters.search;
     if (filters.category !== 'all') params.category = filters.category;
     if (filters.engine !== 'ALL') params.engine = filters.engine;
     setSearchParams(params, { replace: true });
@@ -133,9 +133,13 @@ export default function ListingGridPage() {
       {/* ── Page Header Band ── */}
       <div style={{
         background: 'linear-gradient(160deg, var(--color-brand-primary-dark) 0%, var(--color-brand-primary) 100%)',
-        padding: '2rem 0',
+        padding: '2.5rem 0 5rem',
+        position: 'relative',
+        overflow: 'hidden',
       }}>
-        <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 1.5rem' }}>
+        {/* Subtle decorative dot pattern */}
+        <div style={{ position: 'absolute', inset: 0, opacity: 0.04, backgroundImage: 'radial-gradient(#fff 1.5px,transparent 0)', backgroundSize: '20px 20px', pointerEvents: 'none' }} />
+        <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 1.5rem', position: 'relative', zIndex: 2 }}>
           <p style={{ margin: '0 0 0.4rem', fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(254,206,68,0.9)' }}>
             Live Auction Marketplace
           </p>
@@ -174,8 +178,8 @@ export default function ListingGridPage() {
 
 
       {/* ── Bidding Engine Navigation Tabs ── */}
-      <div style={{ maxWidth: '1280px', margin: '1.5rem auto 0', padding: '0 1.5rem' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.5rem', background: 'rgba(0,35,102,0.03)', border: '1px solid rgba(0,35,102,0.08)', borderRadius: '16px', padding: '0.35rem' }}>
+      <div style={{ maxWidth: '1280px', margin: '-2.25rem auto 0', padding: '0 1.5rem', position: 'relative', zIndex: 10 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.5rem', background: 'var(--color-surface-main)', border: '1px solid var(--color-border-subtle)', borderRadius: '20px', padding: '0.45rem', boxShadow: '0 10px 30px rgba(0,0,0,0.06)' }}>
           {ENGINES.map(eng => {
             const active = (filters.engine || 'ALL') === eng.id;
             return (
@@ -190,16 +194,16 @@ export default function ListingGridPage() {
                   padding: '0.75rem 0.5rem',
                   borderRadius: '12px',
                   border: 'none',
-                  background: active ? '#fff' : 'transparent',
+                  background: active ? 'rgba(0,35,102,0.06)' : 'transparent',
                   color: active ? 'var(--color-brand-primary)' : 'var(--color-text-muted)',
                   fontSize: '0.88rem',
                   fontWeight: active ? 800 : 600,
                   cursor: 'pointer',
-                  boxShadow: active ? '0 4px 15px rgba(0,35,102,0.06)' : 'none',
+                  boxShadow: active ? '0 2px 8px rgba(0,35,102,0.04)' : 'none',
                   transition: 'all 0.2s',
                 }}
               >
-                <span style={{ fontSize: '1.1rem' }}>{eng.icon}</span>
+                {/* <span style={{ fontSize: '1.1rem' }}>{eng.icon}</span> */}
                 <span>{eng.label}</span>
               </button>
             );

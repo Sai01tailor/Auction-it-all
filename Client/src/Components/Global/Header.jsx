@@ -33,7 +33,7 @@ const MOBILE_NAV_LINKS = [
 function BidKarLogo() {
   return (
     <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', textDecoration: 'none', flexShrink: 0 }}>
-      <div style={{
+      {/* <div style={{
         width: '34px', height: '34px',
         borderRadius: '9px',
         background: 'linear-gradient(135deg, #fece44, #e5b630)',
@@ -51,8 +51,9 @@ function BidKarLogo() {
         lineHeight: 1,
         whiteSpace: 'nowrap',
       }}>
-        BidKar<span style={{ color: '#fece44' }}>.in</span>
-      </span>
+        BidKar<span style={{ color: '#fece44' }}>.in</span> */}
+      {/* </span> */}
+      <img src='src/assets/LongLogo.png' alt="logo" style={{ width: '100px', height: 'auto' }} />
     </Link>
   );
 }
@@ -242,10 +243,10 @@ function AuthSection({ user }) {
             </p>
           </div>
           {[
-            { label: '👤 My Profile', to: '/dashboard' },
-            { label: '📦 My Bids', to: '/dashboard' },
-            { label: '🎨 Seller Studio', to: '/seller/studio' },
-            { label: '⚙️ Settings', to: '/settings' },
+            { label: ' My Profile', to: '/dashboard' },
+            { label: ' My Bids', to: '/dashboard' },
+            { label: ' Seller Studio', to: '/seller/studio' },
+            { label: ' Settings', to: '/settings' },
           ].map(({ label, to }) => (
             <Link key={to} to={to} onClick={() => setOpen(false)} style={{
               display: 'block',

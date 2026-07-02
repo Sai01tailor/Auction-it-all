@@ -15,7 +15,9 @@ export default function EnglishConsole({ item }) {
     currentBid,
     totalBids,
     lastBidder,
-    placeBidEvent
+    placeBidSocket,
+    socketError,
+    setSocketError
   } = useSocket(item._id, item.currentHighestBid, 'ENGLISH', item);
 
   // UI state
@@ -25,6 +27,13 @@ export default function EnglishConsole({ item }) {
   const [bidHistory, setBidHistory] = useState([]);
   const [alertMsg, setAlertMsg] = useState(null);
   const [activePhoto, setActivePhoto] = useState(item.photos?.[0] || '');
+
+  useEffect(() => {
+    if (socketError) {
+      setErrorMsg(socketError);
+      setShake(true);
+    }
+  }, [socketError]);
 
   // Time remaining tracking
   const [timeLeft, setTimeLeft] = useState(0);
@@ -132,7 +141,7 @@ export default function EnglishConsole({ item }) {
 
     // 2. Execute bid placement
     try {
-      placeBidEvent(amount, 'You');
+      placeBidSocket(amount);
       setUserBid(amount);
       setCustomBid('');
 
@@ -141,8 +150,6 @@ export default function EnglishConsole({ item }) {
         setEndTime(prev => prev + 120 * 1000); // add 2 mins
         triggerAlert('Bid placed in final minute! Auction extended by 2 minutes.');
       }
-
-      await placeBid(item._id, amount, 'You');
     } catch (err) {
       setErrorMsg('Failed to broadcast bid. Please retry.');
       setShake(true);
@@ -182,14 +189,21 @@ export default function EnglishConsole({ item }) {
               zIndex: 100,
             }}
           >
-            ⚠️ {alertMsg}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem' }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                <line x1="12" y1="9" x2="12" y2="13" />
+                <line x1="12" y1="17" x2="12.01" y2="17" />
+              </svg>
+              <span>{alertMsg}</span>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
 
       {/* Terminal Grid Container */}
       <div style={{ flex: 1, maxWidth: '1280px', width: '100%', margin: '0 auto', padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-        
+
         {/* Back navigation & Title bar */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '1rem' }}>
           <button
@@ -208,10 +222,10 @@ export default function EnglishConsole({ item }) {
 
         {/* Console layout */}
         <div className="console-grid-layout" style={{ alignItems: 'stretch' }}>
-          
+
           {/* Left panel: Media, Input, status */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-            
+
             {/* Focus Gallery + Countdown Box */}
             <div className="gallery-grid-layout" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '18px', padding: '1rem' }}>
               {/* Vertical thumbnail strip */}
@@ -240,7 +254,7 @@ export default function EnglishConsole({ item }) {
               {/* Central Main active photo and countdown timer overlay */}
               <div style={{ position: 'relative', borderRadius: '12px', overflow: 'hidden', height: '200px' }}>
                 <img src={activePhoto} alt={item.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                
+
                 {/* Real-time pulsing timer overlay */}
                 <div style={{
                   position: 'absolute', bottom: '10px', right: '10px',
@@ -251,7 +265,10 @@ export default function EnglishConsole({ item }) {
                   animation: timeLeft < 60 ? 'bid-pulse 1s ease-out infinite' : 'none',
                   display: 'flex', alignItems: 'center', gap: '0.4rem'
                 }}>
-                  <span style={{ fontSize: '1rem' }}>⏰</span>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'inline-block' }}>
+                    <circle cx="12" cy="12" r="10" />
+                    <polyline points="12 6 12 12 16 14" />
+                  </svg>
                   {formatTime(timeLeft)}
                 </div>
               </div>
@@ -260,7 +277,12 @@ export default function EnglishConsole({ item }) {
             {/* Bidding Power Meter Card */}
             <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '18px', padding: '1rem 1.25rem' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem', fontSize: '0.78rem' }}>
-                <span style={{ color: 'rgba(255,255,255,0.5)', fontWeight: 600 }}>⚡ Bidding Power Limit</span>
+                <span style={{ color: 'rgba(255,255,255,0.5)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fece44" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+                  </svg>
+                  Bidding Power Limit
+                </span>
                 <span style={{ color: '#fff', fontWeight: 700 }}>
                   ₹{(TOTAL_BIDDING_POWER - usedBiddingPower).toLocaleString('en-IN')} Available
                 </span>
@@ -277,8 +299,12 @@ export default function EnglishConsole({ item }) {
                 <span>Used Power: ₹{usedBiddingPower.toLocaleString()}</span>
                 <span>Total Limit: ₹{TOTAL_BIDDING_POWER.toLocaleString()}</span>
               </div>
-              <div style={{ marginTop: '0.6rem', fontSize: '0.7rem', color: 'rgba(254, 206, 68, 0.85)', background: 'rgba(254, 206, 68, 0.05)', padding: '0.4rem 0.6rem', borderRadius: '6px', border: '1px solid rgba(254, 206, 68, 0.15)' }}>
-                🔒 Placed bids lock a 10% cash equivalent deposit (e.g. ₹{lockedDeposit.toLocaleString()} locked of your wallet balance) on win.
+              <div style={{ marginTop: '0.6rem', fontSize: '0.7rem', color: 'rgba(254, 206, 68, 0.85)', background: 'rgba(254, 206, 68, 0.05)', padding: '0.4rem 0.6rem', borderRadius: '6px', border: '1px solid rgba(254, 206, 68, 0.15)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                </svg>
+                <span>Placed bids lock a 10% cash equivalent deposit (e.g. ₹{lockedDeposit.toLocaleString()} locked of your wallet balance) on win.</span>
               </div>
             </div>
 
@@ -294,8 +320,11 @@ export default function EnglishConsole({ item }) {
                 boxShadow: '0 8px 32px rgba(0,0,0,0.15)'
               }}
             >
-              <h3 style={{ margin: '0 0 0.85rem', fontSize: '0.9rem', fontWeight: 800, color: '#fece44', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                ⚡ Quick Bid Actions
+              <h3 style={{ margin: '0 0 0.85rem', fontSize: '0.9rem', fontWeight: 800, color: '#fece44', textTransform: 'uppercase', letterSpacing: '0.04em', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fece44" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+                </svg>
+                Quick Bid Actions
               </h3>
 
               {/* Presets Grid */}
@@ -318,6 +347,11 @@ export default function EnglishConsole({ item }) {
                         cursor: cannotBid ? 'not-allowed' : 'pointer',
                         transition: 'all 0.2s',
                         opacity: cannotBid ? 0.6 : 1,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '2px'
                       }}
                       onMouseEnter={e => {
                         if (!cannotBid) {
@@ -377,13 +411,23 @@ export default function EnglishConsole({ item }) {
 
                 {errorMsg && (
                   <p style={{ margin: 0, fontSize: '0.78rem', color: '#fca5a5', display: 'flex', alignItems: 'center', gap: '0.3rem', fontWeight: 600 }}>
-                    ❌ {errorMsg}
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                      <circle cx="12" cy="12" r="10" />
+                      <line x1="15" y1="9" x2="9" y2="15" />
+                      <line x1="9" y1="9" x2="15" y2="15" />
+                    </svg>
+                    {errorMsg}
                   </p>
                 )}
 
                 {TOTAL_BIDDING_POWER < (currentBid + minIncrement) && (
-                  <div style={{ color: '#fca5a5', fontSize: '0.75rem', background: 'rgba(239, 68, 68, 0.08)', border: '1px solid rgba(239, 68, 68, 0.2)', padding: '0.5rem 0.75rem', borderRadius: '8px', fontWeight: 600 }}>
-                    ⚠️ Bidding locked. Your Bidding Power is lower than the minimum required bid (₹{(currentBid + minIncrement).toLocaleString()}). Please top up your wallet.
+                  <div style={{ color: '#fca5a5', fontSize: '0.75rem', background: 'rgba(239, 68, 68, 0.08)', border: '1px solid rgba(239, 68, 68, 0.2)', padding: '0.5rem 0.75rem', borderRadius: '8px', fontWeight: 600, display: 'flex', alignItems: 'start', gap: '0.4rem' }}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: '2px' }}>
+                      <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                      <line x1="12" y1="9" x2="12" y2="13" />
+                      <line x1="12" y1="17" x2="12.01" y2="17" />
+                    </svg>
+                    <span>Bidding locked. Your Bidding Power is lower than the minimum required bid (₹{(currentBid + minIncrement).toLocaleString()}). Please top up your wallet.</span>
                   </div>
                 )}
 

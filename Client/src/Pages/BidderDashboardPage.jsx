@@ -220,10 +220,10 @@ export default function BidderDashboardPage() {
         <div style={{ position: 'absolute', inset: 0, opacity: 0.05, backgroundImage: 'radial-gradient(#fff 1.5px,transparent 0)', backgroundSize: '22px 22px', pointerEvents: 'none' }} />
         <div style={{ maxWidth: '1100px', margin: '0 auto', position: 'relative', zIndex: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1.5rem' }}>
           <div>
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', background: 'rgba(254,206,68,0.12)', border: '1px solid rgba(254,206,68,0.25)', padding: '0.3rem 0.85rem', borderRadius: '20px', marginBottom: '0.75rem' }}>
+            {/* <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', background: 'rgba(254,206,68,0.12)', border: '1px solid rgba(254,206,68,0.25)', padding: '0.3rem 0.85rem', borderRadius: '20px', marginBottom: '0.75rem' }}>
               <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#10b981' }} />
               <span style={{ fontSize: '0.65rem', fontWeight: 800, color: 'var(--color-brand-accent)', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Live Feed Active</span>
-            </div>
+            </div> */}
             <h1 style={{ margin: 0, fontSize: '1.8rem', fontWeight: 900, color: '#fff', letterSpacing: '-0.02em' }}>
               {user?.username ? `${user.username}'s Dashboard` : 'Bidder Dashboard'}
             </h1>
@@ -277,7 +277,7 @@ export default function BidderDashboardPage() {
               <p style={{ margin: '0.2rem 0 0.85rem', fontSize: '0.72rem', color: 'var(--color-text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '100%' }}>
                 {user?.email || 'bidder@bidkar.in'}
               </p>
-              {user?.kycStatus?.toLowerCase() === 'verified' ? (
+              {user?.kycStatus?.toLowerCase() === 'verified' || user?.role === 'SELLER' || user?.role === 'ADMIN' ? (
                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem', background: '#ecfdf5', color: '#047857', padding: '0.3rem 0.75rem', borderRadius: '20px', fontSize: '0.65rem', fontWeight: 800, border: '1px solid #a7f3d0', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                   <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /><polyline points="9 11 11 13 15 9" /></svg>
                   KYC Verified

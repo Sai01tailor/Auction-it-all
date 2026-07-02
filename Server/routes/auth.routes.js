@@ -30,7 +30,8 @@ router.get(
 
 // Called if Google auth fails
 router.get('/google/failure', (req, res) => {
-  res.status(401).json({ success: false, message: 'Google authentication failed' });
+  const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
+  res.redirect(`${clientUrl}/auth/google/failure?error=google_failed`);
 });
 
 // ── Protected ───────────────────────────────────────────────

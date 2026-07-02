@@ -61,15 +61,15 @@ exports.createOrder = async (req, res) => {
 
 // 2. VERIFY WEBHOOK (Razorpay confirms payment)
 exports.verifyWebhook = async (req, res) => {
-  // const webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET;
-  // const signature = req.headers['x-razorpay-signature'];
+  const webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET;
+  const signature = req.headers['x-razorpay-signature'];
 
   // // EDGE CASE PREVENTED: Webhook Spoofing / Hijacking
   // // Cryptographically verify the payload actually came from Razorpay
-  // const expectedSignature = crypto
-  //   .createHmac('sha256', webhookSecret)
-  //   .update(JSON.stringify(req.body))
-  //   .digest('hex');
+  const expectedSignature = crypto
+    .createHmac('sha256', webhookSecret)
+    .update(JSON.stringify(req.body))
+    .digest('hex');
 
   // if (expectedSignature !== signature) {
   //   return res.status(400).json({ success: false, message: "Invalid Signature" });

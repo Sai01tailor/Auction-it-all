@@ -78,8 +78,15 @@ function PlatformStats() {
 
 /* ── Hero Section ── */
 function Hero() {
+  const [cursor, setCursor] = useState({ x: -9999, y: -9999 });
+
   return (
     <section
+      onMouseMove={e => {
+        const rect = e.currentTarget.getBoundingClientRect();
+        setCursor({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+      }}
+      onMouseLeave={() => setCursor({ x: -9999, y: -9999 })}
       style={{
         background: 'linear-gradient(160deg, var(--color-brand-primary-dark) 0%, var(--color-brand-primary) 100%)',
         padding: 'clamp(3rem, 6vw, 5rem) 1.5rem',
@@ -87,16 +94,37 @@ function Hero() {
         position: 'relative', overflow: 'hidden',
       }}
     >
-      {/* Background grid */}
+      {/* Background grid — slightly visible lines */}
       <div style={{
-        position: 'absolute', inset: 0, opacity: 0.04,
-        backgroundImage: 'linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)',
+        position: 'absolute', inset: 0,
+        backgroundImage: 'linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px)',
         backgroundSize: '40px 40px',
         pointerEvents: 'none',
+        zIndex: 0,
+      }} />
+
+      {/* Cursor-reactive glow overlay — lights up grid near mouse */}
+      <div style={{
+        position: 'absolute', inset: 0,
+        background: `radial-gradient(circle 320px at ${cursor.x}px ${cursor.y}px, rgba(254,206,68,0.13) 0%, rgba(26,60,122,0.08) 50%, transparent 70%)`,
+        pointerEvents: 'none',
+        zIndex: 1,
+        transition: 'background 0.05s ease',
+      }} />
+
+      {/* Grid line glow — intensifies near cursor */}
+      <div style={{
+        position: 'absolute', inset: 0,
+        backgroundImage: 'linear-gradient(rgba(254,206,68,0.22) 1px, transparent 1px), linear-gradient(90deg, rgba(254,206,68,0.22) 1px, transparent 1px)',
+        backgroundSize: '40px 40px',
+        maskImage: `radial-gradient(circle 220px at ${cursor.x}px ${cursor.y}px, black 0%, transparent 100%)`,
+        WebkitMaskImage: `radial-gradient(circle 220px at ${cursor.x}px ${cursor.y}px, black 0%, transparent 100%)`,
+        pointerEvents: 'none',
+        zIndex: 2,
       }} />
 
       {/* Live badge */}
-      <div style={{
+      {/* <div style={{
         display: 'inline-flex', alignItems: 'center', gap: '0.5rem',
         background: 'rgba(16,185,129,0.12)',
         border: '1px solid rgba(16,185,129,0.3)',
@@ -111,7 +139,7 @@ function Hero() {
         <span style={{ fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#34d399' }}>
           Marketplace is live
         </span>
-      </div>
+      </div> */}
 
       {/* Headline */}
       <h1 style={{

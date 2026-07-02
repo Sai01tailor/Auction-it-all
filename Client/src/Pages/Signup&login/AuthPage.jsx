@@ -204,23 +204,10 @@ const LoginView = ({ go }) => {
       })
   }
 
-  const gLogin = useGoogleLogin({
-    onSuccess: async t => {
-      setBusy(true)
-      try {
-        const r = await api.post('/auth/google', { token: t.access_token })
-        if (r.data?.token) {
-          setCookie('auth_token', r.data.token, { days: 7 })
-          setUser(r.data.user ?? null)
-        }
-        toast.success('Signed in!')
-        nav('/dashboard', { replace: true })
-      }
-      catch (e) { toast.error(e.response?.data?.message ?? 'Google sign-in failed') }
-      finally { setBusy(false) }
-    },
-    onError: () => toast.error('Google sign-in cancelled'),
-  })
+  const handleGoogleClick = () => {
+    const apiBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api';
+    window.location.href = `${apiBase}/auth/google`;
+  };
 
   return (
     <form onSubmit={submit} noValidate style={{ display: 'flex', flexDirection: 'column', gap: '1.1rem' }}>
@@ -242,7 +229,7 @@ const LoginView = ({ go }) => {
 
       <PrimaryBtn busy={busy} busyLabel="Signing in…">Log In</PrimaryBtn>
       <Or />
-      <GBtn onClick={gLogin} busy={busy} />
+      <GBtn onClick={handleGoogleClick} busy={busy} />
 
       <p style={{ textAlign: 'center', margin: 0, fontSize: '0.875rem', color: '#6b7280', fontFamily: font }}>
         No account?{' '}
@@ -329,15 +316,10 @@ const SignupView = ({ go }) => {
       })
   }
 
-  const gLogin = useGoogleLogin({
-    onSuccess: async t => {
-      setBusy(true)
-      try { const r = await api.post('/auth/google', { token: t.access_token }); if (r.data?.token) setCookie('auth_token', r.data.token, { days: 7 }); toast.success('Signed up!'); nav('/dashboard', { replace: true }) }
-      catch (e) { toast.error(e.response?.data?.message ?? 'Google sign-up failed') }
-      finally { setBusy(false) }
-    },
-    onError: () => toast.error('Google sign-in cancelled'),
-  })
+  const handleGoogleClick = () => {
+    const apiBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api';
+    window.location.href = `${apiBase}/auth/google`;
+  };
 
   return (
     <form onSubmit={submit} noValidate style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -398,7 +380,7 @@ const SignupView = ({ go }) => {
 
       <PrimaryBtn busy={busy} busyLabel="Creating account…">Create Account</PrimaryBtn>
       <Or />
-      <GBtn onClick={gLogin} busy={busy} />
+      <GBtn onClick={handleGoogleClick} busy={busy} />
 
       <p style={{ textAlign: 'center', margin: 0, fontSize: '0.875rem', color: '#6b7280', fontFamily: font }}>
         Already a member?{' '}

@@ -6,30 +6,34 @@ import { useAuth } from '../Context/AuthContext';
 import Header from '../Components/Global/Header';
 import AuthController from '../Components/Global/AuthController';
 import { toast } from 'react-toastify';
+import { deleteCookie } from '../Components/Global/CookieIT';
 
 export default function UserSettingsPage() {
   const navigate = useNavigate();
   const { user, setUser } = useAuth();
 
+  const handleLogout = async () => {
+    try {
+      await api.post('/auth/logout');
+    } catch (e) {
+      console.warn('Backend logout failed:', e.message);
+    }
+    deleteCookie('auth_token');
+    setUser(null);
+    toast.success('Logged out successfully.');
+    navigate('/login', { replace: true });
+  };
+
   // Profile fields
   const [username, setUsername] = useState('');
-  const [profilePictureFile, setProfilePictureFile] = useState(null);
-  const [profilePicturePreview, setProfilePicturePreview] = useState('');
+  const [avatarFile, setAvatarFile] = useState(null);
+  const [avatarPreview, setAvatarPreview] = useState('');
   const [currentAvatarUrl, setCurrentAvatarUrl] = useState('');
 
-  // Language Preference
-  const [preferredLanguage, setPreferredLanguage] = useState('English');
-
-  // Security Toggles
-  const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
+  // Password fields
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-
-  // Notifications Toggles
-  const [smsEnabled, setSmsEnabled] = useState(true);
-  const [emailEnabled, setEmailEnabled] = useState(true);
-  const [pushEnabled, setPushEnabled] = useState(false);
 
   // Loading and Submitting states
   const [submitting, setSubmitting] = useState(false);
@@ -38,22 +42,15 @@ export default function UserSettingsPage() {
   useEffect(() => {
     if (user) {
       setUsername(user.username || '');
-      setPreferredLanguage(user.preferredLanguage || 'English');
-      setTwoFactorEnabled(!!user.twoFactorEnabled);
-      setCurrentAvatarUrl(user.profilePicture || '');
-      if (user.notifications) {
-        setSmsEnabled(user.notifications.sms !== false);
-        setEmailEnabled(user.notifications.email !== false);
-        setPushEnabled(!!user.notifications.push);
-      }
+      setCurrentAvatarUrl(user.avatar || '');
     }
   }, [user]);
 
   const handleFileChange = (e) => {
     if (e.target.files && e.target.files.length > 0) {
       const file = e.target.files[0];
-      setProfilePictureFile(file);
-      setProfilePicturePreview(URL.createObjectURL(file));
+      setAvatarFile(file);
+      setAvatarPreview(URL.createObjectURL(file));
     }
   };
 
@@ -68,14 +65,9 @@ export default function UserSettingsPage() {
     try {
       const formData = new FormData();
       formData.append('username', username);
-      formData.append('preferredLanguage', preferredLanguage);
-      formData.append('twoFactorEnabled', String(twoFactorEnabled));
-      formData.append('notifications[sms]', String(smsEnabled));
-      formData.append('notifications[email]', String(emailEnabled));
-      formData.append('notifications[push]', String(pushEnabled));
 
-      if (profilePictureFile) {
-        formData.append('profilePicture', profilePictureFile);
+      if (avatarFile) {
+        formData.append('avatar', avatarFile);
       }
       if (currentPassword && newPassword) {
         formData.append('currentPassword', currentPassword);
@@ -110,38 +102,36 @@ export default function UserSettingsPage() {
       <AuthController />
       <Header />
 
-      <div style={{ maxWidth: '800px', margin: '3rem auto', padding: '0 1.5rem' }}>
+      {/* ── FULL-WIDTH HERO BANNER ── */}
+      <div style={{
+        background: 'linear-gradient(135deg,var(--color-brand-primary-dark) 0%,var(--color-brand-primary) 55%,#1a3c7a 100%)',
+        padding: '2.5rem 2rem 4rem',
+        position: 'relative',
+        overflow: 'hidden',
+      }}>
+        {/* Dot grid overlay */}
+        <div style={{ position: 'absolute', inset: 0, opacity: 0.05, backgroundImage: 'radial-gradient(#fff 1.5px,transparent 0)', backgroundSize: '22px 22px', pointerEvents: 'none' }} />
+        <div style={{ maxWidth: '800px', margin: '0 auto', position: 'relative', zIndex: 2 }}>
+          <h1 style={{ margin: 0, fontSize: '2rem', fontWeight: 900, color: '#fff', letterSpacing: '-0.02em' }}>
+            Account Settings
+          </h1>
+          <p style={{ margin: '0.35rem 0 0', fontSize: '0.88rem', color: 'rgba(255,255,255,0.65)', lineHeight: 1.5 }}>
+            Configure your profile identity, security credentials, and view account roles and verification status
+          </p>
+        </div>
+      </div>
+
+      {/* ── MAIN CONTENT (overlaps hero) ── */}
+      <div style={{ maxWidth: '800px', margin: '-2rem auto 4rem', padding: '0 1.5rem', position: 'relative', zIndex: 10 }}>
         <motion.div
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
-          style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}
         >
-          {/* Page Banner */}
-          <div style={{
-            display: 'flex',
-            flexDirection: 'column',
-            background: 'linear-gradient(135deg, var(--color-brand-primary) 0%, var(--color-brand-primary-dark) 100%)',
-            padding: '2rem',
-            borderRadius: '24px',
-            boxShadow: '0 8px 30px rgba(0,35,102,0.1)',
-            color: '#fff'
-          }}>
-            <span style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--color-brand-accent)', fontWeight: 800 }}>
-              Member Preferences
-            </span>
-            <h1 style={{ margin: '0.2rem 0 0.5rem', fontSize: '2rem', fontWeight: 900, color: '#fff' }}>
-              Account Settings
-            </h1>
-            <p style={{ margin: 0, fontSize: '0.875rem', color: 'rgba(255,255,255,0.75)' }}>
-              Configure your profile identity, security credentials, and platform notification preferences.
-            </p>
-          </div>
-
           {/* Form wrapper */}
           <form onSubmit={handleFormSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-            
-            {/* Card 1: Profile Edits */}
+
+            {/* Card 1: Profile Edits & Account Details */}
             <div style={{
               background: 'var(--color-surface-main)',
               border: '1px solid var(--color-border-subtle)',
@@ -152,18 +142,19 @@ export default function UserSettingsPage() {
               flexDirection: 'column',
               gap: '1.5rem'
             }}>
-              <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 800, color: 'var(--color-brand-primary)' }}>
-                👤 Profile Information
+              <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 800, color: 'var(--color-brand-primary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
+                Profile Information
               </h3>
 
               <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', flexWrap: 'wrap' }}>
                 <div style={{ position: 'relative', width: '80px', height: '80px', borderRadius: '50%', overflow: 'hidden', border: '2px solid var(--color-brand-accent)', background: 'var(--color-surface-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  {profilePicturePreview ? (
-                    <img src={profilePicturePreview} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  {avatarPreview ? (
+                    <img src={avatarPreview} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   ) : currentAvatarUrl ? (
                     <img src={currentAvatarUrl} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   ) : (
-                    <span style={{ fontSize: '2rem' }}>👤</span>
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--color-text-muted)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
                   )}
                 </div>
                 <div>
@@ -183,58 +174,68 @@ export default function UserSettingsPage() {
                 </div>
               </div>
 
-              <div>
-                <label htmlFor="display-name-input" style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, marginBottom: '0.4rem', color: 'var(--color-brand-primary)' }}>
-                  Display Name
-                </label>
-                <input
-                  id="display-name-input"
-                  type="text"
-                  required
-                  placeholder="Ramesh Kumar"
-                  value={username}
-                  onChange={e => setUsername(e.target.value)}
-                  style={{ width: '100%' }}
-                />
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }} className="mobile-stack">
+                <div>
+                  <label htmlFor="display-name-input" style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, marginBottom: '0.4rem', color: 'var(--color-brand-primary)' }}>
+                    Display Name
+                  </label>
+                  <input
+                    id="display-name-input"
+                    type="text"
+                    required
+                    placeholder="Ramesh Kumar"
+                    value={username}
+                    onChange={e => setUsername(e.target.value)}
+                    style={{ width: '100%' }}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, marginBottom: '0.4rem', color: 'var(--color-brand-primary)' }}>
+                    Email Address
+                  </label>
+                  <input
+                    type="text"
+                    disabled
+                    value={user?.email || ''}
+                    style={{ width: '100%', background: 'var(--color-surface-bg)', cursor: 'not-allowed' }}
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem', borderTop: '1px solid var(--color-border-subtle)', paddingTop: '1.25rem' }} className="mobile-stack">
+                <div>
+                  <span style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: 'var(--color-text-muted)', marginBottom: '0.2rem' }}>Role</span>
+                  <span style={{ display: 'inline-flex', padding: '0.25rem 0.75rem', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 800, background: 'rgba(0,35,102,0.06)', color: 'var(--color-brand-primary)' }}>
+                    {user?.role || 'USER'}
+                  </span>
+                </div>
+                <div>
+                  <span style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: 'var(--color-text-muted)', marginBottom: '0.2rem' }}>Verification Status</span>
+                  {(() => {
+                    const status = user?.kycStatus || 'Unverified';
+                    const colors = {
+                      'Verified': { bg: '#ecfdf5', color: '#10b981' },
+                      'Pending': { bg: '#fffbeb', color: '#f59e0b' },
+                      'Unverified': { bg: '#f3f4f6', color: '#6b7280' },
+                      'Failed': { bg: '#fef2f2', color: '#ef4444' }
+                    }[status] || { bg: '#f3f4f6', color: '#6b7280' };
+                    return (
+                      <span style={{ display: 'inline-flex', padding: '0.25rem 0.75rem', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 800, background: colors.bg, color: colors.color }}>
+                        {status}
+                      </span>
+                    );
+                  })()}
+                </div>
+                <div>
+                  <span style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: 'var(--color-text-muted)', marginBottom: '0.2rem' }}>Authentication Method</span>
+                  <span style={{ display: 'inline-flex', padding: '0.25rem 0.75rem', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 800, background: 'rgba(0,35,102,0.06)', color: 'var(--color-brand-primary)', textTransform: 'capitalize' }}>
+                    {user?.authProvider || 'Local'}
+                  </span>
+                </div>
               </div>
             </div>
 
-            {/* Card 2: Vernacular Preferences */}
-            <div style={{
-              background: 'var(--color-surface-main)',
-              border: '1px solid var(--color-border-subtle)',
-              borderRadius: '24px',
-              padding: '2rem',
-              boxShadow: '0 4px 20px rgba(0,0,0,0.01)',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '1.25rem'
-            }}>
-              <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 800, color: 'var(--color-brand-primary)' }}>
-                🌐 Language Settings (ભાષા / ભાષા)
-              </h3>
-              
-              <div>
-                <label htmlFor="lang-select" style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, marginBottom: '0.4rem', color: 'var(--color-brand-primary)' }}>
-                  Preferred System Language
-                </label>
-                <select
-                  id="lang-select"
-                  value={preferredLanguage}
-                  onChange={e => setPreferredLanguage(e.target.value)}
-                  style={{ width: '100%', background: '#fff' }}
-                >
-                  <option value="English">English</option>
-                  <option value="Hindi">Hindi (हिंदी)</option>
-                  <option value="Gujarati">Gujarati (ગુજરાતી)</option>
-                </select>
-                <span style={{ fontSize: '0.72rem', color: 'var(--color-text-muted)', display: 'block', marginTop: '0.25rem' }}>
-                  The application will display text, notifications, and alerts in your selected language.
-                </span>
-              </div>
-            </div>
-
-            {/* Card 3: Security & Credentials */}
+            {/* Card 2: Security & Credentials */}
             <div style={{
               background: 'var(--color-surface-main)',
               border: '1px solid var(--color-border-subtle)',
@@ -245,154 +246,91 @@ export default function UserSettingsPage() {
               flexDirection: 'column',
               gap: '1.5rem'
             }}>
-              <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 800, color: 'var(--color-brand-primary)' }}>
-                🔒 Security Settings
+              <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 800, color: 'var(--color-brand-primary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg>
+                Security Settings
               </h3>
 
-              {/* Two-Factor Toggle */}
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--color-border-subtle)', paddingBottom: '1.25rem' }}>
+              {user?.authProvider === 'google' ? (
+                <div style={{ padding: '1rem', background: 'rgba(0,35,102,0.03)', borderRadius: '12px', border: '1px solid rgba(0,35,102,0.06)', fontSize: '0.85rem', color: 'var(--color-text-rich)', lineHeight: 1.5 }}>
+                  <strong>🔒 Google Single Sign-On Active</strong>
+                  <p style={{ margin: '0.25rem 0 0', opacity: 0.8 }}>Your account authentication is secured via Google OAuth. Password modifications and account settings are managed directly within your Google Account settings.</p>
+                </div>
+              ) : (
                 <div>
-                  <strong style={{ display: 'block', fontSize: '0.9rem', color: 'var(--color-text-rich)' }}>
-                    Two-Factor Authentication (2FA)
+                  <strong style={{ display: 'block', fontSize: '0.9rem', color: 'var(--color-text-rich)', marginBottom: '1rem' }}>
+                    Update Password
                   </strong>
-                  <span style={{ fontSize: '0.72rem', color: 'var(--color-text-muted)' }}>
-                    Secure high-value bids with an extra mobile OTP confirmation step.
-                  </span>
-                </div>
-                <label className="switch" style={{ position: 'relative', display: 'inline-block', width: '46px', height: '24px' }}>
-                  <input
-                    type="checkbox"
-                    checked={twoFactorEnabled}
-                    onChange={e => setTwoFactorEnabled(e.target.checked)}
-                    style={{ opacity: 0, width: 0, height: 0 }}
-                  />
-                  <span style={{
-                    position: 'absolute', cursor: 'pointer', top: 0, left: 0, right: 0, bottom: 0,
-                    backgroundColor: twoFactorEnabled ? 'var(--color-brand-primary)' : '#ccc',
-                    borderRadius: '24px', transition: '0.3s'
-                  }}>
-                    <span style={{
-                      position: 'absolute', content: '""', height: '18px', width: '18px', left: '3px', bottom: '3px',
-                      backgroundColor: '#fff', borderRadius: '50%', transition: '0.3s',
-                      transform: twoFactorEnabled ? 'translateX(22px)' : 'none'
-                    }} />
-                  </span>
-                </label>
-              </div>
-
-              {/* Change Password fields */}
-              <div>
-                <strong style={{ display: 'block', fontSize: '0.9rem', color: 'var(--color-text-rich)', marginBottom: '1rem' }}>
-                  Update Password
-                </strong>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                  <div>
-                    <label htmlFor="current-pw" style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: 'var(--color-text-muted)', marginBottom: '0.35rem' }}>
-                      Current Password
-                    </label>
-                    <input
-                      id="current-pw"
-                      type="password"
-                      placeholder="••••••••"
-                      value={currentPassword}
-                      onChange={e => setCurrentPassword(e.target.value)}
-                      style={{ width: '100%' }}
-                    />
-                  </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }} className="mobile-stack">
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                     <div>
-                      <label htmlFor="new-pw" style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: 'var(--color-text-muted)', marginBottom: '0.35rem' }}>
-                        New Password
+                      <label htmlFor="current-pw" style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: 'var(--color-text-muted)', marginBottom: '0.35rem' }}>
+                        Current Password
                       </label>
                       <input
-                        id="new-pw"
+                        id="current-pw"
                         type="password"
                         placeholder="••••••••"
-                        value={newPassword}
-                        onChange={e => setNewPassword(e.target.value)}
+                        value={currentPassword}
+                        onChange={e => setCurrentPassword(e.target.value)}
                         style={{ width: '100%' }}
                       />
                     </div>
-                    <div>
-                      <label htmlFor="confirm-pw" style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: 'var(--color-text-muted)', marginBottom: '0.35rem' }}>
-                        Confirm New Password
-                      </label>
-                      <input
-                        id="confirm-pw"
-                        type="password"
-                        placeholder="••••••••"
-                        value={confirmPassword}
-                        onChange={e => setConfirmPassword(e.target.value)}
-                        style={{ width: '100%' }}
-                      />
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }} className="mobile-stack">
+                      <div>
+                        <label htmlFor="new-pw" style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: 'var(--color-text-muted)', marginBottom: '0.35rem' }}>
+                          New Password
+                        </label>
+                        <input
+                          id="new-pw"
+                          type="password"
+                          placeholder="••••••••"
+                          value={newPassword}
+                          onChange={e => setNewPassword(e.target.value)}
+                          style={{ width: '100%' }}
+                        />
+                      </div>
+                      <div>
+                        <label htmlFor="confirm-pw" style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: 'var(--color-text-muted)', marginBottom: '0.35rem' }}>
+                          Confirm New Password
+                        </label>
+                        <input
+                          id="confirm-pw"
+                          type="password"
+                          placeholder="••••••••"
+                          value={confirmPassword}
+                          onChange={e => setConfirmPassword(e.target.value)}
+                          style={{ width: '100%' }}
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            </div>
-
-            {/* Card 4: Notification Preferences */}
-            <div style={{
-              background: 'var(--color-surface-main)',
-              border: '1px solid var(--color-border-subtle)',
-              borderRadius: '24px',
-              padding: '2rem',
-              boxShadow: '0 4px 20px rgba(0,0,0,0.01)',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '1.25rem'
-            }}>
-              <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 800, color: 'var(--color-brand-primary)' }}>
-                🔔 Notification Channels
-              </h3>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                {/* Email Toggle */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div>
-                    <strong style={{ display: 'block', fontSize: '0.875rem', color: 'var(--color-text-rich)' }}>Email Alerts</strong>
-                    <span style={{ fontSize: '0.72rem', color: 'var(--color-text-muted)' }}>Send bids, invoices, and outbid reports to email.</span>
-                  </div>
-                  <input
-                    type="checkbox"
-                    checked={emailEnabled}
-                    onChange={e => setEmailEnabled(e.target.checked)}
-                    style={{ width: '20px', height: '20px', cursor: 'pointer' }}
-                  />
-                </div>
-
-                {/* SMS Toggle */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div>
-                    <strong style={{ display: 'block', fontSize: '0.875rem', color: 'var(--color-text-rich)' }}>SMS / WhatsApp Alerts</strong>
-                    <span style={{ fontSize: '0.72rem', color: 'var(--color-text-muted)' }}>Send transactional messages and OTPs to mobile.</span>
-                  </div>
-                  <input
-                    type="checkbox"
-                    checked={smsEnabled}
-                    onChange={e => setSmsEnabled(e.target.checked)}
-                    style={{ width: '20px', height: '20px', cursor: 'pointer' }}
-                  />
-                </div>
-
-                {/* Browser Push Toggle */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div>
-                    <strong style={{ display: 'block', fontSize: '0.875rem', color: 'var(--color-text-rich)' }}>Browser Push Notifications</strong>
-                    <span style={{ fontSize: '0.72rem', color: 'var(--color-text-muted)' }}>Display real-time desktop pop-ups when outbid.</span>
-                  </div>
-                  <input
-                    type="checkbox"
-                    checked={pushEnabled}
-                    onChange={e => setPushEnabled(e.target.checked)}
-                    style={{ width: '20px', height: '20px', cursor: 'pointer' }}
-                  />
-                </div>
-              </div>
+              )}
             </div>
 
             {/* Save Buttons */}
-            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
+            <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+              <button
+                type="button"
+                onClick={handleLogout}
+                style={{
+                  background: 'transparent',
+                  border: '1.5px solid #f87171',
+                  color: '#f87171',
+                  fontWeight: 700,
+                  padding: '0.75rem 1.75rem',
+                  borderRadius: '12px',
+                  cursor: 'pointer',
+                  marginRight: 'auto',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem'
+                }}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" /></svg>
+                Log Out
+              </button>
+
               <button
                 type="button"
                 onClick={() => navigate('/dashboard')}
@@ -402,7 +340,8 @@ export default function UserSettingsPage() {
                   color: 'var(--color-text-rich)',
                   fontWeight: 700,
                   padding: '0.75rem 2rem',
-                  borderRadius: '12px'
+                  borderRadius: '12px',
+                  cursor: 'pointer'
                 }}
               >
                 Cancel
@@ -415,7 +354,8 @@ export default function UserSettingsPage() {
                   padding: '0.75rem 2.5rem',
                   borderRadius: '12px',
                   boxShadow: '0 4px 15px rgba(254,206,68,0.3)',
-                  minWidth: '180px'
+                  minWidth: '180px',
+                  cursor: 'pointer'
                 }}
               >
                 {submitting ? 'Saving Changes...' : 'Save Settings'}

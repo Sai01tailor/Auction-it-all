@@ -14,9 +14,9 @@ function formatINR(n) {
 }
 
 function getTimer(startTime, endTime) {
-  const now   = Date.now();
+  const now = Date.now();
   const start = new Date(startTime).getTime();
-  const end   = new Date(endTime).getTime();
+  const end = new Date(endTime).getTime();
 
   if (now < start) {
     const diff = start - now;
@@ -29,11 +29,11 @@ function getTimer(startTime, endTime) {
   }
 
   const remaining = end - now;
-  const total     = end - start;
-  const pct       = Math.min(100, Math.round(((now - start) / total) * 100));
+  const total = end - start;
+  const pct = Math.min(100, Math.round(((now - start) / total) * 100));
 
   let text;
-  if(remaining>= 86_400_000){
+  if (remaining >= 86_400_000) {
     const d = Math.floor(remaining / 86_400_000)
     const h = Math.floor((remaining % 86_400_000) / 3_600_000);
     text = `${d}d ${h}h left`;
@@ -57,10 +57,10 @@ function getTimer(startTime, endTime) {
    STATUS CONFIG  (matches Item schema enum)
 ───────────────────────────────────────── */
 const STATUS = {
-  ACTIVE:    { label: 'Live',       bg: '#10b981', text: '#fff'     },
-  SOLD:      { label: 'Sold',       bg: '#6b7280', text: '#fff'     },
-  CANCELLED: { label: 'Cancelled',  bg: '#ef4444', text: '#fff'     },
-  DRAFT:     { label: 'Draft',      bg: '#f59e0b', text: '#fff'     },
+  ACTIVE: { label: 'Live', bg: '#10b981', text: '#fff' },
+  SOLD: { label: 'Sold', bg: '#6b7280', text: '#fff' },
+  CANCELLED: { label: 'Cancelled', bg: '#ef4444', text: '#fff' },
+  DRAFT: { label: 'Draft', bg: '#f59e0b', text: '#fff' },
 };
 
 /* ─────────────────────────────────────────
@@ -73,10 +73,10 @@ const STATUS = {
 ───────────────────────────────────────── */
 export default function ProductCard({ item = {} }) {
   const navigate = useNavigate();
-  const prevBid  = useRef(item.currentHighestBid);
+  const prevBid = useRef(item.currentHighestBid);
 
-  const [timer,     setTimer]     = useState(() => getTimer(item.startTime, item.endTime));
-  const [bidPulse,  setBidPulse]  = useState(false);
+  const [timer, setTimer] = useState(() => getTimer(item.startTime, item.endTime));
+  const [bidPulse, setBidPulse] = useState(false);
 
   // Live countdown
   useEffect(() => {
@@ -97,17 +97,17 @@ export default function ProductCard({ item = {} }) {
     }
   }, [item.currentHighestBid]);
 
-  const photo    = item.photos?.[0] || null;
-  const status   = STATUS[item.status] ?? STATUS.ACTIVE;
+  const photo = item.photos?.[0] || null;
+  const status = STATUS[item.status] ?? STATUS.ACTIVE;
   const isActive = item.status === 'ACTIVE';
-  const isSold   = item.status === 'SOLD';
-  const canBid   = isActive && timer.phase === 'live';
+  const isSold = item.status === 'SOLD';
+  const canBid = isActive && timer.phase === 'live';
 
   /* ── timer colour ── */
   let timerColor = '#10b981';                           // green  — plenty of time
   if (timer.phase === 'ended' || isSold) timerColor = '#9ca3af';
-  else if (timer.urgent)                timerColor = '#ef4444'; // red < 5 min
-  else if (timer.pct >= 70)             timerColor = '#f59e0b'; // orange
+  else if (timer.urgent) timerColor = '#ef4444'; // red < 5 min
+  else if (timer.pct >= 70) timerColor = '#f59e0b'; // orange
 
   const go = () => navigate(`/auction/${item._id}`);
 
@@ -236,12 +236,12 @@ export default function ProductCard({ item = {} }) {
           }}
         >
           {isSold
-            ? '🔒 Sold'
+            ? ' Sold'
             : timer.phase === 'ended'
-            ? '🔒 Auction Closed'
-            : timer.phase === 'upcoming'
-            ? '🕐 Not Started'
-            : '⚡ Place Bid'}
+              ? ' Auction Closed'
+              : timer.phase === 'upcoming'
+                ? ' Not Started'
+                : ' Place Bid'}
         </button>
       </div>
     </article>

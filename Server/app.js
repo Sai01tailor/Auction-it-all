@@ -16,6 +16,7 @@ const settlementRoutes = require('./routes/auctionSettlement.routes');
 const reviewRoutes = require('./routes/review.routes');
 const sellerRoutes = require('./routes/seller.routes');
 const auditLogRoutes = require('./routes/auditLog.routes');
+const KYCRoutes = require('./routes/kyc.routes')
 
 // middleware
 app.use(express.json());
@@ -43,7 +44,7 @@ app.use('/api/settlements', settlementRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/seller', sellerRoutes);
 app.use('/api/audit-logs', auditLogRoutes);
-
+app.use('/api/kyc', KYCRoutes)
 //test route 
 app.get("/", (req, res) => {
   res.send(`API is running on Worker PID:${process.pid}`);

@@ -43,8 +43,11 @@ export default function BiddingConsolePage() {
   useEffect(() => {
     if (!item || !user) return;
 
-    const userKyc = user.kycStatus ?? 'Unverified';
-    if (userKyc.toLowerCase() !== 'verified') {
+    const isKycVerified = (user.kycStatus?.toLowerCase() === 'verified') || 
+                          (user.role === 'SELLER') || 
+                          (user.role === 'ADMIN');
+
+    if (!isKycVerified) {
       setAuthError('KYC_REQUIRED');
     } else if (biddingPower < item.startingPrice) {
       setAuthError('DEPOSIT_REQUIRED');

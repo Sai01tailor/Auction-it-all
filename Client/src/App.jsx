@@ -9,6 +9,8 @@ import SignUp from './Pages/Signup&login/SignUp'
 import VerifyEmail from './Pages/Signup&login/VerifyEmail'
 import Login from './Pages/Signup&login/Login'
 import ForgotPassword from './Pages/Signup&login/ForgotPassword'
+import GoogleSuccess from './Pages/Signup&login/GoogleSuccess'
+import GoogleFailure from './Pages/Signup&login/GoogleFailure'
 import Footer from './Components/Global/Footer'
 
 // Phase 1 — Discovery & Hype
@@ -87,6 +89,8 @@ const App = () => {
         <Route path="/Verify-email"     element={<VerifyEmail />} />
         <Route path="/login"            element={<Login />} />
         <Route path="/forgot-password"  element={<ForgotPassword />} />
+        <Route path="/auth/google/success" element={<GoogleSuccess />} />
+        <Route path="/auth/google/failure" element={<GoogleFailure />} />
 
         {/* Catch all 404 */}
         <Route path="*"                 element={<NotFoundPage />} />

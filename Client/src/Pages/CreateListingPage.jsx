@@ -15,7 +15,9 @@ export default function CreateListingPage() {
 
   // Form Field States
   const [title, setTitle] = useState('');
-  const [category, setCategory] = useState('Luxury Watches');
+  const [category, setCategory] = useState('Electronics');
+  const [condition, setCondition] = useState('NEW');
+
   const [description, setDescription] = useState('');
   const [meetingPoint, setMeetingPoint] = useState('');
   const [photos, setPhotos] = useState([]); // File objects
@@ -133,7 +135,11 @@ export default function CreateListingPage() {
     try {
       // Validate times
       const now = new Date();
-      const start = startTime ? new Date(startTime) : now;
+      // Add a 15-second buffer if start time is not specified or too close to current time to satisfy strict server-side validation
+      let start = startTime ? new Date(startTime) : new Date(now.getTime() + 15000);
+      if (start < new Date(now.getTime() + 5000)) {
+        start = new Date(now.getTime() + 15000);
+      }
       const end = new Date(endTime);
 
       if (start < new Date(now.getTime() - 5 * 60 * 1000)) { // allow 5 min clock skew
@@ -195,6 +201,9 @@ export default function CreateListingPage() {
       formData.append('startingPrice', String(finalStartingPrice));
       formData.append('startTime', start.toISOString());
       formData.append('endTime', end.toISOString());
+      formData.append('category', category);
+      formData.append('condition', condition);
+      formData.append('location', meetingPoint);
 
       // Append all custom fields directly to the FormData payload
       Object.keys(customFields).forEach(key => {
@@ -215,7 +224,8 @@ export default function CreateListingPage() {
       }
     } catch (err) {
       console.error(err);
-      setErrorMessage(err.message || 'An error occurred during submission.');
+      const serverMsg = err.response?.data?.message || err.message;
+      setErrorMessage(serverMsg || 'An error occurred during submission.');
     } finally {
       setIsSubmitting(false);
     }
@@ -239,7 +249,7 @@ export default function CreateListingPage() {
       <Header />
 
       <div style={{ maxWidth: '720px', margin: '3rem auto', padding: '0 1.5rem' }}>
-        
+
         {/* Step Indicator Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2.5rem' }}>
           <div>
@@ -306,7 +316,7 @@ export default function CreateListingPage() {
           overflow: 'hidden',
           padding: '2rem',
         }}>
-          
+
           <AnimatePresence mode="wait">
             {step === 1 && (
               <motion.div
@@ -351,11 +361,27 @@ export default function CreateListingPage() {
                       onChange={e => setCategory(e.target.value)}
                       style={{ ...inputStyle, background: '#fff' }}
                     >
-                      <option value="Luxury Watches">Luxury Watches</option>
-                      <option value="Fine Art & Sculpture">Fine Art & Sculpture</option>
-                      <option value="Rare Coins & Bullion">Rare Coins & Bullion</option>
-                      <option value="Vintage Vehicles">Vintage Vehicles</option>
-                      <option value="Haute Couture">Haute Couture</option>
+                      {['Electronics', 'Art', 'Vehicles', 'Fashion', 'Furniture', 'Collectibles', 'Jewellery', 'Books', 'Sports', 'Other'].map(e => (
+                        <option key={e} value={e}>{e}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1.5rem' }}>
+                  <div>
+                    <label htmlFor="item-Condition" style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, marginBottom: '0.4rem', color: 'var(--color-brand-primary)' }}>
+                      Condition
+                    </label>
+                    <select
+                      id="item-Condition"
+                      value={condition}
+                      onChange={e => setCondition(e.target.value)}
+                      style={{ ...inputStyle, background: '#fff' }}
+                    >
+                      <option value="NEW">New</option>
+                      <option value="LIKE_NEW">Like New</option>
+                      <option value="GOOD">Good</option>
+                      <option value="FAIR">Fair</option>
                     </select>
                   </div>
                 </div>
@@ -404,7 +430,7 @@ export default function CreateListingPage() {
                   <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, marginBottom: '0.4rem', color: 'var(--color-brand-primary)' }}>
                     Media Uploads (Max 5 High-res Photos)
                   </label>
-                  
+
                   <div
                     onDragOver={handleDragOver}
                     onDragLeave={handleDragLeave}
@@ -525,7 +551,7 @@ export default function CreateListingPage() {
                 </div>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                  
+
                   {/* English Format Card */}
                   <div
                     onClick={() => setAuctionType('ENGLISH')}
@@ -830,7 +856,7 @@ export default function CreateListingPage() {
                     ⚖️ Escrow 10% Verification Policy
                   </strong>
                   <span style={{ fontSize: '0.78rem', color: 'var(--color-text-muted)', lineHeight: '1.4', display: 'block' }}>
-                    To ensure bidding integrity, all participating buyers must secure a 10% wallet reserve. 
+                    To ensure bidding integrity, all participating buyers must secure a 10% wallet reserve.
                     Based on your starting configuration, bidders are required to lock a deposit of{' '}
                     <strong style={{ color: 'var(--color-brand-primary)' }}>
                       ₹{getDepositExample().toLocaleString('en-IN')}

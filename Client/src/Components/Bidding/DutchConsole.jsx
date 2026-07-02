@@ -59,7 +59,7 @@ export default function DutchConsole({ item }) {
   };
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--color-brand-primary-dark)', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #06122c 0%, #020718 100%)', display: 'flex', flexDirection: 'column' }}>
       <Header />
 
       <div style={{ flex: 1, maxWidth: '1280px', width: '100%', margin: '0 auto', padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
@@ -115,7 +115,12 @@ export default function DutchConsole({ item }) {
 
                 {purchaseStatus === 'SUCCESS' && (
                   <>
-                    <span style={{ fontSize: '4.5rem', display: 'block', marginBottom: '1rem', animation: 'bounce 1s infinite' }}>🎉</span>
+                    <span style={{ fontSize: '4.5rem', display: 'block', marginBottom: '1rem', animation: 'bounce 1s infinite' }}>
+                      <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'inline-block' }}>
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                        <polyline points="22 4 12 14.01 9 11.01" />
+                      </svg>
+                    </span>
                     <h3 style={{ fontSize: '1.8rem', fontWeight: 800, color: '#10b981', margin: '0 0 0.75rem' }}>Purchased!</h3>
                     <p style={{ color: 'var(--color-text-muted)', fontSize: '0.92rem', lineHeight: 1.6, margin: '0 0 1.75rem' }}>
                       Congratulations! You beat other bidders in the queue. Your 10% security deposit (₹{requiredDeposit.toLocaleString()}) has been held.
@@ -131,7 +136,13 @@ export default function DutchConsole({ item }) {
 
                 {purchaseStatus === 'COLLISION' && (
                   <>
-                    <span style={{ fontSize: '4.5rem', display: 'block', marginBottom: '1rem' }}>⏱️</span>
+                    <span style={{ fontSize: '4.5rem', display: 'block', marginBottom: '1rem' }}>
+                      <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'inline-block' }}>
+                        <circle cx="12" cy="12" r="10" />
+                        <line x1="12" y1="8" x2="12" y2="12" />
+                        <line x1="12" y1="16" x2="12.01" y2="16" />
+                      </svg>
+                    </span>
                     <h3 style={{ fontSize: '1.6rem', fontWeight: 800, color: '#ef4444', margin: '0 0 0.75rem' }}>Sold Out!</h3>
                     <p style={{ color: 'var(--color-text-muted)', fontSize: '0.92rem', lineHeight: 1.6, margin: '0 0 1.75rem' }}>
                       {errorMessage || 'Another bidder clicked "BUY NOW" a fraction of a second before you. Your wallet deposit was not locked.'}
@@ -173,8 +184,12 @@ export default function DutchConsole({ item }) {
               {/* Background gradient grid glow */}
               <div style={{ position: 'absolute', width: '300px', height: '300px', background: 'var(--color-brand-primary-light)', filter: 'blur(100px)', opacity: 0.1, zIndex: 0 }} />
 
-              <span style={{ fontSize: '0.75rem', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.5)', zIndex: 1, marginBottom: '0.5rem' }}>
-                📉 Current Purchase Price
+              <span style={{ fontSize: '0.75rem', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.5)', zIndex: 1, marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="23 18 13.5 8.5 8.5 13.5 1 6" />
+                  <polyline points="17 18 23 18 23 12" />
+                </svg>
+                Current Purchase Price
               </span>
               
               <h1 style={{
@@ -234,8 +249,14 @@ export default function DutchConsole({ item }) {
                 alignItems: 'center',
                 textAlign: 'center',
               }}>
-                <span style={{ fontSize: '0.72rem', fontWeight: 700, textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)', letterSpacing: '0.05em', marginBottom: '0.5rem' }}>
-                  📦 Available Quantity
+                <span style={{ fontSize: '0.72rem', fontWeight: 700, textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)', letterSpacing: '0.05em', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="16.5" y1="9.4" x2="7.5" y2="4.21" />
+                    <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+                    <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
+                    <line x1="12" y1="22.08" x2="12" y2="12" />
+                  </svg>
+                  Available Quantity
                 </span>
                 <span style={{
                   fontSize: '3rem',
@@ -250,8 +271,13 @@ export default function DutchConsole({ item }) {
                   <span style={{ fontSize: '1rem', fontWeight: 500, color: 'rgba(255,255,255,0.4)' }}>left</span>
                 </span>
                 {quantityRemaining <= 1 && (
-                  <span style={{ color: '#fca5a5', fontSize: '0.68rem', marginTop: '0.4rem', fontWeight: 600 }}>
-                    ⚠️ High Demand! Selling out.
+                  <span style={{ color: '#fca5a5', fontSize: '0.68rem', marginTop: '0.4rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                      <line x1="12" y1="9" x2="12" y2="13" />
+                      <line x1="12" y1="17" x2="12.01" y2="17" />
+                    </svg>
+                    High Demand! Selling out.
                   </span>
                 )}
               </div>
@@ -275,7 +301,6 @@ export default function DutchConsole({ item }) {
                 </div>
               </div>
 
-              {/* Buy Now Button */}
               <button
                 onClick={handleBuyNow}
                 disabled={quantityRemaining <= 0 || !hasSufficientPowerLimit}
@@ -314,20 +339,37 @@ export default function DutchConsole({ item }) {
                 }}
               >
                 {quantityRemaining <= 0 ? (
-                  '🔒 SOLD OUT'
+                  <>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                    </svg>
+                    SOLD OUT
+                  </>
                 ) : !hasSufficientPowerLimit ? (
-                  `🔐 INSUFFICIENT POWER (Requires ₹${currentBid.toLocaleString()})`
+                  <>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                    </svg>
+                    INSUFFICIENT POWER (Requires ₹{currentBid.toLocaleString()})
+                  </>
                 ) : (
                   <>
-                    <span style={{ fontSize: '1.35rem' }}>⚡</span>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+                    </svg>
                     BUY NOW FOR ₹{currentBid.toLocaleString('en-IN')}
                   </>
                 )}
               </button>
 
               {!hasSufficientPowerLimit && quantityRemaining > 0 && (
-                <p style={{ margin: '0.75rem 0 0', color: '#fca5a5', fontSize: '0.75rem', textAlign: 'center', fontWeight: 600 }}>
-                  ⚠️ Your active Bidding Power (₹{remainingPower.toLocaleString()}) is lower than the purchase price. Top up your wallet to bid.
+                <p style={{ margin: '0.75rem 0 0', color: '#fca5a5', fontSize: '0.75rem', textAlign: 'center', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.3rem' }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                    <line x1="12" y1="9" x2="12" y2="13" />
+                    <line x1="12" y1="17" x2="12.01" y2="17" />
+                  </svg>
+                  Your active Bidding Power (₹{remainingPower.toLocaleString()}) is lower than the purchase price. Top up your wallet to bid.
                 </p>
               )}
             </div>
@@ -336,9 +378,10 @@ export default function DutchConsole({ item }) {
 
           {/* Right Panel: Dutch price drop timeline & instructions */}
           <div style={{
-            background: 'var(--color-brand-primary-dark)',
+            background: 'linear-gradient(135deg, rgba(6, 18, 44, 0.4) 0%, rgba(2, 7, 24, 0.4) 100%)',
+            backdropFilter: 'blur(16px)',
             borderRadius: '20px',
-            border: '1px solid rgba(255,255,255,0.1)',
+            border: '1px solid rgba(255,255,255,0.08)',
             padding: '1.5rem',
             color: '#fff',
             display: 'flex',
@@ -346,8 +389,11 @@ export default function DutchConsole({ item }) {
             gap: '1.25rem',
             height: '100%'
           }}>
-            <h3 style={{ margin: 0, fontSize: '0.85rem', fontWeight: 800, color: '#fece44', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-              ⏱️ Price Drop Schedule
+            <h3 style={{ margin: 0, fontSize: '0.85rem', fontWeight: 800, color: '#fece44', textTransform: 'uppercase', letterSpacing: '0.06em', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
+              </svg>
+              Price Drop Schedule
             </h3>
             
             {/* Drops Timeline List */}
@@ -396,7 +442,12 @@ export default function DutchConsole({ item }) {
               lineHeight: 1.5,
               color: 'rgba(255,255,255,0.6)'
             }}>
-              <strong style={{ display: 'block', color: '#fff', marginBottom: '0.4rem', fontSize: '0.82rem' }}>💡 Dutch Auction Rules:</strong>
+              <strong style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', color: '#fff', marginBottom: '0.4rem', fontSize: '0.82rem' }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fece44" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10" /><line x1="12" y1="16" x2="12" y2="12" /><line x1="12" y1="8" x2="12.01" y2="8" />
+                </svg>
+                Dutch Auction Rules:
+              </strong>
               <ul style={{ margin: 0, paddingLeft: '1.1rem', display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
                 <li>Price descends steadily every {item.dropInterval} seconds.</li>
                 <li>There are no counter-bids. First user to click "BUY NOW" secures the item.</li>

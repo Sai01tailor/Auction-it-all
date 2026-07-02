@@ -5,6 +5,7 @@ import Header from '../Components/Global/Header';
 import AuthController from '../Components/Global/AuthController';
 import { toast } from 'react-toastify';
 import api from '../../Config/Axios';
+import { useAuth } from '../Context/AuthContext';
 
 const mapTransaction = (t) => {
   if (!t) return null;
@@ -28,6 +29,7 @@ const TYPE_FILTERS = [
 
 export default function TransactionLedgerPage() {
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   const [transactions, setTransactions] = useState([]);
   const [walletBalance, setWalletBalance] = useState(0);
@@ -44,9 +46,35 @@ export default function TransactionLedgerPage() {
           api.get('/transaction/history'),
           api.get('/wallet/balance'),
         ]);
-        const rawTxs = txRes.data?.transactions ?? txRes.data?.data ?? [];
+        let rawTxs = txRes.data?.transactions ?? txRes.data?.data ?? [];
+
+        if (user) {
+          const userId = user.userId || user._id;
+          try {
+            const virtualTxs = JSON.parse(localStorage.getItem(`virtual_transactions:${userId}`) || '[]');
+            const serverOrderIds = new Set(rawTxs.map(tx => tx.razorpayOrderId));
+            const activeVirtuals = virtualTxs.filter(tx => !serverOrderIds.has(tx.razorpayOrderId));
+            rawTxs = [...activeVirtuals, ...rawTxs];
+          } catch (e) { }
+        }
+
         setTransactions(rawTxs.map(mapTransaction).filter(Boolean));
-        setWalletBalance(balRes.data?.walletBalance ?? 0);
+
+        let serverBalance = balRes.data?.data?.availableMoney ?? balRes.data?.walletBalance ?? 0;
+        let finalBalance = serverBalance;
+        if (user) {
+          const userId = user.userId || user._id;
+          const virtualVal = localStorage.getItem(`virtual_balance:${userId}`);
+          if (virtualVal) {
+            const virtualBalance = Number(virtualVal);
+            if (virtualBalance > serverBalance) {
+              finalBalance = virtualBalance;
+            } else {
+              localStorage.removeItem(`virtual_balance:${userId}`);
+            }
+          }
+        }
+        setWalletBalance(finalBalance);
       } catch (err) {
         console.error('Failed to load ledger data', err);
         toast.error('Failed to load transaction history.');
@@ -55,7 +83,7 @@ export default function TransactionLedgerPage() {
       }
     };
     fetchData();
-  }, []);
+  }, [user]);
 
   const handleFilterChange = async (filter) => {
     setActiveFilter(filter);
@@ -64,7 +92,18 @@ export default function TransactionLedgerPage() {
       const typeMap = { 'TOP-UPS': 'TOP-UP', 'DEPOSITS': 'HELD', 'REFUNDS': 'REFUNDED' };
       const params = filter !== 'ALL' && typeMap[filter] ? { type: typeMap[filter] } : {};
       const { data } = await api.get('/transaction/history', { params });
-      const rawTxs = data?.transactions ?? data?.data ?? [];
+      let rawTxs = data?.transactions ?? data?.data ?? [];
+
+      if (user) {
+        const userId = user.userId || user._id;
+        try {
+          const virtualTxs = JSON.parse(localStorage.getItem(`virtual_transactions:${userId}`) || '[]');
+          const serverOrderIds = new Set(rawTxs.map(tx => tx.razorpayOrderId));
+          const activeVirtuals = virtualTxs.filter(tx => !serverOrderIds.has(tx.razorpayOrderId));
+          rawTxs = [...activeVirtuals, ...rawTxs];
+        } catch (e) { }
+      }
+
       setTransactions(rawTxs.map(mapTransaction).filter(Boolean));
     } catch (err) {
       console.error('Filter fetch failed', err);
@@ -107,7 +146,7 @@ export default function TransactionLedgerPage() {
 
   const handleDownloadReceipt = async (tx) => {
     try {
-      const response = await api.get(`/transactions/${tx.id}/receipt`, { responseType: 'blob' });
+      const response = await api.get(`/transaction/${tx.id}/receipt`, { responseType: 'blob' });
       const blob = new Blob([response.data], { type: 'application/pdf' });
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
