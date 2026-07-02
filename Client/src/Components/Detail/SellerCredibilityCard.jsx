@@ -9,10 +9,20 @@ import React from 'react';
 ───────────────────────────────────────────────────────────── */
 
 const KYC_CONFIG = {
-  Verified:   { icon: '✓', label: 'KYC Verified',   bg: '#ecfdf5', color: '#065f46', border: '#a7f3d0' },
-  Pending:    { icon: '⏳', label: 'Verification Pending', bg: '#fffbeb', color: '#92400e', border: '#fde68a' },
-  Failed:     { icon: '✗', label: 'KYC Failed',     bg: '#fef2f2', color: '#991b1b', border: '#fecaca' },
-  Unverified: { icon: '?', label: 'Unverified',     bg: '#f9fafb', color: '#6b7280', border: '#e5e7eb' },
+  Verified: { icon: '✓', label: 'KYC Verified', bg: '#ecfdf5', color: '#065f46', border: '#a7f3d0' },
+  Pending: {
+    icon: <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      {/* Outer Frame - Primary Navy */}
+      <path d="M5 22h14a2 2 0 0 0 2-2v-2a6 6 0 0 0-6-6H9a6 6 0 0 0-6 6v2a2 2 0 0 0 2 2z" stroke="var(--color-brand-primary)" />
+      <path d="M5 2h14a2 2 0 0 1 2 2v2a6 6 0 0 1-6 6H9a6 6 0 0 1-6-4V4a2 2 0 0 1 2-2z" stroke="var(--color-brand-primary)" />
+
+      {/* The Flowing Sand - Accent Gold */}
+      <path d="M12 12l-3-4h6l-3 4z" fill="var(--color-brand-accent-dark)" stroke="var(--color-brand-accent-dark)" />
+      <path d="M12 12l2 4h-4l2-4z" fill="var(--color-brand-accent-dark)" stroke="var(--color-brand-accent-dark)" />
+    </svg>, label: 'Verification Pending', bg: '#fffbeb', color: '#92400e', border: '#fde68a'
+  },
+  Failed: { icon: '✗', label: 'KYC Failed', bg: '#fef2f2', color: '#991b1b', border: '#fecaca' },
+  Unverified: { icon: '?', label: 'Unverified', bg: '#f9fafb', color: '#6b7280', border: '#e5e7eb' },
 };
 
 function getInitials(username, email) {
@@ -30,7 +40,14 @@ function getMemberSince(createdAt) {
 }
 
 function SellerBadge({ kyc }) {
-  const cfg = KYC_CONFIG[kyc] ?? KYC_CONFIG.Unverified;
+  let normalizedKyc = 'Unverified';
+  if (kyc) {
+    const lower = kyc.toLowerCase();
+    if (lower === 'verified') normalizedKyc = 'Verified';
+    else if (lower === 'pending') normalizedKyc = 'Pending';
+    else if (lower === 'failed') normalizedKyc = 'Failed';
+  }
+  const cfg = KYC_CONFIG[normalizedKyc] ?? KYC_CONFIG.Unverified;
   return (
     <span style={{
       display: 'inline-flex', alignItems: 'center', gap: '0.3rem',
@@ -84,10 +101,10 @@ export default function SellerCredibilityCard({ seller, item }) {
     );
   }
 
-  const initials   = getInitials(seller.username, seller.email);
-  const kycStatus  = seller.kycStatus ?? 'Unverified';
-  const isVerified = kycStatus === 'Verified';
-  const since      = getMemberSince(seller.createdAt);
+  const initials = getInitials(seller.username, seller.email);
+  const kycStatus = seller.kycStatus ?? 'Unverified';
+  const isVerified = kycStatus.toLowerCase() === 'verified';
+  const since = getMemberSince(seller.createdAt);
 
   return (
     <div
@@ -141,7 +158,7 @@ export default function SellerCredibilityCard({ seller, item }) {
               }}>
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none"
                   stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="20 6 9 17 4 12"/>
+                  <polyline points="20 6 9 17 4 12" />
                 </svg>
               </span>
             )}
@@ -155,10 +172,46 @@ export default function SellerCredibilityCard({ seller, item }) {
 
       {/* Trust metrics */}
       <div style={{ display: 'flex', flexDirection: 'column' }}>
-        <TrustMetric icon="📅" label="Member Since" value={since} />
-        <TrustMetric icon="⭐" label="Trust Score"  value="4.8 / 5.0" />
-        <TrustMetric icon="🏷️" label="Role"         value={seller.role === 'SELLER' ? 'Verified Seller' : seller.role} />
-        <TrustMetric icon="✅" label="Auctions"      value="Active on BidKar.in" />
+        <TrustMetric icon={<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          {/* Calendar Body - Primary Navy */}
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2" stroke="var(--color-brand-primary)" />
+          <line x1="3" y1="10" x2="21" y2="10" stroke="var(--color-brand-primary)" />
+
+          {/* Rings - Accent Gold */}
+          <line x1="16" y1="2" x2="16" y2="6" stroke="var(--color-brand-accent-dark)" strokeWidth="2.5" />
+          <line x1="8" y1="2" x2="8" y2="6" stroke="var(--color-brand-accent-dark)" strokeWidth="2.5" />
+        </svg>} label="Member Since" value={since} />
+        <TrustMetric icon={<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <polygon
+            points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
+            stroke="var(--color-brand-primary)"
+            fill="var(--color-brand-accent-light)"
+          />
+        </svg>} label="Trust Score" value="4.8 / 5.0" />
+        <TrustMetric icon={<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path
+            d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"
+            stroke="var(--color-brand-primary)"
+          />
+          <line x1="7" y1="7" x2="7.01" y2="7" stroke="var(--color-brand-primary)" strokeWidth="2.5" />
+        </svg>} label="Role" value={seller.role === 'SELLER' ? 'Verified Seller' : seller.role} />
+        <TrustMetric icon={<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <rect
+            x="3"
+            y="3"
+            width="18"
+            height="18"
+            rx="2"
+            ry="2"
+            stroke="var(--color-brand-primary)"
+            strokeWidth="2.5"
+          />
+          <polyline
+            points="9 12 12 15 16 9"
+            stroke="var(--color-brand-accent-dark)"
+            strokeWidth="2.5"
+          />
+        </svg>} label="Auctions" value="Active on BidKar.in" />
       </div>
 
       {/* View Profile CTA */}
@@ -198,7 +251,20 @@ export default function SellerCredibilityCard({ seller, item }) {
         border: '1px solid rgba(16,185,129,0.2)',
         borderRadius: '10px',
       }}>
-        <span style={{ fontSize: '1rem', flexShrink: 0, marginTop: '1px' }}>🛡️</span>
+        <span style={{ fontSize: '1rem', flexShrink: 0, marginTop: '1px' }}> <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="32"
+          height="32"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="#FBBF24"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+          <path d="m9 12 2 2 4-4" />
+        </svg></span>
         <p style={{ margin: 0, fontSize: '0.77rem', color: '#065f46', lineHeight: 1.5 }}>
           This seller has completed BidKar.in KYC verification. All transactions are escrow-protected.
         </p>

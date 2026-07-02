@@ -25,7 +25,17 @@ const DEFAULT_FILTERS = {
   condition:  [],
   category:   'all',
   sort:       'ending',
+  engine:     'ALL',
 };
+
+const ENGINES = [
+  { id: 'ALL',      label: 'All Auctions',          icon: '🏛️' },
+  { id: 'ENGLISH',  label: 'English (Ascending)',    icon: '📈' },
+  { id: 'DUTCH',    label: 'Dutch (Buy Now)',       icon: '📉' },
+  { id: 'BLIND',    label: 'Blind (Sealed Bid)',    icon: '✉️' },
+];
+
+
 
 const PAGE_SIZE = 16;
 
@@ -36,6 +46,7 @@ export default function ListingGridPage() {
     ...DEFAULT_FILTERS,
     search:   searchParams.get('search') ?? '',
     category: searchParams.get('category') ?? 'all',
+    engine:   searchParams.get('engine') ?? 'ALL',
   }));
 
   const [items,   setItems]   = useState([]);
@@ -91,6 +102,7 @@ export default function ListingGridPage() {
     const params = {};
     if (filters.search)   params.search   = filters.search;
     if (filters.category !== 'all') params.category = filters.category;
+    if (filters.engine !== 'ALL') params.engine = filters.engine;
     setSearchParams(params, { replace: true });
   }, [JSON.stringify(filters)]);
 
@@ -109,6 +121,7 @@ export default function ListingGridPage() {
   const hasActiveFilters =
     filters.search ||
     filters.category !== 'all' ||
+    filters.engine !== 'ALL' ||
     filters.condition.length > 0 ||
     filters.priceRange[0] > 0 ||
     filters.priceRange[1] < 10_00_000;
@@ -158,6 +171,42 @@ export default function ListingGridPage() {
         </div>
       </div>
 
+
+
+      {/* ── Bidding Engine Navigation Tabs ── */}
+      <div style={{ maxWidth: '1280px', margin: '1.5rem auto 0', padding: '0 1.5rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.5rem', background: 'rgba(0,35,102,0.03)', border: '1px solid rgba(0,35,102,0.08)', borderRadius: '16px', padding: '0.35rem' }}>
+          {ENGINES.map(eng => {
+            const active = (filters.engine || 'ALL') === eng.id;
+            return (
+              <button
+                key={eng.id}
+                onClick={() => handleFilterChange({ ...filters, engine: eng.id })}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '0.5rem',
+                  padding: '0.75rem 0.5rem',
+                  borderRadius: '12px',
+                  border: 'none',
+                  background: active ? '#fff' : 'transparent',
+                  color: active ? 'var(--color-brand-primary)' : 'var(--color-text-muted)',
+                  fontSize: '0.88rem',
+                  fontWeight: active ? 800 : 600,
+                  cursor: 'pointer',
+                  boxShadow: active ? '0 4px 15px rgba(0,35,102,0.06)' : 'none',
+                  transition: 'all 0.2s',
+                }}
+              >
+                <span style={{ fontSize: '1.1rem' }}>{eng.icon}</span>
+                <span>{eng.label}</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
       {/* ── Main Layout: Sidebar + Grid ── */}
       <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '2rem 1.5rem' }}>
         <div style={{ display: 'flex', gap: '1.75rem', alignItems: 'flex-start' }}>
@@ -178,6 +227,9 @@ export default function ListingGridPage() {
                 )}
                 {filters.category !== 'all' && (
                   <FilterChip label={`Category: ${filters.category}`} onRemove={() => handleFilterChange({ ...filters, category: 'all' })} />
+                )}
+                {filters.engine !== 'ALL' && (
+                  <FilterChip label={`Engine: ${filters.engine}`} onRemove={() => handleFilterChange({ ...filters, engine: 'ALL' })} />
                 )}
                 {filters.condition.map(c => (
                   <FilterChip key={c} label={`Condition: ${c}`} onRemove={() =>

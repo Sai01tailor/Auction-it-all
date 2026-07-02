@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../Context/AuthContext';
+import { useWallet } from '../../Context/WalletContext';
+import api from '../../../Config/Axios';
 
 /* ─────────────────────────────────────────────────────────────
    HEADER — BidKar.in
@@ -13,10 +15,18 @@ import { useAuth } from '../../Context/AuthContext';
      • Mobile hamburger drawer
 ───────────────────────────────────────────────────────────── */
 
-const NAV_LINKS = [
-  { label: 'Browse',       to: '/auctions'    },
-  { label: 'Ending Soon',  to: '/auctions?sort=ending' },
+const DESKTOP_NAV_LINKS = [
+  { label: 'Browse', to: '/auctions' },
+  { label: 'Ending Soon', to: '/auctions?sort=ending' },
   { label: 'How It Works', to: '/how-it-works' },
+];
+
+const MOBILE_NAV_LINKS = [
+  { label: 'Auctions', to: '/auctions' },
+  { label: 'Ending Soon', to: '/auctions?sort=ending' },
+  { label: 'Disputes', to: '/disputes' },
+  { label: 'How It Works', to: '/how-it-works' },
+  { label: 'Contact Us', to: '/contact/email' },
 ];
 
 /* ── Logo ── */
@@ -49,7 +59,7 @@ function BidKarLogo() {
 
 /* ── Search Bar ── */
 function SearchBar({ onSearch, collapsed }) {
-  const [query, setQuery]   = useState('');
+  const [query, setQuery] = useState('');
   const [focused, setFocused] = useState(false);
   const inputRef = useRef(null);
   const navigate = useNavigate();
@@ -232,10 +242,10 @@ function AuthSection({ user }) {
             </p>
           </div>
           {[
-            { label: '👤 My Profile',      to: '/profile'   },
-            { label: '📦 My Bids',         to: '/my-bids'   },
-            { label: '🏷️ My Listings',     to: '/sell'      },
-            { label: '⚙️ Settings',        to: '/settings'  },
+            { label: '👤 My Profile', to: '/dashboard' },
+            { label: '📦 My Bids', to: '/dashboard' },
+            { label: '🎨 Seller Studio', to: '/seller/studio' },
+            { label: '⚙️ Settings', to: '/settings' },
           ].map(({ label, to }) => (
             <Link key={to} to={to} onClick={() => setOpen(false)} style={{
               display: 'block',
@@ -247,8 +257,8 @@ function AuthSection({ user }) {
               fontWeight: 500,
               transition: 'background 0.15s',
             }}
-            onMouseEnter={e => e.currentTarget.style.background = 'var(--color-surface-bg)'}
-            onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+              onMouseEnter={e => e.currentTarget.style.background = 'var(--color-surface-bg)'}
+              onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
             >
               {label}
             </Link>
@@ -286,7 +296,7 @@ function MobileDrawer({ open, onClose }) {
         <style>{`@keyframes slideInLeft { from { transform: translateX(-100%) } to { transform: translateX(0) } }`}</style>
         <BidKarLogo />
         <div style={{ height: '1px', background: 'var(--color-border-subtle)', margin: '1rem 0' }} />
-        {NAV_LINKS.map(link => (
+        {MOBILE_NAV_LINKS.map(link => (
           <Link
             key={link.to}
             to={link.to}
@@ -321,12 +331,173 @@ function MobileDrawer({ open, onClose }) {
   );
 }
 
+/* ── Notification Bell Drodown (P20) ── */
+function NotificationBell() {
+  const [open, setOpen] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const [filter, setFilter] = useState('All');
+  const ref = useRef(null);
+  const navigate = useNavigate();
+
+  const fetchNotifications = async () => {
+    try {
+      const res = await api.get('/notifications', { params: { type: filter } });
+      setNotifications(res.data.notifications || []);
+    } catch (err) {
+      console.error('Failed to fetch notifications', err);
+    }
+  };
+
+  useEffect(() => {
+    fetchNotifications();
+
+    const interval = setInterval(() => {
+      if (document.visibilityState === 'visible') {
+        fetchNotifications();
+      }
+    }, 20000); // poll every 20s
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        fetchNotifications();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [filter]);
+
+  useEffect(() => {
+    const handler = (e) => { if (!ref.current?.contains(e.target)) setOpen(false); };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  const unreadCount = notifications.filter(n => !n.isRead).length;
+
+  const handleMarkRead = async (id, link) => {
+    try {
+      await api.patch(`/notifications/${id}/read`);
+      fetchNotifications();
+      setOpen(false);
+      if (link) navigate(link);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleMarkAllRead = async () => {
+    try {
+      await api.post('/notifications/read-all');
+      fetchNotifications();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  return (
+    <div ref={ref} style={{ position: 'relative', flexShrink: 0, display: 'flex', alignItems: 'center' }}>
+      <button
+        onClick={() => setOpen(o => !o)}
+        style={{
+          background: 'none', border: 'none', cursor: 'pointer', position: 'relative',
+          padding: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+          borderRadius: '8px'
+        }}
+      >
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--color-brand-primary)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+          <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+        </svg>
+        {unreadCount > 0 && (
+          <span style={{
+            position: 'absolute', top: '2px', right: '2px',
+            background: '#ef4444', color: '#fff', fontSize: '0.62rem', fontWeight: 900,
+            borderRadius: '50%', width: '16px', height: '16px',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            boxShadow: '0 0 0 2px #fff'
+          }}>
+            {unreadCount}
+          </span>
+        )}
+      </button>
+
+      {open && (
+        <div style={{
+          position: 'absolute', top: 'calc(100% + 8px)', right: 0,
+          background: '#fff', border: '1px solid var(--color-border-subtle)',
+          borderRadius: '16px', boxShadow: '0 12px 40px rgba(0,35,102,0.12)',
+          padding: '1rem', minWidth: '320px', maxWidth: '360px', zIndex: 100
+        }}>
+          {/* Header */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--color-border-subtle)', paddingBottom: '0.5rem', marginBottom: '0.5rem' }}>
+            <span style={{ fontWeight: 800, fontSize: '0.9rem', color: 'var(--color-brand-primary)' }}>Inbox Alerts</span>
+            <button onClick={handleMarkAllRead} style={{ background: 'none', border: 'none', color: 'var(--color-brand-primary-light)', fontSize: '0.72rem', fontWeight: 700, cursor: 'pointer' }}>Mark all read</button>
+          </div>
+
+          {/* Filters */}
+          <div style={{ display: 'flex', gap: '0.25rem', marginBottom: '0.75rem', overflowX: 'auto', paddingBottom: '0.25rem' }}>
+            {['All', 'Bids', 'Payments', 'System Alerts'].map(cat => (
+              <button
+                key={cat}
+                onClick={() => setFilter(cat)}
+                style={{
+                  padding: '0.25rem 0.5rem', border: 'none', borderRadius: '6px',
+                  background: filter === cat ? 'var(--color-brand-primary)' : 'var(--color-surface-bg)',
+                  color: filter === cat ? '#fff' : 'var(--color-text-muted)',
+                  fontSize: '0.65rem', fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap'
+                }}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+
+          {/* List */}
+          <div style={{ maxHeight: '200px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            {notifications.length === 0 ? (
+              <span style={{ fontSize: '0.78rem', color: 'var(--color-text-muted)', textAlign: 'center', display: 'block', padding: '1rem 0' }}>No notifications found.</span>
+            ) : (
+              notifications.map(n => (
+                <div
+                  key={n._id}
+                  onClick={() => handleMarkRead(n._id, n.link)}
+                  style={{
+                    padding: '0.6rem', borderRadius: '10px',
+                    background: n.isRead ? 'transparent' : 'rgba(254,206,68,0.06)',
+                    border: '1px solid',
+                    borderColor: n.isRead ? 'var(--color-border-subtle)' : 'rgba(254,206,68,0.2)',
+                    cursor: 'pointer', transition: 'all 0.15s'
+                  }}
+                  onMouseEnter={e => e.currentTarget.style.background = 'var(--color-surface-bg)'}
+                  onMouseLeave={e => e.currentTarget.style.background = n.isRead ? 'transparent' : 'rgba(254,206,68,0.06)'}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.2rem' }}>
+                    <span style={{ fontWeight: 800, fontSize: '0.78rem', color: 'var(--color-brand-primary)' }}>{n.title}</span>
+                    <span style={{ fontSize: '0.62rem', color: 'var(--color-text-muted)' }}>{n.type}</span>
+                  </div>
+                  <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--color-text-rich)', lineHeight: 1.3 }}>{n.message}</p>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* ── Main Header ────────────────────────────────────────────── */
 export default function Header() {
-  const { user }      = useAuth();
-  const [scrolled, setScrolled]   = useState(false);
-  const [mobile, setMobile]       = useState(false);
-  const [drawerOpen, setDrawer]   = useState(false);
+  const { user } = useAuth();
+  const { walletBalance } = useWallet();
+  const [scrolled, setScrolled] = useState(false);
+  const [mobile, setMobile] = useState(false);
+  const [drawerOpen, setDrawer] = useState(false);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 15);
@@ -387,7 +558,7 @@ export default function Header() {
         {/* Desktop nav links */}
         {!mobile && (
           <nav style={{ display: 'flex', gap: '0.25rem', flexShrink: 0 }}>
-            {NAV_LINKS.map(link => (
+            {DESKTOP_NAV_LINKS.map(link => (
               <Link
                 key={link.to}
                 to={link.to}
@@ -419,29 +590,50 @@ export default function Header() {
         {/* Search — desktop only */}
         <SearchBar collapsed={mobile} />
 
-        {/* Live indicator */}
-        {!mobile && (
-          <div style={{
-            display: 'flex', alignItems: 'center', gap: '0.4rem',
-            flexShrink: 0, padding: '0.3rem 0.75rem',
-            background: 'rgba(16,185,129,0.08)',
-            border: '1px solid rgba(16,185,129,0.2)',
-            borderRadius: '20px',
-          }}>
-            <span style={{
-              width: '7px', height: '7px', borderRadius: '50%',
-              background: '#10b981',
-              animation: 'bid-pulse 1.2s ease-out infinite',
-              display: 'inline-block',
-            }} />
-            <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#065f46', whiteSpace: 'nowrap' }}>
-              Live
-            </span>
-          </div>
-        )}
+        {/* Right Side Alignment Wrapper */}
+        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '1rem', flexShrink: 0 }}>
+          {/* Wallet Balance Badge */}
+          {user && (
+            <Link
+              to="/wallet"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.45rem',
+                flexShrink: 0,
+                padding: '0.35rem 0.8rem',
+                background: 'rgba(254,206,68,0.08)',
+                border: '1.5px solid rgba(254,206,68,0.4)',
+                borderRadius: '20px',
+                textDecoration: 'none',
+                transition: 'all 0.2s',
+              }}
+              onMouseEnter={e => {
+                e.currentTarget.style.background = 'rgba(254,206,68,0.15)';
+                e.currentTarget.style.transform = 'translateY(-1px)';
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.background = 'rgba(254,206,68,0.08)';
+                e.currentTarget.style.transform = 'translateY(0)';
+              }}
+            >
+              <span style={{ fontSize: '0.85rem', lineHeight: 1 }}><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FBBF24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M20 12V8H6a2 2 0 0 1-2-2c0-1.1.9-2 2-2h12v4" />
+                <path d="M4 6v12c0 1.1.9 2 2 2h14v-4" />
+                <path d="M18 12a2 2 0 0 0-2 2c0 1.1.9 2 2 2h4v-4h-4z" />
+                <circle cx="6" cy="18" r="2" />
+                <circle cx="18" cy="6" r="2" />
+              </svg></span>
+              <span style={{ fontSize: '0.78rem', fontWeight: 800, color: 'var(--color-brand-primary)', whiteSpace: 'nowrap' }} className="tabular-nums">
+                ₹{walletBalance.toLocaleString('en-IN')}
+              </span>
+            </Link>
+          )}
 
-        {/* Auth */}
-        <AuthSection user={user} />
+          {/* Auth */}
+          {user && <NotificationBell />}
+          <AuthSection user={user} />
+        </div>
       </header>
 
       <MobileDrawer open={drawerOpen} onClose={() => setDrawer(false)} />

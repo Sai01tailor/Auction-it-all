@@ -18,20 +18,21 @@ function computeState(startTime, endTime) {
 
   if (now < start) {
     const diff = start - now;
-    const h = Math.floor(diff / 3_600_000);
+    const d = Math.floor(diff / 86_400_000);
+    const h = Math.floor((diff % 86_400_000) / 3_600_000);
     const m = Math.floor((diff % 3_600_000) / 60_000);
     const s = Math.floor((diff % 60_000) / 1_000);
     return {
       phase: 'upcoming',
       label: 'Starts in',
-      h, m, s,
+      d, h, m, s,
       pct: 0,
       urgent: false,
     };
   }
 
   if (now >= end) {
-    return { phase: 'ended', label: 'Ended', h: 0, m: 0, s: 0, pct: 100, urgent: false };
+    return { phase: 'ended', label: 'Ended', d: 0, h: 0, m: 0, s: 0, pct: 100, urgent: false };
   }
 
   const remaining = end - now;
@@ -41,7 +42,8 @@ function computeState(startTime, endTime) {
   return {
     phase: 'live',
     label: 'Ends in',
-    h: Math.floor(remaining / 3_600_000),
+    d: Math.floor(remaining / 86_400_000),
+    h: Math.floor((remaining % 86_400_000) / 3_600_000),
     m: Math.floor((remaining % 3_600_000) / 60_000),
     s: Math.floor((remaining % 60_000) / 1_000),
     pct,
@@ -141,6 +143,13 @@ export default function LiveTimer({
           fontVariantNumeric: 'tabular-nums',
         }}
       >
+        {/* Days */}
+        {state.d > 0 && (
+          <>
+            <Segment value={pad(state.d)} label="D" color={color} sz={sz} />
+            <Colon color={color} sz={sz} />
+          </>
+        )}
         {/* Hours */}
         <Segment value={pad(state.h)} label="H" color={color} sz={sz} />
         <Colon color={color} sz={sz} />
@@ -150,6 +159,7 @@ export default function LiveTimer({
         {/* Seconds */}
         <Segment value={pad(state.s)} label="S" color={color} sz={sz} />
       </div>
+
 
       {/* Progress bar */}
       {showBar && (

@@ -9,26 +9,26 @@ import React, { useState } from 'react';
 ───────────────────────────────────────────────────────────── */
 
 const CATEGORIES = [
-  { id: 'all',         label: 'All',          icon: '🌐' },
-  { id: 'electronics', label: 'Electronics',   icon: '💻' },
-  { id: 'art',         label: 'Art',           icon: '🎨' },
-  { id: 'vehicles',    label: 'Vehicles',      icon: '🏍️' },
-  { id: 'jewellery',   label: 'Jewellery',     icon: '💍' },
-  { id: 'realestate',  label: 'Real Estate',   icon: '🏠' },
-  { id: 'fashion',     label: 'Fashion',       icon: '👜' },
-  { id: 'antiques',    label: 'Antiques',      icon: '🏺' },
-  { id: 'sports',      label: 'Sports',        icon: '🏋️' },
+  { id: 'all', label: 'All', icon: '🌐' },
+  { id: 'electronics', label: 'Electronics', icon: '💻' },
+  { id: 'art', label: 'Art', icon: '🎨' },
+  { id: 'vehicles', label: 'Vehicles', icon: '🏍️' },
+  { id: 'jewellery', label: 'Jewellery', icon: '💍' },
+  { id: 'realestate', label: 'Real Estate', icon: '🏠' },
+  { id: 'fashion', label: 'Fashion', icon: '👜' },
+  { id: 'antiques', label: 'Antiques', icon: '🏺' },
+  { id: 'sports', label: 'Sports', icon: '🏋️' },
 ];
 
 const CONDITIONS = ['New', 'Like New', 'Good', 'Fair'];
 
 const PRICE_PRESETS = [
-  { label: 'Any',        min: 0,       max: 10_00_000 },
-  { label: '< ₹10K',    min: 0,       max: 10_000    },
-  { label: '₹10K–50K',  min: 10_000,  max: 50_000    },
-  { label: '₹50K–2L',   min: 50_000,  max: 2_00_000  },
-  { label: '₹2L–5L',    min: 2_00_000,max: 5_00_000  },
-  { label: '> ₹5L',     min: 5_00_000,max: 10_00_000 },
+  { label: 'Any', min: 0, max: 10_00_000 },
+  { label: '< ₹10K', min: 0, max: 10_000 },
+  { label: '₹10K–50K', min: 10_000, max: 50_000 },
+  { label: '₹50K–2L', min: 50_000, max: 2_00_000 },
+  { label: '₹2L–5L', min: 2_00_000, max: 5_00_000 },
+  { label: '> ₹5L', min: 5_00_000, max: 10_00_000 },
 ];
 
 /* ── Section wrapper ── */
@@ -72,8 +72,8 @@ export default function FilterSidebar({ filters, onFilterChange }) {
     n >= 1_00_000
       ? `₹${(n / 1_00_000).toFixed(n % 1_00_000 === 0 ? 0 : 1)}L`
       : n >= 1_000
-      ? `₹${(n / 1_000).toFixed(n % 1_000 === 0 ? 0 : 0)}K`
-      : `₹${n}`;
+        ? `₹${(n / 1_000).toFixed(n % 1_000 === 0 ? 0 : 0)}K`
+        : `₹${n}`;
 
   const [min, max] = filters.priceRange ?? [0, 10_00_000];
 
@@ -137,7 +137,7 @@ export default function FilterSidebar({ filters, onFilterChange }) {
                 transition: 'all 0.15s',
               }}
             >
-              <span>{cat.icon}</span>
+              {/* <span>{cat.icon}</span> */}
               <span>{cat.label}</span>
             </button>
           ))}
@@ -201,9 +201,9 @@ export default function FilterSidebar({ filters, onFilterChange }) {
       <Section title="Auction Type">
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
           {[
-            { val: 'ACTIVE',   label: '⚡ Live Now',   color: '#10b981' },
-            { val: 'UPCOMING', label: '🕐 Upcoming',   color: '#f59e0b' },
-            { val: 'ENDED',    label: '🔒 Ended',      color: '#9ca3af' },
+            { val: 'ACTIVE', label: ' Live Now', color: '#10b981' },
+            { val: 'UPCOMING', label: ' Upcoming', color: '#f59e0b' },
+            { val: 'ENDED', label: ' Ended', color: '#9ca3af' },
           ].map(opt => (
             <label
               key={opt.val}

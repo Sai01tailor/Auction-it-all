@@ -24,7 +24,7 @@ const auditLogSchema=new mongoose.Schema({
     timestamps:true
 });
 
-module.export=mongoose.model('AuditLog',auditLogSchema)
+module.exports=mongoose.model('AuditLog',auditLogSchema)
 
 
 // // src/routes/bid.routes.js

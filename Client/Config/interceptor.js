@@ -28,8 +28,16 @@ api.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       deleteCookie('auth_token');
-      // Use full reload so React state is cleared cleanly
-      window.location.replace('/login');
+      
+      const url = error.config?.url || '';
+      const isAuthRoute = url.includes('/auth/') || 
+                          window.location.pathname.startsWith('/login') || 
+                          window.location.pathname.startsWith('/sign-up');
+
+      if (!isAuthRoute) {
+        // Use full reload so React state is cleared cleanly
+        window.location.replace('/login');
+      }
     }
     return Promise.reject(error);
   }

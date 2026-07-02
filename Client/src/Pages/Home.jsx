@@ -6,6 +6,7 @@ import TrustBar from '../Components/Home/TrustBar';
 import Carousel from '../Components/Product/Carousel';
 import ProductGrid from '../Components/Product/Product_grid';
 import { getEndingSoon } from '../services/auctionService';
+import { Zap, Tag, ShieldCheck, Lock, Scale, Clock } from 'lucide-react';
 
 /* ─────────────────────────────────────────────────────────────
    P01: Home Page — /
@@ -22,18 +23,20 @@ import { getEndingSoon } from '../services/auctionService';
 
 /* ── Live platform stats ── */
 const STATS = [
-  { value: '12,400+', label: 'Active Auctions'  },
-  { value: '3.2L+',   label: 'Registered Bidders' },
-  { value: '₹48Cr+',  label: 'Total Value Traded' },
-  { value: '99.1%',   label: 'Escrow Success Rate' },
+  { value: '12,400+', label: 'Active Auctions' },
+  { value: '3.2L+', label: 'Registered Bidders' },
+  { value: '₹48Cr+', label: 'Total Value Traded' },
+  { value: '99.1%', label: 'Escrow Success Rate' },
 ];
 
 function PlatformStats() {
   return (
-    <div style={{
-      background: 'var(--color-brand-primary-dark)',
-      borderBottom: '1px solid rgba(255,255,255,0.06)',
-    }}>
+    <div
+      className='hidden md:flex'
+      style={{
+        background: 'var(--color-brand-primary-dark)',
+        borderBottom: '1px solid rgba(255,255,255,0.06)',
+      }}>
       <div style={{
         maxWidth: '1280px', margin: '0 auto',
         padding: '0.75rem 1.5rem',
@@ -152,7 +155,8 @@ function Hero() {
             onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-2px)'}
             onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
           >
-            ⚡ Start Bidding
+            {/* <Zap size={18} />  */}
+            Start Bidding
           </button>
         </Link>
         <Link to="/sign-up" id="hero-cta-sell">
@@ -166,11 +170,14 @@ function Hero() {
             cursor: 'pointer',
             backdropFilter: 'blur(4px)',
             transition: 'all 0.2s',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '0.4rem'
           }}
             onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.18)'}
             onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
           >
-            🏷️ List Your Item
+            <Tag size={18} /> List Your Item
           </button>
         </Link>
       </div>
@@ -180,13 +187,17 @@ function Hero() {
         display: 'flex', gap: '1.5rem', marginTop: '2.5rem',
         flexWrap: 'wrap', justifyContent: 'center',
       }}>
-        {['🛡️ KYC Verified', '🔒 Escrow Protected', '⚖️ IT Act Compliant'].map(item => (
-          <span key={item} style={{
+        {[
+          { text: 'KYC Verified', icon: <ShieldCheck size={16} style={{ color: '#10b981' }} /> },
+          { text: 'Escrow Protected', icon: <Lock size={16} style={{ color: 'var(--color-brand-accent)' }} /> },
+          { text: 'IT Act Compliant', icon: <Scale size={16} style={{ color: '#60a5fa' }} /> }
+        ].map(item => (
+          <span key={item.text} style={{
             fontSize: '0.78rem', fontWeight: 600,
             color: 'rgba(255,255,255,0.55)',
-            display: 'flex', alignItems: 'center', gap: '0.3rem',
+            display: 'flex', alignItems: 'center', gap: '0.4rem',
           }}>
-            {item}
+            {item.icon} {item.text}
           </span>
         ))}
       </div>
@@ -210,7 +221,11 @@ function EndingSoonSection() {
     <section style={{ padding: '3rem 0', background: 'var(--color-surface-bg)' }}>
       <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 1.5rem' }}>
         <Carousel
-          title="⏳ Ending Soon"
+          title={
+            <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+              <Clock size={20} style={{ color: 'var(--color-brand-primary-light)' }} /> Ending Soon
+            </span>
+          }
           items={loading ? undefined : items}
           endpoint={loading ? '/items' : undefined}
           params={{ status: 'ACTIVE', limit: 12 }}

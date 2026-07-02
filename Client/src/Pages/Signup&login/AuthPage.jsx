@@ -6,6 +6,9 @@ import api from '../../../Config/interceptor'
 import { toast } from 'react-toastify'
 import { useNavigate } from 'react-router-dom'
 import OtpInput from 'react-otp-input'
+import EyeOff from '../../assets/Icons/EyeOff.svg'
+import EyeOn from '../../assets/Icons/EyeOn.svg'
+import { useAuth } from '../../Context/AuthContext'
 
 /* ─── tokens ─────────────────────────────── */
 const C = {
@@ -159,6 +162,8 @@ const strLabel = ['', 'Weak', 'Fair', 'Good', 'Strong']
 ═══════════════════════════════════════════ */
 const LoginView = ({ go }) => {
   const nav = useNavigate()
+  const { setUser } = useAuth()
+  const submittingRef = useRef(false)   // synchronous guard against double-submit
   const [email, setEmail] = useState('')
   const [pw, setPw]       = useState('')
   const [show, setShow]   = useState(false)
@@ -178,18 +183,39 @@ const LoginView = ({ go }) => {
   }
 
   const submit = ev => {
-    ev.preventDefault(); if (!validate()) return
+    ev.preventDefault()
+    if (submittingRef.current) return   // block if already in-flight
+    if (!validate()) return
+    submittingRef.current = true
     setBusy(true)
-    api.post('/login', { email, password: pw })
-      .then(r => { if (r.data?.token) setCookie('auth_token', r.data.token, { days: 7 }); toast.success('Welcome back! 🎉'); nav('/dashboard', { replace: true }) })
+    api.post('/auth/login', { email, password: pw })
+      .then(r => {
+        if (r.data?.token) {
+          setCookie('auth_token', r.data.token, { days: 7 })
+          setUser(r.data.user ?? null)
+        }
+        toast.success('Welcome back! 🎉')
+        nav('/dashboard', { replace: true })
+      })
       .catch(e => toast.error(e.response?.data?.message ?? 'Invalid credentials'))
-      .finally(() => setBusy(false))
+      .finally(() => {
+        submittingRef.current = false
+        setBusy(false)
+      })
   }
 
   const gLogin = useGoogleLogin({
     onSuccess: async t => {
       setBusy(true)
-      try { const r = await api.post('/auth/google', { token: t.access_token }); if (r.data?.token) setCookie('auth_token', r.data.token, { days: 7 }); toast.success('Signed in!'); nav('/dashboard', { replace: true }) }
+      try {
+        const r = await api.post('/auth/google', { token: t.access_token })
+        if (r.data?.token) {
+          setCookie('auth_token', r.data.token, { days: 7 })
+          setUser(r.data.user ?? null)
+        }
+        toast.success('Signed in!')
+        nav('/dashboard', { replace: true })
+      }
       catch (e) { toast.error(e.response?.data?.message ?? 'Google sign-in failed') }
       finally { setBusy(false) }
     },
@@ -210,7 +236,7 @@ const LoginView = ({ go }) => {
           <input id="l-pw" type={show ? 'text' : 'password'} placeholder="••••••••" value={pw}
             onChange={e => { setPw(e.target.value); setErr(p => ({ ...p, pw: '' })) }}
             style={{ ...pI.style, paddingRight: '2.8rem' }} onFocus={pI.onFocus} onBlur={pI.onBlur} />
-          <button type="button" onClick={() => setShow(v => !v)} style={{ position: 'absolute', right: '0.85rem', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem', padding: 0, color: '#9ca3af' }}>{show ? '🙈' : '👁️'}</button>
+          <button type="button" onClick={() => setShow(v => !v)} style={{ position: 'absolute', right: '0.85rem', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem', padding: 0, color: '#9ca3af' }}>{show ? <img src={EyeOff} style={{width:"25px", height:"25px"}}/> : <img src={EyeOn} style={{width:"25px", height:"25px"}}/>}</button>
         </div>
       </F>
 
@@ -233,6 +259,7 @@ const LoginView = ({ go }) => {
 ═══════════════════════════════════════════ */
 const SignupView = ({ go }) => {
   const nav = useNavigate()
+  const submittingRef = useRef(false)   // synchronous guard against double-submit
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [pw, setPw]       = useState('')
@@ -244,6 +271,7 @@ const SignupView = ({ go }) => {
 
   const nI = useInput(!!err.name)
   const eI = useInput(!!err.email)
+  const mI = useInput(!!err.mobile)
   const pI = useInput(!!err.pw)
 
   const validate = () => {
@@ -259,16 +287,46 @@ const SignupView = ({ go }) => {
   }
 
   const submit = ev => {
-    ev.preventDefault(); if (!validate()) return
+    ev.preventDefault()
+    if (submittingRef.current) return   // block if already in-flight
+    if (!validate()) return
+
+    // ── Pre-submit guards (avoid hitting the server unnecessarily) ──────────
+    // 1. Already logged in → go to dashboard
+    if (getCookie('auth_token')) {
+      nav('/dashboard', { replace: true })
+      return
+    }
+    // 2. Same email was previously submitted for OTP → skip to verify step
+    const pendingEmail = getCookie('Otp_Email')
+    if (pendingEmail && pendingEmail.toLowerCase() === email.toLowerCase()) {
+      toast.info('OTP already sent to this email. Please verify.')
+      go('verify')
+      return
+    }
+
+    submittingRef.current = true
     setBusy(true)
-    api.post('/signup', { username: name, email, password: pw, role: 'USER' })
+    api.post('/auth/register', { username: name, email, password: pw, role: 'USER' })
       .then(() => {
         toast.success('Account created! Check your inbox.')
         setCookie('Otp_Email', email, { days: 1, secure: true, sameSite: 'Strict' })
         go('verify')
       })
-      .catch(e => toast.error(e.response?.data?.message ?? 'Sign-up failed'))
-      .finally(() => setBusy(false))
+      .catch(e => {
+        const msg = e.response?.data?.message ?? 'Sign-up failed'
+        if (e.response?.status === 400) {
+          // Email already registered & verified → take them to login immediately
+          toast.info('This email is already registered. Please log in.', { autoClose: 2500 })
+          go('login')   // switch the card view — nav('/login') doesn't remount AuthPage
+        } else {
+          toast.error(msg)
+        }
+      })
+      .finally(() => {
+        submittingRef.current = false
+        setBusy(false)
+      })
   }
 
   const gLogin = useGoogleLogin({
@@ -293,13 +351,23 @@ const SignupView = ({ go }) => {
           onChange={e => { setEmail(e.target.value); setErr(p => ({ ...p, email: '' })) }} {...eI} />
       </F>
 
+      {/* <F label="Mobile Number" id="su-mobile" err={err.mobile}>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <select style={{ padding: '0.7rem', borderRadius: 10, border: '1.5px solid #d1d5db', outline: 'none', fontWeight: 700, fontFamily: font, background: C.white, height: 46 }}>
+            <option>+91 (IN)</option>
+          </select>
+          <input id="su-mobile" type="tel" maxLength="10" placeholder="98765 43210" value={mobile}
+            onChange={e => { setMobile(e.target.value.replace(/[^0-9]/g, '')); setErr(p => ({ ...p, mobile: '' })) }} {...mI} />
+        </div>
+      </F> */}
+
       <F label="Password" id="su-pw" err={err.pw}>
         <>
           <div style={{ position: 'relative' }}>
             <input id="su-pw" type={show ? 'text' : 'password'} placeholder="••••••••" value={pw}
               onChange={e => { setPw(e.target.value); setErr(p => ({ ...p, pw: '' })) }}
               style={{ ...pI.style, paddingRight: '2.8rem' }} onFocus={pI.onFocus} onBlur={pI.onBlur} />
-            <button type="button" onClick={() => setShow(v => !v)} style={{ position: 'absolute', right: '0.85rem', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem', padding: 0, color: '#9ca3af' }}>{show ? '🙈' : '👁️'}</button>
+            <button type="button" onClick={() => setShow(v => !v)} style={{ position: 'absolute', right: '0.85rem', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem', padding: 0, color: '#9ca3af' }}>{show ? <img src={EyeOff} style={{width:"25px", height:"25px"}}/> : <img src={EyeOn} style={{width:"25px", height:"25px"}}/>}</button>
           </div>
           {pw && (
             <div style={{ marginTop: 6 }}>
@@ -322,8 +390,7 @@ const SignupView = ({ go }) => {
           <input type="checkbox" checked={terms} onChange={e => { setTerms(e.target.checked); setErr(p => ({ ...p, terms: '' })) }}
             style={{ marginTop: 2, accentColor: C.navy, width: 16, height: 16, flexShrink: 0 }} />
           <span style={{ fontSize: '0.81rem', color: '#6b7280', lineHeight: 1.5, fontFamily: font, userSelect: 'none' }}>
-            I agree to the{' '}<a href="/terms" style={{ color: C.navy, fontWeight: 700, textDecoration: 'none' }}>Terms</a>
-            {' '}&amp;{' '}<a href="/privacy" style={{ color: C.navy, fontWeight: 700, textDecoration: 'none' }}>Privacy Policy</a>
+            I agree to the <a href="/legal/terms" style={{ color: C.navy, fontWeight: 700, textDecoration: 'none' }}>Terms</a>, <a href="/legal/privacy" style={{ color: C.navy, fontWeight: 700, textDecoration: 'none' }}>Privacy Policy</a>, and the <a href="/legal/terms" style={{ color: C.goldD, fontWeight: 800, textDecoration: 'none' }}>10% Escrow Deposit Rule</a>.
           </span>
         </label>
         <AnimatePresence>{err.terms && <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ margin: '4px 0 0', fontSize: '0.76rem', color: C.err, fontFamily: font }}>{err.terms}</motion.p>}</AnimatePresence>
@@ -348,6 +415,7 @@ const SignupView = ({ go }) => {
 ═══════════════════════════════════════════ */
 const VerifyView = ({ go }) => {
   const nav = useNavigate()
+  const { setUser } = useAuth()
   const [otp, setOtp]       = useState('')
   const [busy, setBusy]     = useState(false)
   const [cd, setCd]         = useState(0)
@@ -365,8 +433,16 @@ const VerifyView = ({ go }) => {
     const email = getCookie('Otp_Email')
     if (!email) { toast.error('Session expired'); go('signup'); return }
     setBusy(true)
-    api.post('/verify', { email, otp })
-      .then(() => { toast.success('Email verified! 🎉'); deleteCookie('Otp_Email'); nav('/dashboard', { replace: true }) })
+    api.post('/auth/verify', { email, otp })
+      .then((r) => {
+        toast.success('Email verified! 🎉')
+        if (r.data?.token) {
+          setCookie('auth_token', r.data.token, { days: 7 })
+          setUser(r.data.user ?? null)   // sync React state immediately
+        }
+        deleteCookie('Otp_Email')
+        nav('/dashboard', { replace: true })
+      })
       .catch(e => toast.error(e.response?.data?.message ?? 'Invalid or expired code'))
       .finally(() => setBusy(false))
   }
@@ -375,7 +451,7 @@ const VerifyView = ({ go }) => {
     const email = getCookie('Otp_Email')
     if (!email) { toast.error('Session expired'); go('signup'); return }
     setRes(true)
-    try { await api.post('/resend-otp', { email }); toast.success('New code sent!'); setCd(60) }
+    try { await api.post('/auth/resend-otp', { email }); toast.success('New code sent!'); setCd(60) }
     catch (e) { toast.error(e.response?.data?.message ?? 'Could not resend') }
     finally { setRes(false) }
   }
@@ -392,13 +468,14 @@ const VerifyView = ({ go }) => {
           containerStyle={{ display: 'flex', justifyContent: 'center' }}
           renderInput={(props) => (
             <input {...props} style={{
-              width: 46, height: 56, textAlign: 'center', fontFamily: font,
+              width: 46, height: 56, textAlign: 'center', fontFamily: 'monospace',
+              fontVariantNumeric: 'tabular-nums',
               fontSize: '1.4rem', fontWeight: 800, borderRadius: 10,
-              border: `2px solid ${props.value ? C.navy : '#d1d5db'}`,
+              border: `2px solid ${props.value ? C.gold : '#d1d5db'}`,
               background: props.value ? 'rgba(0,35,102,0.05)' : C.white,
               color: C.navy, outline: 'none',
               transition: 'border-color 0.2s, background 0.2s',
-              boxShadow: props.value ? '0 2px 8px rgba(0,35,102,0.12)' : 'none',
+              boxShadow: props.value ? '0 0 0 3px rgba(254, 206, 68, 0.25)' : 'none',
             }} />
           )}
         />
@@ -417,7 +494,7 @@ const VerifyView = ({ go }) => {
 
       <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
         <PrimaryBtn busy={busy} busyLabel="Verifying…" disabled={otp.length < 6}>
-          {otp.length === 6 ? '✓  Verify & Continue' : `Enter ${6 - otp.length} more digit${6 - otp.length !== 1 ? 's' : ''}`}
+          {otp.length === 6 ? 'Verify & Continue' : `Enter ${6 - otp.length} more digit${6 - otp.length !== 1 ? 's' : ''}`}
         </PrimaryBtn>
 
         <p style={{ textAlign: 'center', margin: 0, fontSize: '0.875rem', color: '#6b7280', fontFamily: font }}>
@@ -439,9 +516,39 @@ const VerifyView = ({ go }) => {
 
 /* ─── View metadata ──────────────────────── */
 const meta = {
-  login:  { step: 0, badge: '👋', title: 'Welcome back',    sub: 'Sign in to your BidKar account' },
-  signup: { step: 1, badge: '🚀', title: 'Join BidKar.in',  sub: 'Create your free bidder account' },
-  verify: { step: 2, badge: '📬', title: 'Check your inbox',sub: 'Enter the 6-digit code we emailed you' },
+  login: {
+    step: 0,
+    badge: (
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--color-brand-accent)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+        <circle cx="12" cy="7" r="4" />
+      </svg>
+    ),
+    title: 'Welcome back',
+    sub: 'Sign in to your BidKar account'
+  },
+  signup: {
+    step: 1,
+    badge: (
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--color-brand-accent)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+        <polyline points="9 11 11 13 15 9" />
+      </svg>
+    ),
+    title: 'Join BidKar.in',
+    sub: 'Create your free bidder account'
+  },
+  verify: {
+    step: 2,
+    badge: (
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--color-brand-accent)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="2" y="4" width="20" height="16" rx="2" />
+        <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+      </svg>
+    ),
+    title: 'Check your inbox',
+    sub: 'Enter the 6-digit code we emailed you'
+  },
 }
 
 /* ═══════════════════════════════════════════
@@ -595,12 +702,28 @@ const AuthPage = ({ initialView = 'login' }) => {
 
         {/* Card footer */}
         <div style={{
-          borderTop: '1px solid #f3f4f6', padding: '1rem 2rem',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 20,
+          borderTop: '1px solid #f3f4f6', padding: '1.25rem 2rem',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1.25rem',
         }}>
-          {['🔒 Secure Escrow', '✅ KYC Verified', '⚡ Live Bidding'].map(t => (
-            <span key={t} style={{ fontSize: '0.7rem', color: '#9ca3af', fontFamily: font, fontWeight: 500 }}>{t}</span>
-          ))}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.7rem', color: '#9ca3af', fontWeight: 600 }}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+              <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+            </svg>
+            <span>Secure Escrow</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.7rem', color: '#9ca3af', fontWeight: 600 }}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+            </svg>
+            <span>KYC Verified</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.7rem', color: '#9ca3af', fontWeight: 600 }}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+            </svg>
+            <span>Live Bidding</span>
+          </div>
         </div>
       </motion.div>
 

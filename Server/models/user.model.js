@@ -13,7 +13,20 @@ const userSchema=new mongoose.Schema({
     },
     password:{
         type:String,
-        required:true
+        required:false   // optional for Google OAuth users
+    },
+    googleId:{
+        type:String,
+        default:null
+    },
+    authProvider:{
+        type:String,
+        enum:['local','google'],
+        default:'local'
+    },
+    avatar:{
+        type:String,
+        default:null
     },
     role:{
         type:String,
@@ -38,9 +51,9 @@ const userSchema=new mongoose.Schema({
     kycLastAttemptAt:Date
 });
 
-// hadshing of password before saving 
+// hashing of password before saving (skip for Google OAuth users)
 userSchema.pre('save',async function(){
-    if(!this.isModified('password')) return;
+    if(!this.isModified('password') || !this.password) return;
     this.password=await bcrypt.hash(this.password,10);
 });
 

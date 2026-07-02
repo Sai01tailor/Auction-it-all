@@ -13,8 +13,8 @@ const fadeUp = {
 }
 
 const linkHover = {
-  rest:  { x: 0,  color: '#9ca3af' },
-  hover: { x: 5,  color: '#fece44' },
+  rest: { x: 0, color: '#9ca3af' },
+  hover: { x: 5, color: '#fece44' },
 }
 
 /* ── sub-components ── */
@@ -74,29 +74,29 @@ const Footer = () => {
   const year = new Date().getFullYear()
 
   const marketplace = [
-    { label: 'Live Auction',      to: '/auctions/live'     },
-    { label: 'Ending Soon',       to: '/auctions/ending'   },
-    { label: 'Category Sitemap',  to: '/sitemap'           },
-    { label: 'Featured Sellers',  to: '/sellers/featured'  },
+    { label: 'Live Auction', to: '/auctions' },
+    { label: 'Ending Soon', to: '/auctions?sort=ending' },
+    { label: 'Category Sitemap', to: '/sitemap' },
+    { label: 'Featured Sellers', to: '/auctions' },
   ]
   const helpTrust = [
-    { label: 'How it Works?',       to: '/how-it-works'   },
-    { label: 'Safety Handoff Guide',to: '/safety'         },
-    { label: 'Dispute Center',      to: '/disputes'       },
-    { label: 'FAQs',                to: '/faqs'           },
+    { label: 'How it Works?', to: '/how-it-works' },
+    { label: 'Safety Handoff Guide', to: '/how-it-works' },
+    { label: 'Dispute Center', to: '/disputes' },
+    { label: 'FAQs', to: '/how-it-works' },
   ]
   const contact = [
-    { label: 'Support Email',     to: '/contact/email'      },
-    { label: 'Emergency HelpLine',to: '/contact/helpline'   },
-    { label: 'Grievance Officer', to: '/contact/grievance'  },
-    { label: 'Office Address',    to: '/contact/address'    },
+    { label: 'Support Email', to: '/contact/email' },
+    { label: 'Emergency HelpLine', to: '/contact/helpline' },
+    { label: 'Grievance Officer', to: '/contact/grievance' },
+    { label: 'Office Address', to: '/contact/address' },
   ]
 
   const legalLinks = [
-    { label: 'Terms of Service',   to: '/terms'    },
-    { label: 'Privacy Policy',     to: '/privacy'  },
-    { label: 'IT Act Compliance',  to: '/it-act'   },
-    { label: 'TDS / Tax Info',     to: '/tax-info' },
+    { label: 'Terms of Service', to: '/legal/terms' },
+    { label: 'Privacy Policy', to: '/legal/privacy' },
+    { label: 'IT Act Compliance', to: '/legal/it-act' },
+    { label: 'TDS / Tax Info', to: '/legal/tax-info' },
   ]
 
   return (
@@ -173,9 +173,9 @@ const Footer = () => {
             {/* social icons (SVG inline) */}
             <div style={{ display: 'flex', gap: '0.625rem' }}>
               {[
-                { label: 'Twitter/X',  path: 'M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z' },
+                { label: 'Twitter/X', path: 'M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z' },
                 { label: 'Instagram', path: 'M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37zM17.5 6.5a1 1 0 1 0-1-1 1 1 0 0 0 1 1zM20.07 4.93A10 10 0 0 0 4 15a10 10 0 1 0 16.07-10.07z' },
-                { label: 'LinkedIn',  path: 'M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6zM2 9h4v12H2zM4 3a2 2 0 1 1 0 4 2 2 0 0 1 0-4z' },
+                { label: 'LinkedIn', path: 'M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6zM2 9h4v12H2zM4 3a2 2 0 1 1 0 4 2 2 0 0 1 0-4z' },
               ].map(({ label, path }) => (
                 <motion.a
                   key={label}
@@ -216,8 +216,8 @@ const Footer = () => {
 
           {/* link columns */}
           <FooterLinkGroup title="Market Place" links={marketplace} colIndex={1} />
-          <FooterLinkGroup title="Help &amp; Trust" links={helpTrust}   colIndex={2} />
-          <FooterLinkGroup title="Contact"       links={contact}     colIndex={3} />
+          <FooterLinkGroup title="Help &amp; Trust" links={helpTrust} colIndex={2} />
+          <FooterLinkGroup title="Contact" links={contact} colIndex={3} />
         </div>
 
         {/* ── divider ── */}

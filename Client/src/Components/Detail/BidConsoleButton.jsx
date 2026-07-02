@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../Context/AuthContext';
+import { useWallet } from '../../Context/WalletContext';
+import { toast } from 'react-toastify';
 
 /* ─────────────────────────────────────────────────────────────
    BidConsoleButton — Primary CTA for P03 Auction Detail
@@ -10,17 +12,46 @@ import { useAuth } from '../../Context/AuthContext';
      currentBid {number} — live bid from useSocket
 ───────────────────────────────────────────────────────────── */
 export default function BidConsoleButton({ item, currentBid }) {
-  const { user }    = useAuth();
-  const navigate    = useNavigate();
+  const { user } = useAuth();
+  const { biddingPower } = useWallet();
+  const navigate = useNavigate();
   const [hover, setHover] = useState(false);
+  const [isWatchlisted, setIsWatchlisted] = useState(() => {
+    try {
+      const saved = localStorage.getItem('watchlist');
+      const list = saved ? JSON.parse(saved) : [];
+      return list.some(x => x._id === item._id);
+    } catch {
+      return false;
+    }
+  });
+
+  const handleWatchlistToggle = () => {
+    try {
+      const saved = localStorage.getItem('watchlist');
+      let list = saved ? JSON.parse(saved) : [];
+      if (isWatchlisted) {
+        list = list.filter(x => x._id !== item._id);
+        setIsWatchlisted(false);
+        toast.success('Removed from watchlist! ');
+      } else {
+        list.push(item);
+        setIsWatchlisted(true);
+        toast.success('Added to watchlist! ');
+      }
+      localStorage.setItem('watchlist', JSON.stringify(list));
+    } catch (err) {
+      console.error('Failed to toggle watchlist', err);
+    }
+  };
 
   if (!item) return null;
 
-  const now      = Date.now();
+  const now = Date.now();
   const hasEnded = new Date(item.endTime).getTime() <= now;
   const hasStarted = new Date(item.startTime).getTime() <= now;
   const isActive = item.status === 'ACTIVE' && hasStarted && !hasEnded;
-  const isSold   = item.status === 'SOLD';
+  const isSold = item.status === 'SOLD';
   const isCancelled = item.status === 'CANCELLED';
   const notLoggedIn = !user;
 
@@ -28,32 +59,42 @@ export default function BidConsoleButton({ item, currentBid }) {
   let label, bg, disabled, tooltip;
 
   if (isSold) {
-    label = '🔒 Item Sold';
+    label = ' Item Sold';
     bg = '#6b7280';
     disabled = true;
     tooltip = 'This auction has ended and the item has been sold.';
   } else if (isCancelled) {
-    label = '❌ Auction Cancelled';
+    label = ' Auction Cancelled';
     bg = '#ef4444';
     disabled = true;
     tooltip = 'This auction was cancelled by the seller.';
   } else if (hasEnded) {
-    label = '⏰ Auction Closed';
+    label = ' Auction Closed';
     bg = '#9ca3af';
     disabled = true;
     tooltip = 'Bidding time has expired for this item.';
   } else if (!hasStarted) {
-    label = '🕐 Bidding Not Open Yet';
+    label = ' Bidding Not Open Yet';
     bg = '#f59e0b';
     disabled = true;
     tooltip = 'This auction has not started yet. Check back soon!';
   } else if (notLoggedIn) {
-    label = '🔐 Sign In to Bid';
+    label = ' Sign In to Bid';
     bg = 'var(--color-brand-primary)';
     disabled = false;
     tooltip = 'You must be signed in to place a bid.';
+  } else if ((user?.kycStatus ?? 'Unverified').toLowerCase() !== 'verified') {
+    label = ' Complete KYC to Bid';
+    bg = 'var(--color-brand-primary)';
+    disabled = false;
+    tooltip = 'KYC verification is required to participate in live bidding.';
+  } else if (biddingPower < item.startingPrice) {
+    label = ' Deposit Escrow to Bid';
+    bg = 'var(--color-brand-primary)';
+    disabled = false;
+    tooltip = `Minimum ₹${Math.floor(item.startingPrice * 0.1).toLocaleString()} deposit required to enter this console.`;
   } else {
-    label = '⚡ Enter Bidding Console';
+    label = ' Enter Bidding Console';
     bg = 'var(--color-brand-primary)';
     disabled = false;
     tooltip = null;
@@ -63,6 +104,14 @@ export default function BidConsoleButton({ item, currentBid }) {
     if (disabled) return;
     if (notLoggedIn) {
       navigate(`/login?redirect=/auction/${item._id}/console`);
+      return;
+    }
+    if ((user?.kycStatus ?? 'Unverified').toLowerCase() !== 'verified') {
+      navigate('/kyc');
+      return;
+    }
+    if (biddingPower < item.startingPrice) {
+      navigate('/wallet');
       return;
     }
     navigate(`/auction/${item._id}/console`);
@@ -93,8 +142,8 @@ export default function BidConsoleButton({ item, currentBid }) {
             boxShadow: !disabled && hover
               ? '0 8px 24px rgba(0,35,102,0.3)'
               : !disabled
-              ? '0 4px 16px rgba(0,35,102,0.2)'
-              : 'none',
+                ? '0 4px 16px rgba(0,35,102,0.2)'
+                : 'none',
             transform: !disabled && hover ? 'translateY(-1px)' : 'translateY(0)',
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
           }}
@@ -140,25 +189,26 @@ export default function BidConsoleButton({ item, currentBid }) {
       <div style={{ display: 'flex', gap: '0.75rem' }}>
         <button
           id="btn-watchlist"
+          onClick={handleWatchlistToggle}
           style={{
             flex: 1, padding: '0.65rem',
-            background: '#fff',
-            border: '1.5px solid var(--color-border-subtle)',
+            background: isWatchlisted ? 'rgba(239, 68, 68, 0.05)' : '#fff',
+            border: isWatchlisted ? '1.5px solid rgba(239, 68, 68, 0.3)' : '1.5px solid var(--color-border-subtle)',
             borderRadius: '10px',
             fontSize: '0.85rem', fontWeight: 600,
-            color: 'var(--color-brand-primary)',
+            color: isWatchlisted ? '#ef4444' : 'var(--color-brand-primary)',
             cursor: 'pointer',
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem',
             transition: 'all 0.15s',
           }}
-          onMouseEnter={e => e.currentTarget.style.background = 'var(--color-surface-bg)'}
-          onMouseLeave={e => e.currentTarget.style.background = '#fff'}
+          onMouseEnter={e => e.currentTarget.style.background = isWatchlisted ? 'rgba(239, 68, 68, 0.1)' : 'var(--color-surface-bg)'}
+          onMouseLeave={e => e.currentTarget.style.background = isWatchlisted ? 'rgba(239, 68, 68, 0.05)' : '#fff'}
         >
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+          <svg width="15" height="15" viewBox="0 0 24 24" fill={isWatchlisted ? 'currentColor' : 'none'}
             stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
           </svg>
-          Watchlist
+          {isWatchlisted ? 'Watchlisted' : 'Watchlist'}
         </button>
         <button
           id="btn-share"
@@ -179,9 +229,9 @@ export default function BidConsoleButton({ item, currentBid }) {
         >
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
             stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-            <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
-            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
-            <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+            <circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" />
+            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
+            <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
           </svg>
           Share
         </button>
@@ -196,7 +246,11 @@ export default function BidConsoleButton({ item, currentBid }) {
           border: '1px solid rgba(254,206,68,0.3)',
           borderRadius: '10px',
         }}>
-          <span style={{ fontSize: '1rem', flexShrink: 0 }}>🔒</span>
+          <span style={{ fontSize: '1rem', flexShrink: 0 }}><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--color-brand-primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="4" y="11" width="16" height="10" rx="2" ry="2" />
+            <circle cx="12" cy="16" r="1.5" fill="var(--color-brand-primary)" />
+            <path d="M8 11V7a4 4 0 0 1 8 0v4" />
+          </svg></span>
           <p style={{ margin: 0, fontSize: '0.77rem', color: '#856100', lineHeight: 1.4 }}>
             <strong>Escrow Protected:</strong> Your bid deposit is held securely until both parties confirm handoff.
           </p>

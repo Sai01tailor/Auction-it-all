@@ -364,4 +364,185 @@
   .progress-pulse {
     animation: progress-pulse 1.2s ease-in-out infinite;
   }
+
+  /* Mobile-first Bidding Consoles Grid */
+  .console-grid-layout {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  /* Mobile-first Product Detail Gallery */
+  .gallery-grid-layout {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .gallery-thumbnails {
+    display: flex;
+    flex-direction: row;
+    gap: 0.5rem;
+    overflow-x: auto;
+    max-height: 75px;
+  }
+
+  .gallery-thumbnails::-webkit-scrollbar {
+    height: 4px;
+  }
+
+  .gallery-thumbnails::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 4px;
+  }
+
+  /* Mobile-first Dutch Media Panel */
+  .dutch-media-layout {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+
+  @media (min-width: 768px) {
+    .console-grid-layout {
+      grid-template-columns: minmax(0, 1.4fr) 1fr;
+    }
+
+    .gallery-grid-layout {
+      grid-template-columns: 150px 1fr;
+    }
+
+    .gallery-thumbnails {
+      flex-direction: column;
+      max-height: 200px;
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+
+    .gallery-thumbnails::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    .dutch-media-layout {
+      grid-template-columns: 1.2fr 1fr;
+    }
+  }
+
+  /* =========================================
+     AUCTION DETAIL PAGE RESPONSIVE LAYOUT
+     ========================================= */
+  .auction-detail-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "gallery"
+      "sidebar"
+      "description"
+      "rules";
+    gap: 1.5rem;
+  }
+
+  .detail-grid-gallery {
+    grid-area: gallery;
+  }
+
+  .detail-grid-description {
+    grid-area: description;
+  }
+
+  .detail-grid-rules {
+    grid-area: rules;
+  }
+
+  .detail-grid-sidebar {
+    grid-area: sidebar;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    position: static;
+  }
+
+  .skeleton-grid-container {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .auction-details-table {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+  }
+
+  @media (max-width: 480px) {
+    .auction-details-table {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (min-width: 900px) {
+    .auction-detail-grid {
+      grid-template-columns: minmax(0, 1fr) 370px;
+      grid-template-areas:
+        "gallery sidebar"
+        "description sidebar"
+        "rules sidebar";
+      gap: 2rem;
+    }
+
+    .detail-grid-sidebar {
+      position: sticky;
+      top: 84px;
+    }
+
+    .skeleton-grid-container {
+      grid-template-columns: minmax(0, 1fr) 380px;
+      gap: 2.5rem;
+    }
+  }
+
+  /* =========================================
+     SELLER PROFILE PAGE RESPONSIVE LAYOUT
+     ========================================= */
+  .seller-profile-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2.5rem;
+    max-width: 1200px;
+    margin: -80px auto 4rem;
+    padding: 0 1.5rem;
+    position: relative;
+    z-index: 10;
+  }
+
+  @media (min-width: 1024px) {
+    .seller-profile-grid {
+      grid-template-columns: 320px 1fr;
+    }
+  }
+
+  .legal-hub-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+
+  @media (min-width: 1024px) {
+    .legal-hub-grid {
+      grid-template-columns: 290px 1fr;
+    }
+  }
+
+  .contact-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+
+  @media (min-width: 1024px) {
+    .contact-grid {
+      grid-template-columns: 290px 1fr;
+    }
+  }
 }

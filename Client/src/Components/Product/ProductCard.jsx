@@ -33,7 +33,11 @@ function getTimer(startTime, endTime) {
   const pct       = Math.min(100, Math.round(((now - start) / total) * 100));
 
   let text;
-  if (remaining >= 3_600_000) {
+  if(remaining>= 86_400_000){
+    const d = Math.floor(remaining / 86_400_000)
+    const h = Math.floor((remaining % 86_400_000) / 3_600_000);
+    text = `${d}d ${h}h left`;
+  } else if (remaining >= 3_600_000) {
     const h = Math.floor(remaining / 3_600_000);
     const m = Math.floor((remaining % 3_600_000) / 60_000);
     text = `${h}h ${m}m left`;

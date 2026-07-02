@@ -5,7 +5,7 @@ import MediaGallery from '../Components/Detail/MediaGallery';
 import BiddingStatsCard from '../Components/Detail/BiddingStatsCard';
 import SellerCredibilityCard from '../Components/Detail/SellerCredibilityCard';
 import BidConsoleButton from '../Components/Detail/BidConsoleButton';
-import { getAuctionById } from '../services/auctionService';
+import { getAuctionById, getSellerProfile } from '../services/auctionService';
 import { useSocket } from '../hooks/useSocket';
 
 /* ─────────────────────────────────────────────────────────────
@@ -21,7 +21,7 @@ import { useSocket } from '../hooks/useSocket';
 function DetailSkeleton() {
   return (
     <div style={{ maxWidth: '1100px', margin: '2rem auto', padding: '0 1.5rem' }}>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 380px', gap: '2.5rem' }}>
+      <div className="skeleton-grid-container">
         <div style={{ background: '#f3f4f6', borderRadius: '16px', aspectRatio: '4/3' }} className="animate-pulse" />
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           {Array.from({ length: 4 }).map((_, i) => (
@@ -36,10 +36,10 @@ function DetailSkeleton() {
 /* ── Status badge ── */
 function StatusBadge({ status }) {
   const cfg = {
-    ACTIVE:    { label: '⚡ Live',       bg: '#ecfdf5', color: '#065f46', border: '#a7f3d0' },
-    SOLD:      { label: '🔒 Sold',       bg: '#f9fafb', color: '#6b7280', border: '#e5e7eb' },
-    CANCELLED: { label: '❌ Cancelled',  bg: '#fef2f2', color: '#991b1b', border: '#fecaca' },
-    DRAFT:     { label: '📝 Draft',      bg: '#fffbeb', color: '#92400e', border: '#fde68a' },
+    ACTIVE: { label: ' Live', bg: '#ecfdf5', color: '#065f46', border: '#a7f3d0' },
+    SOLD: { label: ' Sold', bg: '#f9fafb', color: '#6b7280', border: '#e5e7eb' },
+    CANCELLED: { label: ' Cancelled', bg: '#fef2f2', color: '#991b1b', border: '#fecaca' },
+    DRAFT: { label: ' Draft', bg: '#fffbeb', color: '#92400e', border: '#fde68a' },
   }[status] ?? { label: status, bg: '#f9fafb', color: '#6b7280', border: '#e5e7eb' };
 
   return (
@@ -73,12 +73,13 @@ function formatDate(dateStr) {
 
 /* ── Main Page ── */
 export default function AuctionDetailPage() {
-  const { id }    = useParams();
-  const navigate  = useNavigate();
+  const { id } = useParams();
+  const navigate = useNavigate();
 
-  const [item,    setItem]    = useState(null);
+  const [item, setItem] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error,   setError]   = useState(null);
+  const [error, setError] = useState(null);
+  const [sellerProfile, setSellerProfile] = useState(null);
 
   const { currentBid } = useSocket(id, item?.currentHighestBid ?? 0);
 
@@ -88,7 +89,15 @@ export default function AuctionDetailPage() {
     setError(null);
 
     getAuctionById(id)
-      .then(data => setItem(data))
+      .then(data => {
+        setItem(data);
+        const sellerIdVal = typeof data.sellerId === 'object' ? data.sellerId?._id : data.sellerId;
+        if (sellerIdVal) {
+          getSellerProfile(sellerIdVal)
+            .then(prof => setSellerProfile(prof))
+            .catch(err => console.warn('Failed to load seller profile details', err));
+        }
+      })
       .catch(() => setError('Auction not found or an error occurred.'))
       .finally(() => setLoading(false));
   }, [id]);
@@ -117,7 +126,11 @@ export default function AuctionDetailPage() {
     );
   }
 
-  const seller = item?.sellerId;
+  const seller = item?.sellerId ? {
+    ...item.sellerId,
+    kycStatus: sellerProfile?.kycStatus ?? item.sellerId.kycStatus,
+    createdAt: sellerProfile?.joinedDate ? new Date(sellerProfile.joinedDate) : item.sellerId.createdAt,
+  } : null;
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--color-surface-bg)' }}>
@@ -169,85 +182,88 @@ export default function AuctionDetailPage() {
           </div>
         </div>
 
-        {/* ── Two-column layout ── */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'minmax(0, 1fr) 370px',
-          gap: '2rem',
-          alignItems: 'start',
-        }}>
-          {/* Left: Gallery */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.75rem' }}>
+        {/* ── Responsive Layout ── */}
+        <div className="auction-detail-grid">
+          {/* Gallery */}
+          <div className="detail-grid-gallery">
             <MediaGallery photos={item?.photos ?? []} title={item?.title} />
+          </div>
 
-            {/* Description Card */}
-            <div style={{
-              background: '#fff',
-              border: '1px solid var(--color-border-subtle)',
-              borderRadius: '16px',
-              padding: '1.5rem',
-              boxShadow: '0 2px 8px rgba(0,35,102,0.04)',
-            }}>
-              <h3 style={{ margin: '0 0 1rem', fontSize: '1rem', fontWeight: 700, color: 'var(--color-brand-primary)' }}>
-                About This Item
-              </h3>
-              <p style={{ margin: 0, fontSize: '0.93rem', color: 'var(--color-text-muted)', lineHeight: 1.75 }}>
-                {item?.description ?? 'No description provided.'}
-              </p>
+          {/* Description Card */}
+          <div className="detail-grid-description" style={{
+            background: '#fff',
+            border: '1px solid var(--color-border-subtle)',
+            borderRadius: '16px',
+            padding: '1.5rem',
+            boxShadow: '0 2px 8px rgba(0,35,102,0.04)',
+          }}>
+            <h3 style={{ margin: '0 0 1rem', fontSize: '1rem', fontWeight: 700, color: 'var(--color-brand-primary)' }}>
+              About This Item
+            </h3>
+            <p style={{ margin: 0, fontSize: '0.93rem', color: 'var(--color-text-muted)', lineHeight: 1.75 }}>
+              {item?.description ?? 'No description provided.'}
+            </p>
 
-              {/* Auction details table */}
-              <div style={{ marginTop: '1.5rem', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
-                {[
-                  { label: 'Starting Price',  value: `₹${item?.startingPrice?.toLocaleString('en-IN') ?? '—'}` },
-                  { label: 'Auction Start',   value: formatDate(item?.startTime) },
-                  { label: 'Auction End',     value: formatDate(item?.endTime)   },
-                  { label: 'Item Status',     value: item?.status ?? '—'         },
-                ].map(({ label, value }) => (
-                  <div key={label} style={{
-                    padding: '0.65rem 0.85rem',
-                    background: 'var(--color-surface-bg)',
-                    borderRadius: '10px',
-                    border: '1px solid var(--color-border-subtle)',
-                  }}>
-                    <p style={{ margin: '0 0 0.2rem', fontSize: '0.67rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--color-text-muted)' }}>
-                      {label}
-                    </p>
-                    <p style={{ margin: 0, fontSize: '0.87rem', fontWeight: 600, color: 'var(--color-text-rich)' }}>
-                      {value}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Bidding rules */}
-            <div style={{
-              background: 'rgba(0,35,102,0.03)',
-              border: '1px solid rgba(0,35,102,0.1)',
-              borderRadius: '14px',
-              padding: '1.25rem',
-            }}>
-              <h4 style={{ margin: '0 0 0.75rem', fontSize: '0.88rem', fontWeight: 700, color: 'var(--color-brand-primary)' }}>
-                📋 Bidding Rules
-              </h4>
-              <ul style={{ margin: 0, padding: '0 0 0 1.25rem', display: 'flex', flexDirection: 'column', gap: '0.45rem' }}>
-                {[
-                  'A 10% refundable deposit is required to enter the bidding console.',
-                  'Your bid must be higher than the current highest bid.',
-                  'The auction closes at the exact end time — no extensions.',
-                  'Winner has 48 hours to complete the escrow payment.',
-                  'KYC verification required before placing any bid.',
-                ].map((rule, i) => (
-                  <li key={i} style={{ fontSize: '0.82rem', color: 'var(--color-text-muted)', lineHeight: 1.5 }}>
-                    {rule}
-                  </li>
-                ))}
-              </ul>
+            {/* Auction details table */}
+            <div className="auction-details-table">
+              {[
+                { label: 'Starting Price', value: `₹${item?.startingPrice?.toLocaleString('en-IN') ?? '—'}` },
+                { label: 'Auction Start', value: formatDate(item?.startTime) },
+                { label: 'Auction End', value: formatDate(item?.endTime) },
+                { label: 'Item Status', value: item?.status ?? '—' },
+              ].map(({ label, value }) => (
+                <div key={label} style={{
+                  padding: '0.65rem 0.85rem',
+                  background: 'var(--color-surface-bg)',
+                  borderRadius: '10px',
+                  border: '1px solid var(--color-border-subtle)',
+                }}>
+                  <p style={{ margin: '0 0 0.2rem', fontSize: '0.67rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--color-text-muted)' }}>
+                    {label}
+                  </p>
+                  <p style={{ margin: 0, fontSize: '0.87rem', fontWeight: 600, color: 'var(--color-text-rich)' }}>
+                    {value}
+                  </p>
+                </div>
+              ))}
             </div>
           </div>
 
+          {/* Bidding rules */}
+          <div className="detail-grid-rules" style={{
+            background: 'rgba(0,35,102,0.03)',
+            border: '1px solid rgba(0,35,102,0.1)',
+            borderRadius: '14px',
+            padding: '1.25rem',
+          }}>
+            <h4 style={{ margin: '0 0 0.75rem', fontSize: '0.88rem', fontWeight: 700, display: 'flex', alignItems: 'center', color: 'var(--color-brand-primary)' }}>
+              <span><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                {/* Document Body - Primary Navy */}
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke="var(--color-brand-primary)" />
+                <polyline points="14 2 14 8 20 8" stroke="var(--color-brand-primary)" />
+
+                {/* Rule Lines - Accent Gold */}
+                <line x1="8" y1="13" x2="16" y2="13" stroke="var(--color-brand-accent-dark)" />
+                <line x1="8" y1="17" x2="16" y2="17" stroke="var(--color-brand-accent-dark)" />
+              </svg></span> Bidding Rules
+            </h4>
+            <ul style={{ margin: 0, padding: '0 0 0 1.25rem', display: 'flex', flexDirection: 'column', gap: '0.45rem' }}>
+              {[
+                'A 10% refundable deposit is required to enter the bidding console.',
+                'Your bid must be higher than the current highest bid.',
+                'The auction closes at the exact end time — no extensions.',
+                'Winner has 48 hours to complete the escrow payment.',
+                'KYC verification required before placing any bid.',
+              ].map((rule, i) => (
+                <li key={i} style={{ fontSize: '0.82rem', color: 'var(--color-text-muted)', lineHeight: 1.5 }}>
+                  {rule}
+                </li>
+              ))}
+            </ul>
+          </div>
+
           {/* Right: Bid stats + seller + CTA */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', position: 'sticky', top: '84px' }}>
+          <div className="detail-grid-sidebar">
             <BiddingStatsCard item={item} />
             <BidConsoleButton item={item} currentBid={currentBid} />
             <SellerCredibilityCard seller={seller} item={item} />

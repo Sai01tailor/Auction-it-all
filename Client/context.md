@@ -1,5 +1,5 @@
 # BidKar.in — Client Context Document
-> Last updated: Phase 1 scaffolding · June 2026
+> Last updated: Phase 4: Seller Management · June 2026
 
 ---
 
@@ -51,7 +51,8 @@ Client/
 │   ├── App.jsx            — Route declarations (react-router-dom v7)
 │   ├── index.css          — ⛔ LOCKED — Theme + Tailwind v4 config
 │   ├── Context/
-│   │   └── AuthContext.jsx — useAuth() hook · { user, setUser, isInitializing }
+│   │   ├── AuthContext.jsx — useAuth() hook · { user, setUser, isInitializing }
+│   │   └── WalletContext.jsx — useWallet() hook · { walletBalance, biddingPower, transactions, addFunds, lockDeposit }
 │   ├── services/
 │   │   └── auctionService.js — API abstraction layer (see API section below)
 │   ├── hooks/
@@ -75,16 +76,30 @@ Client/
 │   │   │   ├── FilterSidebar.jsx  — Price range, type, condition, category filters
 │   │   │   ├── AuctionGrid.jsx    — 4-col grid with infinite scroll
 │   │   │   └── SearchBar.jsx      — Debounced search input
-│   │   └── Detail/
-│   │       ├── MediaGallery.jsx       — Hover-zoom gallery + thumbnail strip
-│   │       ├── BiddingStatsCard.jsx   — Live bid stats + synchronized countdown
-│   │       ├── SellerCredibilityCard.jsx — KYC badge, rating, seller info
-│   │       └── BidConsoleButton.jsx   — Primary CTA → /auction/:id/console
+│   │   ├── Detail/
+│   │   │   ├── MediaGallery.jsx       — Hover-zoom gallery + thumbnail strip
+│   │   │   ├── BiddingStatsCard.jsx   — Live bid stats + synchronized countdown
+│   │   │   ├── SellerCredibilityCard.jsx — KYC badge, rating, seller info
+│   │   │   └── BidConsoleButton.jsx   — Primary CTA → /auction/:id/console
+│   │   └── Bidding/
+│   │       ├── EnglishConsole.jsx  — P04: English console layout with smart buttons
+│   │       ├── LiveLeaderboard.jsx — P05: Anonymized vertical scrolling bids feed
+│   │       ├── DutchConsole.jsx    — P07: Descending price stopwatch ticker
+│   │       ├── BlindConsole.jsx    — P08: Sealed wax envelope submission form
+│   │       └── BlindReveal.jsx     — P09: Winner spotlight ranking tables
 │   └── Pages/
 │       ├── Home.jsx              — P01: Hero + EndingSoon carousel + CategoryGrid + Grid + TrustBar
 │       ├── ListingGridPage.jsx   — P02: Sidebar + 4-col AuctionGrid + SearchBar
 │       ├── AuctionDetailPage.jsx — P03: MediaGallery + BiddingStats + SellerCard + CTA
-│       └── Signup&login/         — Auth pages (pre-built, DO NOT CHANGE)
+│       ├── BiddingConsolePage.jsx — Dynamic bidding terminal router for Phase 2
+│       ├── WalletPage.jsx        — P15: Interactive 10x leverage cash wallet & power dial
+│       ├── TransactionLedgerPage.jsx — P16: Mobile-first responsive passbook rows
+│       ├── KYCPage.jsx           — P14: Aadhaar OTP server client + PAN liveness check
+│       ├── BidderDashboardPage.jsx — P17: Command tower with AnimatePresence reorder list
+│       ├── CreateListingPage.jsx — P19: Multi-step creation form & gold-pulse file uploader
+│       ├── SellerStudioPage.jsx  — P18: Metrics dashboard tiles & exchange confirmer
+│       ├── SellerProfilePage.jsx — P11: Public trust storefront & glowing verified badges
+│       └── Signup&login/         — Auth pages (unified phone OTP gateway consent checks)
 ```
 
 ---
@@ -167,9 +182,9 @@ Server emits:
 ### `<FilterSidebar onFilterChange />`
 - Emits: `{ priceRange: [min, max], type: string, condition: string[], category: string }`
 
-### `useSocket(auctionId)`
-- Returns: `{ currentBid, totalBids, lastBidder, isConnected }`
-- Dev mock: simulates a bid every 8–15 seconds
+### `useSocket(auctionId, initialBid, auctionType)`
+- Returns: `{ currentBid, totalBids, lastBidder, isConnected, quantityRemaining, nextDropPrice, nextDropCountdown, blindBidsList, isRevealed, timerExpired }`
+- Dev mock: Simulates English live bid intervals, Dutch descending price drop ticks & race condition buy-nows, and Blind envelope seals & reveal states.
 
 ---
 
@@ -180,6 +195,17 @@ Server emits:
 /auctions             → ListingGridPage.jsx (P02)
 /auction/:id          → AuctionDetailPage.jsx (P03)
 /auction/:id/console  → BiddingConsolePage (Phase 2)
+/seller/create        → CreateListingPage.jsx (P19)
+/seller/studio        → SellerStudioPage.jsx (P18)
+/seller/:id           → SellerProfilePage.jsx (P11)
+/handoff/:itemId      → HandoffRoomPage.jsx (P21 & P22)
+/disputes             → DisputeCenterPage.jsx (P24)
+/admin                → AdminPanelPage.jsx (P26)
+/legal/:section       → LegalHubPage.jsx (P28)
+/sitemap              → SitemapPage.jsx (P29)
+/invoice/:itemId      → InvoicePage.jsx (P23)
+/withdrawn            → ErrorStatePages.jsx (P30)
+/maintenance          → ErrorStatePages.jsx (P30)
 /sign-up              → SignUp.jsx
 /Verify-email         → VerifyEmail.jsx
 /login                → Login.jsx
@@ -216,12 +242,11 @@ Server emits:
 
 ## 🚦 Phase Progress
 
-- [x] Phase 0 — Project init, Auth, Footer, basic Header
-- [x] Phase 1 — Discovery & Hype (P01 Home, P02 Listing, P03 Detail) ← **CURRENT**
-- [ ] Phase 2 — Bidding Console (real-time Socket.io bidding UI)
-- [ ] Phase 3 — Seller Dashboard (create/manage listings)
-- [ ] Phase 4 — User Profile, KYC flow
-- [ ] Phase 5 — Admin Panel
+- [x] Phase 1 — Discovery & Hype (P01 Home, P02 Listing, P03 Detail, P10, P12, P29)
+- [x] Phase 2 — Bidding Console (P04 English, P05 Leaderboard, P07 Dutch, P08 Blind, P09 Reveal)
+- [x] Phase 3 — User Verification & Wallet (P13 Auth OTP, P14 KYC, P15 Wallet, P16 Ledger, P17 Dashboard)
+- [x] Phase 4 — Seller Management (P18 Seller Studio, P19 Create Listing, P11 Seller Profile)
+- [x] Phase 5 — Closing & Operations (P20-P26, P28, P30-P31) ← **COMPLETED**
 
 ---
 

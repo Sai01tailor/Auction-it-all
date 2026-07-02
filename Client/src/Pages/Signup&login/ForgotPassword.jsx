@@ -4,6 +4,7 @@ import api from '../../../Config/interceptor'
 import { toast } from 'react-toastify'
 import { useNavigate } from 'react-router-dom'
 import OtpInput from 'react-otp-input'
+import { deleteCookie } from '../../Components/Global/CookieIT'
 
 /* ─── tokens (mirrors index.css) ────────── */
 const C = {
@@ -125,7 +126,7 @@ const StepEmail = ({ onNext }) => {
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setErr('Enter a valid email'); return }
     setBusy(true)
     try {
-      await api.post('/forgot-password', { email })
+      await api.post('/auth/forgot-password', { email })
       toast.success('OTP sent to your email!')
       onNext(email)
     } catch (e) {
@@ -171,7 +172,7 @@ const StepReset = ({ email, onBack }) => {
   const resend = async () => {
     setRes(true)
     try {
-      await api.post('/forgot-password', { email })
+      await api.post('/auth/forgot-password', { email })
       toast.success('New OTP sent!')
       setCd(60)
     } catch (e) {
@@ -195,7 +196,7 @@ const StepReset = ({ email, onBack }) => {
     if (!validate()) return
     setBusy(true)
     try {
-      await api.post('/reset-password', { email, otp, newPassword: pw })
+      await api.post('/auth/reset-password', { email, otp, newPassword: pw })
       toast.success('Password reset! You can now log in.')
       nav('/login', { replace: true })
     } catch (e) {

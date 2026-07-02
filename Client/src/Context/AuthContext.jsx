@@ -20,9 +20,9 @@ export const AuthProvider = ({ children }) => {
         }
 
         // Token exists — validate it server-side and fetch the user profile
-        api.get('/me')
+        api.get('/auth/profile')
             .then((res) => {
-                setUser(res.data);
+                setUser(res.data?.user || res.data);
             })
             .catch(() => {
                 // Token is expired / tampered — clear it so the app stays clean
