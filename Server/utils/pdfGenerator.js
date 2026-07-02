@@ -52,4 +52,50 @@ const generateInvoicePDF = async (data) => {
     }
 };
 
-module.exports = { generateInvoicePDF };
+/**
+ * Generates a Receipt PDF for wallet top-up transactions
+ * @param {Object} data - Receipt data (payment details, coins added, etc.)
+ * @returns {Promise<Buffer>} - The binary PDF data
+ */
+const generateReceiptPDF = async (data) => {
+    let browser = null;
+    
+    try {
+        // 1. Point to the receipt template
+        const templatePath = path.join(__dirname, '../templates/receipt.ejs');
+
+        // 2. Render the EJS file into HTML
+        const htmlContent = await ejs.renderFile(templatePath, data);
+
+        // 3. Launch Puppeteer
+        browser = await puppeteer.launch({ 
+            headless: 'new',
+            executablePath: 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
+            args: ['--no-sandbox', '--disable-setuid-sandbox'] 
+        });
+
+        const page = await browser.newPage();
+
+        // 4. Load the HTML
+        await page.setContent(htmlContent, { waitUntil: 'networkidle0' });
+
+        // 5. Generate PDF
+        const pdfBuffer = await page.pdf({
+            format: 'A4',
+            printBackground: true,
+            margin: { top: '20px', bottom: '20px', left: '20px', right: '20px' }
+        });
+
+        return pdfBuffer; 
+
+    } catch (error) {
+        console.error("Receipt PDF Generation Error:", error);
+        throw new Error("Failed to generate receipt PDF");
+    } finally {
+        if (browser) {
+            await browser.close();
+        }
+    }
+};
+
+module.exports = { generateInvoicePDF, generateReceiptPDF };

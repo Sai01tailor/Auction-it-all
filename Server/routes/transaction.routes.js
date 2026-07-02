@@ -6,7 +6,7 @@ const authMiddleware = require('../middlewares/auth.middleware');
 // Frontend calls this to display the Top-Up history table
 router.get('/history', authMiddleware, transactionController.getMyTransactions);
 
-// Fetch PDF payment/refund receipt using Razorpay API
-router.get('/:id/receipt', authMiddleware, transactionController.getReceipt);
+// Download receipt PDF for a specific transaction
+router.get('/:transactionId/receipt', authMiddleware, transactionController.downloadReceipt);
 
 module.exports = router;

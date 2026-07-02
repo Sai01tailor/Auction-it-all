@@ -1,7 +1,6 @@
-const Transaction = require('../models/transaction.model');
-const AuctionCache = require('../redis/auction.cache');
-const htmlPdf = require('html-pdf-node');
-const axios = require('axios');
+const Transaction = require('../models/transaction.model')
+const AuctionCache = require('../redis/auction.cache')
+const { generateReceiptPDF } = require('../utils/pdfGenerator');
 
 exports.getMyTransactions = async (req, res) => {
   try {
@@ -40,16 +39,98 @@ exports.getMyTransactions = async (req, res) => {
     await AuctionCache.setCache(cacheKey, 900, responseData);
     res.status(200).json(responseData);
 
+
   } catch (err) {
     console.error("Transaction Fetch Error:", err);
     res.status(500).json({ success: false, message: "Could not fetch history." });
   }
+}
+
+/**
+ * Download Receipt PDF for a successful wallet top-up transaction
+ * GET /api/transaction/:transactionId/receipt
+ */
+exports.downloadReceipt = async (req, res) => {
+  try {
+    const { transactionId } = req.params;
+    const userId = req.user._id;
+
+    // 1. Find the transaction and verify ownership
+    const transaction = await Transaction.findById(transactionId)
+      .populate('userId', 'name email');
+
+    // 2. Security check: User can only download their own receipts
+    if (!transaction) {
+      return res.status(404).json({
+        success: false,
+        message: "Transaction not found"
+      });
+    }
+
+    if (transaction.userId._id.toString() !== userId.toString()) {
+      return res.status(403).json({
+        success: false,
+        message: "Unauthorized: You can only access your own receipts"
+      });
+    }
+
+    // 3. Only allow receipt for successful transactions
+    if (transaction.status !== 'SUCCESS') {
+      return res.status(400).json({
+        success: false,
+        message: `Receipt not available for ${transaction.status} transactions`
+      });
+    }
+
+    // 4. Prepare receipt data
+    const receiptData = {
+      receiptId: `RCPT-${transaction._id.toString().slice(-8).toUpperCase()}`,
+      date: new Date(transaction.createdAt).toLocaleDateString('en-IN', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      }),
+      transactionId: transaction.razorpayOrderId,
+      paymentId: transaction.razorpayPaymentId || 'N/A',
+      userName: transaction.userId.name,
+      userEmail: transaction.userId.email || '',
+      userId: transaction.userId._id,
+      amountPaid: (transaction.amountInPaise / 100).toFixed(2),
+      coinsAdded: transaction.coinsToBeAdded,
+      paymentMethod: 'Razorpay (Online Payment)',
+      status: transaction.status
+    };
+
+    // 5. Generate PDF using Puppeteer
+    const pdfBuffer = await generateReceiptPDF(receiptData);
+
+    // 6. Set response headers for PDF download
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition',
+      `attachment; filename=BidKar-Receipt-${receiptData.receiptId}.pdf`
+    );
+
+    // 7. Send the PDF buffer
+    res.send(pdfBuffer);
+
+  } catch (error) {
+    console.error("Receipt Generation Error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to generate receipt. Please try again later."
+    });
+  }
+}
+  } catch (err) {
+  console.error("Transaction Fetch Error:", err);
+  res.status(500).json({ success: false, message: "Could not fetch history." });
+}
 };
 
 exports.getReceipt = async (req, res) => {
   try {
     const txId = req.params.id;
-    
+
     // Find transaction and populate user
     const transaction = await Transaction.findOne({
       $or: [
@@ -67,7 +148,7 @@ exports.getReceipt = async (req, res) => {
     const email = transaction.userId?.email || 'N/A';
     const paymentId = transaction.razorpayPaymentId || 'N/A';
     const orderId = transaction.razorpayOrderId || 'N/A';
-    
+
     let isRefund = false;
     let paymentStatus = transaction.status;
     let paymentMethod = 'UPI/Card';
@@ -80,22 +161,22 @@ exports.getReceipt = async (req, res) => {
       hour: '2-digit',
       minute: '2-digit'
     });
-    
+
     // Fetch details from Razorpay REST API directly via Axios
     if (transaction.razorpayPaymentId && !transaction.razorpayPaymentId.startsWith('pay_mock_')) {
       try {
         const keyId = process.env.RAZORPAY_KEY_ID;
         const keySecret = process.env.RAZORPAY_KEY_SECRET;
         const authHeader = 'Basic ' + Buffer.from(`${keyId}:${keySecret}`).toString('base64');
-        
+
         const response = await axios.get(`https://api.razorpay.com/v1/payments/${transaction.razorpayPaymentId}`, {
           headers: { 'Authorization': authHeader }
         });
-        
+
         const payment = response.data;
         paymentMethod = payment.method ? payment.method.toUpperCase() : paymentMethod;
         paymentStatus = payment.status ? payment.status.toUpperCase() : paymentStatus;
-        
+
         // Check for refunds on this payment
         if (payment.amount_refunded && payment.amount_refunded > 0) {
           isRefund = true;
