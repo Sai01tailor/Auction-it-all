@@ -1,39 +1,36 @@
-const mongoose=require('mongoose')
+const mongoose = require('mongoose')
 
-const auditLogSchema=new mongoose.Schema({
-    userId:{
-        type:mongoose.Schema.Types.ObjectId,
-        ref:'User',
-        default:null
+const auditLogSchema = new mongoose.Schema({
+    userId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        default: null
     },
-    action:{
-        type:String,
-        required:true
+    action: {
+        type: String,
+        required: true,
+        index: true
     },
-    ipAddress:{
-        type:String,
-        required:true
+    ipAddress: {
+        type: String,
+        required: true
     },
-    deviceInfo:{
-        type:String,
+    deviceInfo: {
+        type: String,
     },
-    endPoint:{
-        type:String,
+    endpoint: {
+        type: String,
+    },
+    // For bid tracking — stores auctionId, amount, serverId, reason, etc.
+    metadata: {
+        type: mongoose.Schema.Types.Mixed,
+        default: {}
     }
-},{
-    timestamps:true
+}, {
+    timestamps: true
 });
 
-module.exports=mongoose.model('AuditLog',auditLogSchema)
+// Index for fast auction bid queries
+auditLogSchema.index({ 'metadata.auctionId': 1, createdAt: 1 });
 
-
-// // src/routes/bid.routes.js
-// const express = require('express');
-// const router = express.Router();
-// const auditTracker = require('../middlewares/auditTracker.middleware');
-// const bidController = require('../controllers/bid.controller');
-
-// // Notice we pass exactly what action is happening
-// router.post('/place-bid', auditTracker('BID_PLACED'), bidController.placeBid);
-
-// module.exports = router;
+module.exports = mongoose.model('AuditLog', auditLogSchema);
