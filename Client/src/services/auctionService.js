@@ -184,7 +184,7 @@ export async function getActiveAuctions(filters = {}, offset = 0, limit = 16) {
   };
 
   const { data } = await api.get('/items', { params: requestParams });
-  
+
   let items = (data.items ?? []).map(injectMockData);
 
   if (isEngineFilter) {
@@ -250,7 +250,7 @@ export async function submitBlindBid(itemId, amount) {
   try {
     const saved = localStorage.getItem(`all_blind_bids:${itemId}`);
     allBids = saved ? JSON.parse(saved) : [];
-  } catch (e) {}
+  } catch (e) { }
 
   allBids = allBids.filter(b => b.bidder !== username);
   allBids.push({
@@ -275,7 +275,7 @@ export async function getBlindRevealData(itemId) {
   try {
     const saved = localStorage.getItem(`all_blind_bids:${itemId}`);
     bids = saved ? JSON.parse(saved) : [];
-  } catch (e) {}
+  } catch (e) { }
 
   // Generate some realistic competitor bids deterministically to challenge the user
   const bidders = ['Bidder_8921', 'Bidder_4310', 'Bidder_7724'];
@@ -285,7 +285,7 @@ export async function getBlindRevealData(itemId) {
     if (rawDetails) {
       startingPrice = JSON.parse(rawDetails).startingPrice || 10000;
     }
-  } catch (e) {}
+  } catch (e) { }
 
   bidders.forEach((b, idx) => {
     if (!bids.some(x => x.bidder === b)) {
@@ -299,7 +299,7 @@ export async function getBlindRevealData(itemId) {
 
   // Sort descending by bid amount
   bids.sort((a, b) => b.amount - a.amount);
-  
+
   // Winner is the highest bidder (either the user or one of the competitors)
   const winner = bids.length > 0 ? bids[0] : null;
 

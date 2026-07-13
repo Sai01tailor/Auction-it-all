@@ -83,7 +83,11 @@ export default function BidConsoleButton({ item, currentBid }) {
     bg = 'var(--color-brand-primary)';
     disabled = false;
     tooltip = 'You must be signed in to place a bid.';
-  } else if ((user?.kycStatus ?? 'Unverified').toLowerCase() !== 'verified') {
+  } else if (
+    (user?.kycStatus ?? 'Unverified').toLowerCase() !== 'verified' &&
+    user?.role !== 'SELLER' &&
+    user?.role !== 'ADMIN'
+  ) {
     label = ' Complete KYC to Bid';
     bg = 'var(--color-brand-primary)';
     disabled = false;
@@ -106,7 +110,11 @@ export default function BidConsoleButton({ item, currentBid }) {
       navigate(`/login?redirect=/auction/${item._id}/console`);
       return;
     }
-    if ((user?.kycStatus ?? 'Unverified').toLowerCase() !== 'verified') {
+    if (
+      (user?.kycStatus ?? 'Unverified').toLowerCase() !== 'verified' &&
+      user?.role !== 'SELLER' &&
+      user?.role !== 'ADMIN'
+    ) {
       navigate('/kyc');
       return;
     }

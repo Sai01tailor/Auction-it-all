@@ -171,7 +171,7 @@ const initSockets = (server) => {
         // 6. Update the Item
         item.currentHighestBid = amount;
         item.winnerId = userId;
-        await item.save();
+        await item.save({ validateBeforeSave: false });
 
         // Update Redis and get the new rankings
         const leaderboard = await LeaderboardService.updateLeaderboard(auctionId, user.username, amount);

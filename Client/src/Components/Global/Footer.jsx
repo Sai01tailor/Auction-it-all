@@ -2,6 +2,33 @@ import React from 'react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 
+function BidKarLogo() {
+  return (
+    <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', textDecoration: 'none', flexShrink: 0 }}>
+      {/* <div style={{
+        width: '34px', height: '34px',
+        borderRadius: '9px',
+        background: 'linear-gradient(135deg, #fece4488, #e5b630)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        flexShrink: 0,
+        boxShadow: '0 2px 8px rgba(254,206,68,0.4)',
+      }}>
+        <span style={{ fontSize: '1.05rem', fontWeight: 800, color: '#002366', lineHeight: 1 }}>B</span>
+      </div>
+      <span style={{
+        fontSize: '1.35rem',
+        fontWeight: 800,
+        color: 'var(--color-brand-primary)',
+        letterSpacing: '-0.04em',
+        lineHeight: 1,
+        whiteSpace: 'nowrap',
+      }}>
+        BidKar<span style={{ color: '#fece4488' }}>.in</span> */}
+      {/* </span> */}
+      <img src='src/assets/LongLogo.png' alt="logo" style={{ width: '100px', height: 'auto', filter: 'drop-shadow(1px 0px 0px #fece4488) drop-shadow(-1px 0px 0px #fece4488) drop-shadow(0px 1px 0px #fece4488) drop-shadow(0px -1px 0px #fece4488)' }} />
+    </Link>
+  );
+}
 /* ── animation helpers ── */
 const fadeUp = {
   hidden: { opacity: 0, y: 24 },
@@ -44,7 +71,7 @@ const FooterLinkGroup = ({ title, links, colIndex }) => (
         left: 0,
         width: '28px',
         height: '2px',
-        background: '#fece44',
+        background: '#fece4488',
         borderRadius: '2px',
       }} />
     </h3>
@@ -109,7 +136,7 @@ const Footer = () => {
       {/* ── top accent line ── */}
       <div style={{
         height: '3px',
-        background: 'linear-gradient(90deg, #fece44 0%, #e5b630 50%, #fece44 100%)',
+        background: 'linear-gradient(90deg, #fece4488 0%, #e5b630 50%, #fece4488 100%)',
       }} />
 
       {/* ── main grid ── */}
@@ -133,7 +160,7 @@ const Footer = () => {
             viewport={{ once: true, amount: 0.3 }}
             style={{ gridColumn: 'span 1' }}
           >
-            <div style={{
+            {/* <div style={{
               display: 'flex',
               alignItems: 'center',
               gap: '0.5rem',
@@ -143,7 +170,7 @@ const Footer = () => {
                 width: '36px',
                 height: '36px',
                 borderRadius: '8px',
-                background: 'linear-gradient(135deg, #fece44, #e5b630)',
+                background: 'linear-gradient(135deg, #fece4488, #e5b630)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -157,9 +184,10 @@ const Footer = () => {
                 color: '#ffffff',
                 letterSpacing: '-0.03em',
               }}>
-                BidKar<span style={{ color: '#fece44' }}>.in</span>
+                BidKar<span style={{ color: '#fece4488' }}>.in</span>
               </span>
-            </div>
+            </div> */}
+            <BidKarLogo />
 
             <p style={{
               fontSize: '0.875rem',
@@ -181,7 +209,7 @@ const Footer = () => {
                   key={label}
                   href="#"
                   aria-label={label}
-                  whileHover={{ scale: 1.15, backgroundColor: '#fece44' }}
+                  whileHover={{ scale: 1.15, backgroundColor: '#fece4488' }}
                   transition={{ duration: 0.2 }}
                   style={{
                     width: '34px',
@@ -284,7 +312,7 @@ const Footer = () => {
                   transition: 'color 0.2s ease',
                   fontWeight: 400,
                 }}
-                onMouseEnter={e => (e.target.style.color = '#fece44')}
+                onMouseEnter={e => (e.target.style.color = '#fece4488')}
                 onMouseLeave={e => (e.target.style.color = '#6b7280')}
               >
                 {label}
@@ -308,7 +336,7 @@ const Footer = () => {
           }}
         >
           © {year}{' '}
-          <span style={{ color: '#fece44', fontWeight: 600 }}>BidKar.in</span>
+          <span style={{ color: '#fece4488', fontWeight: 600 }}>BidKar.in</span>
           . All rights reserved. Regulated under applicable Indian e-commerce &amp; IT laws.
         </motion.p>
       </div>

@@ -61,7 +61,7 @@ export function useSocket(auctionId, initialBid = 0, auctionType = 'ENGLISH', it
     }
 
     const socketUrl = import.meta.env.VITE_API_BASE_URL.replace(/\/api$/, '').replace(/\/api\/$/, '');
-    
+
     // Connect to Socket.io server with authentication payload
     const socket = io(socketUrl, {
       auth: { token },
@@ -86,7 +86,7 @@ export function useSocket(auctionId, initialBid = 0, auctionType = 'ENGLISH', it
       setSocketError(null);
       setCurrentBid(payload.newHighestBid);
       setTotalBids(prev => prev + 1);
-      
+
       const isMe = payload.bidderId === user?.userId;
       setLastBidder({
         username: isMe ? 'You' : `Bidder_${payload.bidderId.slice(-4)}`

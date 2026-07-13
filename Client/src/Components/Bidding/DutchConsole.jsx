@@ -26,7 +26,7 @@ export default function DutchConsole({ item }) {
   const TOTAL_BIDDING_POWER = biddingPower;
   const usedBiddingPower = 0; // assuming no other active bids
   const remainingPower = TOTAL_BIDDING_POWER - usedBiddingPower;
-  
+
   // 10% deposit requirement based on current price
   const requiredDeposit = Math.floor(currentBid * 0.10);
   const hasSufficientPower = remainingPower >= currentBid; // User needs enough bidding power (usually total bid value) or 10% deposit? 
@@ -44,7 +44,7 @@ export default function DutchConsole({ item }) {
 
     try {
       const result = await buyNowDutch(item._id);
-      
+
       if (result.success) {
         buyNowDutchEvent(); // update local quantity
         setPurchaseStatus('SUCCESS');
@@ -63,7 +63,7 @@ export default function DutchConsole({ item }) {
       <Header />
 
       <div style={{ flex: 1, maxWidth: '1280px', width: '100%', margin: '0 auto', padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-        
+
         {/* Navigation & Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '1rem' }}>
           <button
@@ -162,10 +162,10 @@ export default function DutchConsole({ item }) {
 
         {/* Dutch Core Layout */}
         <div className="console-grid-layout" style={{ alignItems: 'stretch' }}>
-          
+
           {/* Left Panel: Big ticker + Image + Button */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-            
+
             {/* Live Descending Price Display Card */}
             <div style={{
               background: 'radial-gradient(circle at top left, rgba(254, 206, 68, 0.08) 0%, rgba(255, 255, 255, 0.02) 100%)',
@@ -191,7 +191,7 @@ export default function DutchConsole({ item }) {
                 </svg>
                 Current Purchase Price
               </span>
-              
+
               <h1 style={{
                 fontSize: 'clamp(2.5rem, 6vw, 4.5rem)',
                 fontWeight: 900,
@@ -226,7 +226,7 @@ export default function DutchConsole({ item }) {
 
             {/* Quantity Tracker & Media Preview */}
             <div className="dutch-media-layout">
-              
+
               {/* Product preview */}
               <div style={{ position: 'relative', borderRadius: '18px', overflow: 'hidden', height: '180px', border: '1px solid rgba(255,255,255,0.08)' }}>
                 <img src={activePhoto} alt={item.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -395,13 +395,13 @@ export default function DutchConsole({ item }) {
               </svg>
               Price Drop Schedule
             </h3>
-            
+
             {/* Drops Timeline List */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', flex: 1 }}>
               {[0, 1, 2, 3, 4].map(idx => {
                 const dropPriceVal = Math.max(item.priceFloor, currentBid - (idx * item.dropAmount));
                 const secondsFromNow = (idx * item.dropInterval) + nextDropCountdown;
-                
+
                 return (
                   <div
                     key={idx}

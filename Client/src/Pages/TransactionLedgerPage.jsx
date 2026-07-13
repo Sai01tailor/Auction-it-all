@@ -11,10 +11,17 @@ const mapTransaction = (t) => {
   if (!t) return null;
   if (t.amount !== undefined && t.type !== undefined) return t;
   return {
+    // mongoId is the raw _id used for the receipt API endpoint
+    mongoId: t._id || null,
     id: t._id || t.razorpayOrderId || 'N/A',
     date: t.createdAt || new Date().toISOString(),
-    title: t.razorpayPaymentId ? `Wallet Top-up (ID: ${t.razorpayPaymentId})` : 'Wallet Top-up (Pending)',
+    title: t.razorpayPaymentId
+      ? `Wallet Top-up (ID: ${t.razorpayPaymentId})`
+      : 'Wallet Top-up (Pending)',
     amount: (t.amountInPaise ?? 0) / 100,
+    coinsAdded: t.coinsToBeAdded ?? null,
+    razorpayOrderId: t.razorpayOrderId || null,
+    razorpayPaymentId: t.razorpayPaymentId || null,
     type: 'TOP-UP',
     status: t.status || 'PENDING',
   };
@@ -37,6 +44,7 @@ export default function TransactionLedgerPage() {
   const [activeFilter, setActiveFilter] = useState('ALL');
   const [expandedTxId, setExpandedTxId] = useState(null);
   const [search, setSearch] = useState('');
+  const [downloadingReceiptId, setDownloadingReceiptId] = useState(null);
 
   React.useEffect(() => {
     const fetchData = async () => {
@@ -145,17 +153,30 @@ export default function TransactionLedgerPage() {
   const totalDeposited = walletBalance + totalLocked;
 
   const handleDownloadReceipt = async (tx) => {
+    // The receipt API requires the MongoDB _id of the transaction
+    const transactionId = tx.mongoId || tx.id;
+    if (!transactionId || transactionId === 'N/A') {
+      toast.error('Cannot download receipt: transaction ID unavailable.');
+      return;
+    }
+    setDownloadingReceiptId(transactionId);
     try {
-      const response = await api.get(`/transaction/${tx.id}/receipt`, { responseType: 'blob' });
+      const response = await api.get(`/transaction/${transactionId}/receipt`, { responseType: 'blob' });
       const blob = new Blob([response.data], { type: 'application/pdf' });
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
-      link.href = url; link.download = `Receipt-${tx.id}.pdf`;
-      document.body.appendChild(link); link.click();
-      document.body.removeChild(link); window.URL.revokeObjectURL(url);
+      link.href = url;
+      link.download = `BidKar-Receipt-${transactionId}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
       toast.success('Receipt downloaded!');
     } catch (err) {
-      toast.error(err?.response?.data?.message || 'Receipt download failed.');
+      const msg = err?.response?.data?.message || 'Receipt download failed.';
+      toast.error(msg);
+    } finally {
+      setDownloadingReceiptId(null);
     }
   };
 
@@ -273,12 +294,13 @@ export default function TransactionLedgerPage() {
           </div>
 
           {/* Column headers */}
-          <div style={{ display: 'grid', gridTemplateColumns: '120px 140px 1fr 120px 110px', gap: 0, padding: '0.7rem 1.5rem', background: 'var(--color-surface-bg)', borderBottom: '1px solid var(--color-border-subtle)', fontSize: '0.68rem', fontWeight: 800, color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '120px 140px 1fr 120px 110px 140px', gap: 0, padding: '0.7rem 1.5rem', background: 'var(--color-surface-bg)', borderBottom: '1px solid var(--color-border-subtle)', fontSize: '0.68rem', fontWeight: 800, color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
             <div>TX ID</div>
             <div>Timestamp</div>
             <div>Description</div>
             <div style={{ textAlign: 'right' }}>Amount</div>
             <div style={{ textAlign: 'center' }}>Status</div>
+            <div style={{ textAlign: 'center' }}>Actions</div>
           </div>
 
           {/* Transaction rows */}
@@ -297,13 +319,16 @@ export default function TransactionLedgerPage() {
               const isExpanded = expandedTxId === tx.id;
               const isCredit = tx.type === 'TOP-UP' || tx.type === 'REFUNDED';
 
+              const isDownloading = downloadingReceiptId === (tx.mongoId || tx.id);
+              const canDownloadReceipt = tx.status === 'SUCCESS' && tx.type === 'TOP-UP';
+
               return (
                 <div key={tx.id} style={{ borderBottom: '1px solid var(--color-border-subtle)' }}>
                   {/* Main row */}
                   <div
                     onClick={() => toggleExpand(tx.id)}
                     style={{
-                      display: 'grid', gridTemplateColumns: '120px 140px 1fr 120px 110px',
+                      display: 'grid', gridTemplateColumns: '120px 140px 1fr 120px 110px 140px',
                       alignItems: 'center', padding: '0.95rem 1.5rem',
                       cursor: 'pointer', transition: 'background 0.12s',
                     }}
@@ -337,9 +362,47 @@ export default function TransactionLedgerPage() {
                         {badge.label}
                       </span>
                     </div>
+
+                    {/* Actions — inline receipt download for SUCCESS top-ups */}
+                    <div style={{ textAlign: 'center' }} onClick={e => e.stopPropagation()}>
+                      {canDownloadReceipt ? (
+                        <button
+                          onClick={() => handleDownloadReceipt(tx)}
+                          disabled={isDownloading}
+                          style={{
+                            padding: '0.3rem 0.7rem',
+                            background: isDownloading ? 'rgba(0,35,102,0.05)' : '#fff',
+                            border: '1.5px solid var(--color-brand-primary)',
+                            borderRadius: '8px', cursor: isDownloading ? 'not-allowed' : 'pointer',
+                            fontWeight: 700, fontSize: '0.72rem',
+                            color: 'var(--color-brand-primary)',
+                            display: 'inline-flex', alignItems: 'center', gap: '0.35rem',
+                            transition: 'all 0.15s', opacity: isDownloading ? 0.7 : 1,
+                          }}
+                          onMouseEnter={e => { if (!isDownloading) e.currentTarget.style.background = 'rgba(0,35,102,0.06)'; }}
+                          onMouseLeave={e => { if (!isDownloading) e.currentTarget.style.background = '#fff'; }}
+                        >
+                          {isDownloading ? (
+                            <>
+                              <div style={{ width: '10px', height: '10px', border: '2px solid rgba(0,35,102,0.2)', borderTopColor: 'var(--color-brand-primary)', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+                              Generating…
+                            </>
+                          ) : (
+                            <>
+                              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>
+                              Receipt PDF
+                            </>
+                          )}
+                        </button>
+                      ) : (
+                        <span style={{ fontSize: '0.72rem', color: 'var(--color-text-muted)', fontStyle: 'italic' }}>
+                          {tx.status === 'PENDING' ? 'Pending…' : tx.status === 'FAILED' ? '—' : '—'}
+                        </span>
+                      )}
+                    </div>
                   </div>
 
-                  {/* Expandable receipt drawer */}
+                  {/* Expandable detail drawer */}
                   <AnimatePresence>
                     {isExpanded && (
                       <motion.div
@@ -349,37 +412,58 @@ export default function TransactionLedgerPage() {
                         transition={{ duration: 0.2 }}
                         style={{ overflow: 'hidden' }}
                       >
-                        <div style={{ padding: '1.25rem 1.5rem 1.5rem', background: 'var(--color-surface-bg)', borderTop: '1px solid var(--color-border-subtle)', display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(180px,1fr))', gap: '1.5rem' }}>
+                        <div style={{ padding: '1.25rem 1.5rem 1.5rem', background: 'var(--color-surface-bg)', borderTop: '1px solid var(--color-border-subtle)', display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: '1.5rem' }}>
+                          {/* Transaction IDs */}
                           <div style={{ fontSize: '0.78rem', color: 'var(--color-text-muted)', display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
-                            <strong style={{ fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--color-text-rich)', marginBottom: '0.1rem' }}>Tax Invoice Details</strong>
-                            <span><strong>Provider:</strong> BidKar Escrow Service</span>
-                            <span style={{ fontFamily: 'monospace', wordBreak: 'break-all' }}><strong>Ref ID:</strong> {tx.id}</span>
-                            <span><strong>Mode:</strong> Razorpay UPI Instant Clear</span>
+                            <strong style={{ fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--color-text-rich)', marginBottom: '0.1rem' }}>Transaction Details</strong>
+                            <span style={{ fontFamily: 'monospace', wordBreak: 'break-all' }}><strong>Order ID:</strong> {tx.razorpayOrderId || tx.id}</span>
+                            {tx.razorpayPaymentId && (
+                              <span style={{ fontFamily: 'monospace', wordBreak: 'break-all' }}><strong>Payment ID:</strong> {tx.razorpayPaymentId}</span>
+                            )}
+                            <span><strong>Mode:</strong> Razorpay (Online Payment)</span>
                           </div>
+                          {/* Payment breakdown */}
                           <div style={{ fontSize: '0.78rem', color: 'var(--color-text-muted)', display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
-                            <strong style={{ fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--color-text-rich)', marginBottom: '0.1rem' }}>Escrow Log</strong>
-                            <span><strong>Operation:</strong> {tx.type}</span>
-                            <span><strong>Grievance:</strong> BK-IN-2026-{String(tx.id).toUpperCase().slice(0, 8)}</span>
+                            <strong style={{ fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--color-text-rich)', marginBottom: '0.1rem' }}>Payment Breakdown</strong>
+                            <span><strong>Amount Paid:</strong> ₹{tx.amount.toLocaleString('en-IN')}</span>
+                            {tx.coinsAdded != null && (
+                              <span><strong>Coins Credited:</strong> {tx.coinsAdded.toLocaleString('en-IN')} BidKar Coins</span>
+                            )}
+                            <span style={{ fontSize: '0.72rem', color: '#10b981', marginTop: '0.15rem' }}>Conversion: ₹1 = 1 BidKar Coin</span>
                             <span><strong>Status:</strong> {tx.status}</span>
                           </div>
-                          <div style={{ display: 'flex', alignItems: 'flex-start', paddingTop: '0.25rem' }}>
-                            <button
-                              onClick={(e) => { e.stopPropagation(); handleDownloadReceipt(tx); }}
-                              style={{
-                                padding: '0.55rem 1rem', background: '#fff',
-                                border: '1.5px solid var(--color-border-subtle)',
-                                borderRadius: '10px', cursor: 'pointer', fontWeight: 700,
-                                fontSize: '0.78rem', color: 'var(--color-brand-primary)',
-                                display: 'inline-flex', alignItems: 'center', gap: '0.4rem',
-                                transition: 'all 0.15s',
-                              }}
-                              onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--color-brand-primary)'; e.currentTarget.style.background = 'rgba(0,35,102,0.03)'; }}
-                              onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--color-border-subtle)'; e.currentTarget.style.background = '#fff'; }}
-                            >
-                              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>
-                              Download Receipt (PDF)
-                            </button>
-                          </div>
+                          {/* Receipt download (in drawer) */}
+                          {canDownloadReceipt && (
+                            <div style={{ display: 'flex', alignItems: 'flex-start', paddingTop: '0.25rem' }}>
+                              <button
+                                onClick={(e) => { e.stopPropagation(); handleDownloadReceipt(tx); }}
+                                disabled={isDownloading}
+                                style={{
+                                  padding: '0.55rem 1rem', background: '#fff',
+                                  border: '1.5px solid var(--color-border-subtle)',
+                                  borderRadius: '10px', cursor: isDownloading ? 'not-allowed' : 'pointer',
+                                  fontWeight: 700, fontSize: '0.78rem',
+                                  color: 'var(--color-brand-primary)',
+                                  display: 'inline-flex', alignItems: 'center', gap: '0.4rem',
+                                  transition: 'all 0.15s', opacity: isDownloading ? 0.7 : 1,
+                                }}
+                                onMouseEnter={e => { if (!isDownloading) { e.currentTarget.style.borderColor = 'var(--color-brand-primary)'; e.currentTarget.style.background = 'rgba(0,35,102,0.03)'; } }}
+                                onMouseLeave={e => { if (!isDownloading) { e.currentTarget.style.borderColor = 'var(--color-border-subtle)'; e.currentTarget.style.background = '#fff'; } }}
+                              >
+                                {isDownloading ? (
+                                  <>
+                                    <div style={{ width: '11px', height: '11px', border: '2px solid rgba(0,35,102,0.15)', borderTopColor: 'var(--color-brand-primary)', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+                                    Generating PDF…
+                                  </>
+                                ) : (
+                                  <>
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>
+                                    Download Receipt (PDF)
+                                  </>
+                                )}
+                              </button>
+                            </div>
+                          )}
                         </div>
                       </motion.div>
                     )}

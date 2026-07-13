@@ -4,9 +4,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 import api from '../../Config/Axios';
 import Header from '../Components/Global/Header';
 import AuthController from '../Components/Global/AuthController';
+import { useAuth } from '../Context/AuthContext';
 
 export default function KYCPage() {
   const navigate = useNavigate();
+  const { setUser } = useAuth();
 
   // Step state: 1 = Aadhaar Input, 2 = OTP Verification, 3 = Completed
   const [step, setStep] = useState(1);
@@ -26,10 +28,15 @@ export default function KYCPage() {
         if (res.data && res.data.kycStatus === 'Verified') {
           setStep(3);
           setKycResult({ kycStatus: 'Verified', verifiedAt: res.data.verifiedAt });
+          setUser(prev => ({
+            ...prev,
+            kycStatus: 'Verified',
+            role: 'SELLER'
+          }));
         }
       })
       .catch(() => {});
-  }, []);
+  }, [setUser]);
 
   // Aadhaar Submit Step 1: Initiate
   const handleAadhaarSubmit = async (e) => {
@@ -72,6 +79,11 @@ export default function KYCPage() {
         otp: aadhaarOtp
       });
       if (data.success) {
+        setUser(prev => ({
+          ...prev,
+          kycStatus: 'Verified',
+          role: 'SELLER'
+        }));
         setKycResult(data);
         setStep(3);
       } else {

@@ -57,7 +57,7 @@ exports.downloadReceipt = async (req, res) => {
 
     // 1. Find the transaction and verify ownership
     const transaction = await Transaction.findById(transactionId)
-      .populate('userId', 'name email');
+      .populate('userId', 'username email');
 
     // 2. Security check: User can only download their own receipts
     if (!transaction) {
@@ -92,7 +92,7 @@ exports.downloadReceipt = async (req, res) => {
       }),
       transactionId: transaction.razorpayOrderId,
       paymentId: transaction.razorpayPaymentId || 'N/A',
-      userName: transaction.userId.name,
+      userName: transaction.userId.username || transaction.userId.name || 'BidKar User',
       userEmail: transaction.userId.email || '',
       userId: transaction.userId._id,
       amountPaid: (transaction.amountInPaise / 100).toFixed(2),

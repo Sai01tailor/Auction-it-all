@@ -7,8 +7,8 @@ const CLIENT_URL = process.env.CLIENT_URL || "http://localhost:5173";
 // Helper to enforce strict JWT payload naming
 const createToken = (user) => {
   return jwt.sign(
-    { userId: user._id, role: user.role }, 
-    process.env.JWT_SECRET, 
+    { userId: user._id, role: user.role },
+    process.env.JWT_SECRET,
     { expiresIn: "1d" }
   );
 };
@@ -96,7 +96,8 @@ exports.verifySignupOtp = async (req, res) => {
         userId: user._id,       // STRICT NAMING: userId
         username: user.username,
         email: user.email,
-        role: user.role
+        role: user.role,
+        kycStatus: user.kycStatus
       },
     });
 
@@ -128,7 +129,8 @@ exports.login = async (req, res) => {
         userId: user._id,       // STRICT NAMING: userId
         username: user.username,
         email: user.email,
-        role: user.role
+        role: user.role,
+        kycStatus: user.kycStatus
       },
     });
 
@@ -157,7 +159,8 @@ exports.getProfile = async (req, res) => {
         userId: req.user._id,   // STRICT NAMING: userId
         username: req.user.username,
         email: req.user.email,
-        role: req.user.role
+        role: req.user.role,
+        kycStatus: req.user.kycStatus
       }
     });
   } catch (error) {
@@ -201,7 +204,7 @@ exports.forgotPassword = async (req, res) => {
     `;
 
     await sendEmail(email, subject, htmlContent);
-    
+
     res.status(200).json({
       success: true,
       message: "Password reset OTP sent successfully to your email",
@@ -213,8 +216,8 @@ exports.forgotPassword = async (req, res) => {
 };
 
 // Reset Password (Verify & Update)
-exports.resetPassword=async(req,res)=>{
-  try{
+exports.resetPassword = async (req, res) => {
+  try {
     const { email, otp, newPassword } = req.body;
 
     if (!email || !otp || !newPassword) {
@@ -242,14 +245,14 @@ exports.resetPassword=async(req,res)=>{
     // 4. Clear Otp so that it cannot be reused 
     user.otp = undefined;
     user.otpExpiresAt = undefined;
-    
+
     await user.save();
 
     res.status(200).json({
       success: true,
       message: "Password reset successful. You can now login with your new password",
     });
-  }catch(err){
+  } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
 }
