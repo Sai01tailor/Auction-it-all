@@ -50,4 +50,14 @@ app.get("/", (req, res) => {
   console.log(`request Handled by worker ${process.pid}`);
 });
 
+// Health check endpoint for monitoring and keep-alive
+app.get("/health", (req, res) => {
+  res.status(200).json({
+    status: "healthy",
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    pid: process.pid
+  });
+});
+
 module.exports=app
