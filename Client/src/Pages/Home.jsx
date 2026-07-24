@@ -33,7 +33,7 @@ const STATS = [
 function PlatformStats() {
   return (
     <>
-      <div className='text-white bg-red-500 text-center py-2'> Note : the Site is Under Construction and this is just a preview avoid investing as of now.</div>
+      <div className='text-white bg-red-900 text-center py-2'> Note : the Site is Under Construction and this is just a preview. avoid investing as of now.</div>
       <div
         className='hidden md:flex'
         style={{
