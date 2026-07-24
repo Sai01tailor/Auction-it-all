@@ -34,7 +34,7 @@ const MOBILE_NAV_LINKS = [
 export function BigLogo({ style = {}, compact = false }) {
   return (
     <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', textDecoration: 'none', flexShrink: 0, ...style }}>
-      <img src={LongLogo} alt="BidKar Logo" style={{ width: compact ? '82px' : '110px', height: 'auto', objectFit: 'contain' }} />
+      <img src={LongLogo} alt="BidKar Logo" style={{ width: compact ? '82px' : '88px', height: 'auto', maxHeight: '28px', objectFit: 'contain' }} />
     </Link>
   );
 }

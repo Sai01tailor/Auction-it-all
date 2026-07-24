@@ -32,48 +32,50 @@ const STATS = [
 
 function PlatformStats() {
   return (
-    <div
-      className='hidden md:flex'
-      style={{
-        background: 'var(--color-brand-primary-dark)',
-        borderBottom: '1px solid rgba(255,255,255,0.06)',
-      }}>
-      <div style={{
-        maxWidth: '1280px', margin: '0 auto',
-        padding: '0.75rem 1.5rem',
-        display: 'flex',
-        justifyContent: 'center',
-        gap: '0',
-        flexWrap: 'wrap',
-      }}>
-        {STATS.map((stat, i) => (
-          <div
-            key={stat.label}
-            style={{
-              display: 'flex', flexDirection: 'column', alignItems: 'center',
-              padding: '0.5rem 2rem',
-              borderRight: i < STATS.length - 1 ? '1px solid rgba(255,255,255,0.1)' : 'none',
-            }}
-          >
-            <span style={{
-              fontSize: '1.1rem', fontWeight: 800,
-              color: 'var(--color-brand-accent)',
-              letterSpacing: '-0.02em',
-              fontVariantNumeric: 'tabular-nums',
-            }}>
-              {stat.value}
-            </span>
-            <span style={{
-              fontSize: '0.67rem', fontWeight: 600, letterSpacing: '0.08em',
-              textTransform: 'uppercase', color: 'rgba(255,255,255,0.5)',
-              marginTop: '1px',
-            }}>
-              {stat.label}
-            </span>
-          </div>
-        ))}
-      </div>
-    </div>
+    <>
+      <div className='text-white bg-red-200 text-center py-2'> Note : the Site is Under Construction and this is just a preview avoid investing as of now.</div>
+      <div
+        className='hidden md:flex'
+        style={{
+          background: 'var(--color-brand-primary-dark)',
+          borderBottom: '1px solid rgba(255,255,255,0.06)',
+        }}>
+        <div style={{
+          maxWidth: '1280px', margin: '0 auto',
+          padding: '0.75rem 1.5rem',
+          display: 'flex',
+          justifyContent: 'center',
+          gap: '0',
+          flexWrap: 'wrap',
+        }}>
+          {STATS.map((stat, i) => (
+            <div
+              key={stat.label}
+              style={{
+                display: 'flex', flexDirection: 'column', alignItems: 'center',
+                padding: '0.5rem 2rem',
+                borderRight: i < STATS.length - 1 ? '1px solid rgba(255,255,255,0.1)' : 'none',
+              }}
+            >
+              <span style={{
+                fontSize: '1.1rem', fontWeight: 800,
+                color: 'var(--color-brand-accent)',
+                letterSpacing: '-0.02em',
+                fontVariantNumeric: 'tabular-nums',
+              }}>
+                {stat.value}
+              </span>
+              <span style={{
+                fontSize: '0.67rem', fontWeight: 600, letterSpacing: '0.08em',
+                textTransform: 'uppercase', color: 'rgba(255,255,255,0.5)',
+                marginTop: '1px',
+              }}>
+                {stat.label}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div></>
   );
 }
 

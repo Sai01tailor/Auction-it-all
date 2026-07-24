@@ -91,16 +91,12 @@ const Footer = () => {
     { label: 'Browse Live Auctions', to: '/auctions' },
     { label: 'Ending Soon Drops', to: '/auctions?sort=ending' },
     { label: 'Create Seller Listing', to: '/seller/create' },
-    { label: 'HTML & XML Sitemap Index', to: '/sitemap' },
-    { label: 'Dynamic sitemap.xml', to: '/sitemap.xml' },
   ]
   const helpTrust = [
-    { label: 'How Online Auctions Work', to: '/how-it-works' },
-    { label: 'Bidder Activity Dashboard', to: '/dashboard' },
-    { label: 'Wallet & Bidding Power', to: '/wallet' },
-    { label: 'Transaction & Escrow Ledger', to: '/ledger' },
-    { label: 'KYC & Aadhaar Verification', to: '/kyc' },
-    { label: 'Dispute Resolution Center', to: '/disputes' },
+    { label: 'How it Works?', to: '/how-it-works' },
+    { label: 'Safety Handoff Guide', to: '/how-it-works' },
+    { label: 'Dispute Center', to: '/disputes' },
+    { label: 'FAQs', to: '/how-it-works' },
   ]
   const contact = [
     { label: 'Customer Help Desk', to: '/contact' },
@@ -326,10 +322,11 @@ const Footer = () => {
             color: '#4b5563',
           }}
         >
-          © {year}{' '}
-          <span style={{ color: '#fece4488', fontWeight: 600 }}>BidKar.in</span>
-          . All rights reserved. Regulated under applicable Indian e-commerce &amp; IT laws.
+          © {year} CTRL Freaks. Made with ❤️ by <a style={{ color: '#fece4488', fontWeight: 600 }} href="https://www.linkedin.com/in/sai-tailor-764b8231a/" target="_blank" rel="noopener noreferrer">Sai Tailor </a>,
+          <a style={{ color: '#fece4488', fontWeight: 600 }} href="https://www.linkedin.com/in/krish-kanjani-572b0427b/" target="_blank" rel="noopener noreferrer"> Krish Kanjani </a>,
+          <a style={{ color: '#fece4488', fontWeight: 600 }} href="https://www.linkedin.com/in/preet-kotak-8538b033a/" target="_blank" rel="noopener noreferrer"> Preet Kotak </a>
         </motion.p>
+
       </div>
     </footer>
   )
