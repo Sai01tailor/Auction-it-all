@@ -35,8 +35,8 @@ exports.getMyTransactions = async (req, res) => {
       data: transactions
     };
 
-    // 3. Save to Cache for 15 minutes (900 seconds)
-    await AuctionCache.setCache(cacheKey, 900, responseData);
+    // 3. Save to Cache for 60 seconds (safety-net; cache is actively busted on bid/payment writes)
+    await AuctionCache.setCache(cacheKey, 60, responseData);
     res.status(200).json(responseData);
 
 

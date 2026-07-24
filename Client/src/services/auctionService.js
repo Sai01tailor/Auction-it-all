@@ -218,100 +218,31 @@ export async function getAuctionById(id) {
 ───────────────────────────────────────────────────────────── */
 
 export async function placeBid(itemId, amount) {
-  // Bidding is handled over WebSockets (Socket.io). Returning mock success.
   return { success: true };
 }
 
 /**
  * Execute a Dutch auction Buy Now purchase.
- * Simulated locally to support client-only Dutch engines.
  */
 export async function buyNowDutch(itemId) {
-  return {
-    success: true,
-    message: "Purchase transaction recorded in escrow. Item locked.",
-  };
+  const { data } = await api.post(`/items/${itemId}/buy-dutch`);
+  return data;
 }
 
 /**
  * Submit a sealed blind bid.
- * Persists locally to local storage to simulate secure off-chain submission.
  */
 export async function submitBlindBid(itemId, amount) {
-  const username = 'You';
-  // Save user's bid
-  localStorage.setItem(`blind_bid:${itemId}:${username}`, JSON.stringify({
-    amount,
-    timestamp: new Date().toISOString()
-  }));
-
-  // Store user's bid alongside other simulated bids
-  let allBids = [];
-  try {
-    const saved = localStorage.getItem(`all_blind_bids:${itemId}`);
-    allBids = saved ? JSON.parse(saved) : [];
-  } catch (e) { }
-
-  allBids = allBids.filter(b => b.bidder !== username);
-  allBids.push({
-    bidder: username,
-    amount,
-    timestamp: new Date().toISOString()
-  });
-  localStorage.setItem(`all_blind_bids:${itemId}`, JSON.stringify(allBids));
-
-  return {
-    success: true,
-    message: "Your blind bid has been sealed and encrypted."
-  };
+  const { data } = await api.post(`/items/${itemId}/blind-bid`, { amount: Number(amount) });
+  return data;
 }
 
 /**
  * Fetch the decrypted blind reveal leaderboard after the deadline.
- * Populates custom simulated bid list.
  */
 export async function getBlindRevealData(itemId) {
-  let bids = [];
-  try {
-    const saved = localStorage.getItem(`all_blind_bids:${itemId}`);
-    bids = saved ? JSON.parse(saved) : [];
-  } catch (e) { }
-
-  // Generate some realistic competitor bids deterministically to challenge the user
-  const bidders = ['Bidder_8921', 'Bidder_4310', 'Bidder_7724'];
-  let startingPrice = 10000;
-  try {
-    const rawDetails = localStorage.getItem(`local_auction_details:${itemId}`);
-    if (rawDetails) {
-      startingPrice = JSON.parse(rawDetails).startingPrice || 10000;
-    }
-  } catch (e) { }
-
-  bidders.forEach((b, idx) => {
-    if (!bids.some(x => x.bidder === b)) {
-      bids.push({
-        bidder: b,
-        amount: Number(startingPrice) + (idx + 1) * 3500,
-        timestamp: new Date(Date.now() - (idx + 1) * 60000).toISOString()
-      });
-    }
-  });
-
-  // Sort descending by bid amount
-  bids.sort((a, b) => b.amount - a.amount);
-
-  // Winner is the highest bidder (either the user or one of the competitors)
-  const winner = bids.length > 0 ? bids[0] : null;
-
-  return {
-    success: true,
-    bids: bids.map(b => ({
-      bidder: { username: b.bidder },
-      amount: b.amount,
-      timestamp: b.timestamp
-    })),
-    winner
-  };
+  const { data } = await api.get(`/items/${itemId}/blind-reveal`);
+  return data;
 }
 
 /* ─────────────────────────────────────────────────────────────
@@ -453,7 +384,9 @@ export async function getSellerProfile(sellerId) {
     kycType: 'Aadhaar + PAN Verified',
     joinedDate: profileData.joinedDate
       ? `Joined ${new Date(profileData.joinedDate).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' })}`
-      : 'Joined recently',
+      : profileData.createdAt
+        ? `Joined ${new Date(profileData.createdAt).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' })}`
+        : 'Joined Recently',
     reputation: profileData.reputation ?? 0,
     successRate: profileData.successRate ?? 98,
     totalSold: profileData.totalSold ?? 0,

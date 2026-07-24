@@ -3,8 +3,8 @@ import { motion, AnimatePresence, useMotionValue, useSpring } from 'framer-motio
 import api from '../../../Config/interceptor'
 import { toast } from 'react-toastify'
 import { useNavigate } from 'react-router-dom'
-import OtpInput from 'react-otp-input'
 import { deleteCookie } from '../../Components/Global/CookieIT'
+import LongLogo from '../../assets/LongLogo.png'
 
 /* ─── tokens (mirrors index.css) ────────── */
 const C = {
@@ -403,18 +403,9 @@ const ForgotPassword = () => {
         <div style={{ padding: '2rem 2rem 0' }}>
           {/* Logo + step pills */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.75rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
-              <div style={{
-                width: 34, height: 34, borderRadius: 9,
-                background: `linear-gradient(135deg, ${C.gold}, ${C.goldD})`,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-              }}>
-                <span style={{ fontSize: '1rem', fontWeight: 900, color: C.navy }}>B</span>
-              </div>
-              <span style={{ fontSize: '1.15rem', fontWeight: 800, color: C.navy, letterSpacing: '-0.03em' }}>
-                BidKar<span style={{ color: C.gold }}>.in</span>
-              </span>
-            </div>
+            <a href="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center' }}>
+              <img src={LongLogo} alt="BidKar Logo" style={{ width: 110, height: 'auto', objectFit: 'contain' }} />
+            </a>
 
             {/* Step pills */}
             <div style={{ display: 'flex', gap: 5, alignItems: 'center' }}>

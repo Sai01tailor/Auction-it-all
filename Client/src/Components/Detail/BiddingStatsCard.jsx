@@ -59,7 +59,9 @@ function StatPill({ label, value, highlight, type }) {
 export default function BiddingStatsCard({ item }) {
   const { currentBid, totalBids, lastBidder, isConnected } = useSocket(
     item?._id,
-    item?.currentHighestBid ?? 0,
+    item?.currentHighestBid ?? item?.startingPrice ?? 0,
+    item?.auctionType ?? 'ENGLISH',
+    item,
   );
 
   const prevBid = useRef(currentBid);
@@ -78,14 +80,17 @@ export default function BiddingStatsCard({ item }) {
   const isSold = item?.status === 'SOLD';
 
   const bidderName = typeof lastBidder === 'object' ? lastBidder?.username : lastBidder;
+  const effectiveTotalBids = totalBids > 0 ? totalBids : (item?.bidsCount ?? 0);
 
   // Real-time standing calculation
   let standingValue = '—';
-  if (totalBids === 0 && (item?.bidsCount ?? 0) === 0) {
+  if (effectiveTotalBids === 0) {
     standingValue = 'No bids';
   } else if (bidderName) {
     const isMe = bidderName === 'You' || bidderName === 'you';
     standingValue = isMe ? 'Leading' : 'Outbid';
+  } else {
+    standingValue = 'Active';
   }
 
   return (
@@ -107,24 +112,6 @@ export default function BiddingStatsCard({ item }) {
         <h2 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 800, color: 'var(--color-brand-primary)' }}>
           Bidding Stats
         </h2>
-        {/* Connection indicator */}
-        <div style={{
-          display: 'flex', alignItems: 'center', gap: '0.4rem',
-          padding: '0.25rem 0.65rem',
-          background: isConnected ? 'rgba(16,185,129,0.08)' : 'rgba(239,68,68,0.08)',
-          borderRadius: '20px',
-          border: `1px solid ${isConnected ? 'rgba(16,185,129,0.25)' : 'rgba(239,68,68,0.25)'}`,
-        }}>
-          <span style={{
-            width: '7px', height: '7px', borderRadius: '50%',
-            background: isConnected ? '#10b981' : '#ef4444',
-            display: 'inline-block',
-            animation: isConnected ? 'bid-pulse 1.2s ease-out infinite' : 'none',
-          }} />
-          <span style={{ fontSize: '0.7rem', fontWeight: 700, color: isConnected ? '#065f46' : '#991b1b' }}>
-            {isConnected ? 'Live' : 'Offline'}
-          </span>
-        </div>
       </div>
 
       {/* ── Current Highest Bid ── */}
@@ -180,7 +167,7 @@ export default function BiddingStatsCard({ item }) {
       {/* ── Stat Pills ── */}
       <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
         <StatPill label="Starting" value={formatINR(item?.startingPrice)} />
-        <StatPill label="Total Bids" value={totalBids > 0 ? totalBids : item?.bidsCount ?? 0} highlight />
+        <StatPill label="Total Bids" value={effectiveTotalBids} highlight />
         <StatPill
           label="Your Standing"
           value={standingValue}

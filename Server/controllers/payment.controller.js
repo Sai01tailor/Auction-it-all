@@ -3,6 +3,7 @@ const crypto = require('crypto');
 const mongoose = require('mongoose');
 const Transaction = require('../models/transaction.model');
 const Wallet = require('../models/wallet.model');
+const AuctionCache = require('../redis/auction.cache');
 
 // Initialize Razorpay instance
 const razorpay = new Razorpay({
@@ -120,6 +121,13 @@ exports.verifyWebhook = async (req, res) => {
     // 4. Commit everything! If code reaches here, both DB updates succeed together.
     await session.commitTransaction();
     session.endSession();
+
+    // 5. Bust Redis cache so the wallet page and ledger reflect the new balance immediately
+    //    (eliminates the need to wait for the 30s TTL or rely solely on the localStorage workaround)
+    await Promise.all([
+      AuctionCache.clearCache(`wallet_balance:${transaction.userId}`),
+      AuctionCache.clearCache(`tx_history:${transaction.userId}:page:1`),
+    ]);
 
     res.status(200).json({ success: true, message: "Payment verified, wallet credited!" });
 

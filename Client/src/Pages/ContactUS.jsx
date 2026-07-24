@@ -98,7 +98,7 @@ export default function ContactUS() {
       <section style={{
         background: 'linear-gradient(135deg, var(--color-brand-primary-dark) 0%, var(--color-brand-primary) 60%, #001f5c 100%)',
         color: '#fff',
-        padding: '5rem 1.5rem 6.5rem',
+        padding: '2.5rem 0.65rem 4.5rem',
         textAlign: 'center',
         position: 'relative',
         overflow: 'hidden'
@@ -112,61 +112,60 @@ export default function ContactUS() {
         }} />
 
         <div style={{ maxWidth: '800px', margin: '0 auto', position: 'relative', zIndex: 10 }}>
-          <span style={{ fontSize: '0.72rem', fontWeight: 800, color: 'var(--color-brand-accent)', background: 'rgba(254,206,68,0.12)', border: '1px solid rgba(254,206,68,0.25)', padding: '0.35rem 0.85rem', borderRadius: '20px', display: 'inline-block', marginBottom: '1rem', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+          <span style={{ fontSize: '0.68rem', fontWeight: 800, color: 'var(--color-brand-accent)', background: 'rgba(254,206,68,0.12)', border: '1px solid rgba(254,206,68,0.25)', padding: '0.3rem 0.75rem', borderRadius: '20px', display: 'inline-block', marginBottom: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
             Official Helpdesk & Support
           </span>
-          <h1 style={{ color: 'var(--color-brand-accent)', margin: 0, fontSize: 'clamp(2.2rem, 5vw, 3.2rem)', fontWeight: 900, letterSpacing: '-0.03em', lineHeight: 1.15 }}>
+          <h1 style={{ color: 'var(--color-brand-accent)', margin: 0, fontSize: 'clamp(1.6rem, 4.5vw, 3rem)', fontWeight: 900, letterSpacing: '-0.03em', lineHeight: 1.15 }}>
             Help & Support Hub
           </h1>
-          <p style={{ margin: '0.6rem 0 0', fontSize: '0.95rem', color: 'rgba(255,255,255,0.7)', lineHeight: 1.6 }}>
+          <p style={{ margin: '0.4rem 0 0', fontSize: '0.82rem', color: 'rgba(255,255,255,0.7)', lineHeight: 1.5 }}>
             Official customer assistance corridor. Lodge direct support tickets, reach our emergency helpline, connect with the grievance cell, or view physical coordinates.
           </p>
         </div>
       </section>
 
       {/* Main Grid Container - Overlapping with absolute z-index stacking */}
-      <div style={{ maxWidth: '1100px', margin: '-3.5rem auto 4.5rem', padding: '0 1.5rem', position: 'relative', zIndex: 20 }}>
+      <div style={{ maxWidth: '1100px', margin: '-2.5rem auto 4.5rem', padding: '0 0.65rem', position: 'relative', zIndex: 20 }}>
 
         {/* Main Split Grid */}
         <div className="contact-grid">
 
-          {/* Sticky Sidebar Navigation */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem', height: 'fit-content', position: 'sticky', top: '90px', zIndex: 10 }}>
+          {/* Sidebar Navigation */}
+          <div className="contact-sidebar">
             {tabs.map(tab => {
               const isActive = type === tab.id;
               return (
                 <button
                   key={tab.id}
                   onClick={() => navigate(`/contact/${tab.id}`)}
+                  className="contact-tab-btn"
                   style={{
                     textAlign: 'left',
-                    padding: '1.25rem',
                     border: '1.5px solid',
                     borderColor: isActive ? 'var(--color-brand-primary)' : 'var(--color-border-subtle)',
                     background: isActive ? 'var(--color-brand-primary)' : '#fff',
                     color: isActive ? '#fff' : 'var(--color-text-rich)',
-                    borderRadius: '16px',
                     cursor: 'pointer',
                     boxShadow: isActive ? '0 8px 20px rgba(0,35,102,0.08)' : '0 2px 8px rgba(0,35,102,0.01)',
                     transition: 'all 0.2s',
                     fontWeight: 800,
-                    fontSize: '0.9rem',
+                    fontSize: '0.82rem',
                     display: 'flex',
                     flexDirection: 'column',
-                    gap: '0.4rem'
+                    gap: '0.25rem'
                   }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <span style={{ color: isActive ? '#fff' : 'var(--color-brand-primary)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                    <span style={{ color: isActive ? '#fff' : 'var(--color-brand-primary)', display: 'inline-flex', flexShrink: 0 }}>
                       {tab.icon}
                     </span>
-                    <span>{tab.name}</span>
+                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{tab.name}</span>
                   </div>
-                  <span style={{
-                    fontSize: '0.72rem',
+                  <span className="hidden sm:block" style={{
+                    fontSize: '0.68rem',
                     fontWeight: 500,
                     opacity: isActive ? 0.8 : 0.6,
-                    paddingLeft: '1.65rem'
+                    paddingLeft: '1.4rem'
                   }}>
                     {tab.desc}
                   </span>
@@ -176,16 +175,14 @@ export default function ContactUS() {
           </div>
 
           {/* Support Workspace */}
-          <div style={{
+          <div className="contact-workspace" style={{
             background: '#fff',
             border: '1px solid var(--color-border-subtle)',
-            borderRadius: '24px',
-            padding: '2.5rem',
             boxShadow: '0 8px 30px rgba(0,35,102,0.02)',
-            minHeight: '420px',
+            minHeight: '380px',
             display: 'flex',
             flexDirection: 'column',
-            gap: '1.5rem'
+            gap: '1.25rem'
           }}>
 
             {/* ── Tab 1: Email Ticket ── */}

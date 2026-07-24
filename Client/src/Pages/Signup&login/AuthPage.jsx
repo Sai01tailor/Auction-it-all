@@ -9,6 +9,7 @@ import OtpInput from 'react-otp-input'
 import EyeOff from '../../assets/Icons/EyeOff.svg'
 import EyeOn from '../../assets/Icons/EyeOn.svg'
 import { useAuth } from '../../Context/AuthContext'
+import LongLogo from '../../assets/LongLogo.png'
 
 /* ─── tokens ─────────────────────────────── */
 const C = {
@@ -223,7 +224,9 @@ const LoginView = ({ go }) => {
           <input id="l-pw" type={show ? 'text' : 'password'} placeholder="••••••••" value={pw}
             onChange={e => { setPw(e.target.value); setErr(p => ({ ...p, pw: '' })) }}
             style={{ ...pI.style, paddingRight: '2.8rem' }} onFocus={pI.onFocus} onBlur={pI.onBlur} />
-          <button type="button" onClick={() => setShow(v => !v)} style={{ position: 'absolute', right: '0.85rem', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem', padding: 0, color: '#9ca3af' }}>{show ? <img src={EyeOff} style={{width:"25px", height:"25px"}}/> : <img src={EyeOn} style={{width:"25px", height:"25px"}}/>}</button>
+          <button type="button" onClick={() => setShow(v => !v)} style={{ position: 'absolute', right: '0.85rem', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
+            <img src={show ? EyeOff : EyeOn} alt="toggle password" style={{ width: '22px', height: '22px' }} />
+          </button>
         </div>
       </F>
 
@@ -250,6 +253,7 @@ const SignupView = ({ go }) => {
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [pw, setPw]       = useState('')
+  const [confirmPw, setConfirmPw] = useState('')
   const [show, setShow]   = useState(false)
   const [terms, setTerms] = useState(false)
   const [busy, setBusy]   = useState(false)
@@ -260,6 +264,7 @@ const SignupView = ({ go }) => {
   const eI = useInput(!!err.email)
   const mI = useInput(!!err.mobile)
   const pI = useInput(!!err.pw)
+  const cpI = useInput(!!err.confirmPw)
 
   const validate = () => {
     const e = {}
@@ -269,6 +274,8 @@ const SignupView = ({ go }) => {
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) e.email = 'Invalid email'
     if (!pw) e.pw = 'Password is required'
     else if (pw.length < 8) e.pw = 'Minimum 8 characters'
+    if (!confirmPw) e.confirmPw = 'Please confirm your password'
+    else if (confirmPw !== pw) e.confirmPw = 'Passwords do not match'
     if (!terms) e.terms = 'Please accept the terms'
     setErr(e); return !Object.keys(e).length
   }
@@ -349,7 +356,9 @@ const SignupView = ({ go }) => {
             <input id="su-pw" type={show ? 'text' : 'password'} placeholder="••••••••" value={pw}
               onChange={e => { setPw(e.target.value); setErr(p => ({ ...p, pw: '' })) }}
               style={{ ...pI.style, paddingRight: '2.8rem' }} onFocus={pI.onFocus} onBlur={pI.onBlur} />
-            <button type="button" onClick={() => setShow(v => !v)} style={{ position: 'absolute', right: '0.85rem', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem', padding: 0, color: '#9ca3af' }}>{show ? <img src={EyeOff} style={{width:"25px", height:"25px"}}/> : <img src={EyeOn} style={{width:"25px", height:"25px"}}/>}</button>
+            <button type="button" onClick={() => setShow(v => !v)} style={{ position: 'absolute', right: '0.85rem', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
+              <img src={show ? EyeOff : EyeOn} alt="toggle password" style={{ width: '22px', height: '22px' }} />
+            </button>
           </div>
           {pw && (
             <div style={{ marginTop: 6 }}>
@@ -364,6 +373,17 @@ const SignupView = ({ go }) => {
             </div>
           )}
         </>
+      </F>
+
+      <F label="Confirm Password" id="su-cpw" err={err.confirmPw}>
+        <div style={{ position: 'relative' }}>
+          <input id="su-cpw" type={show ? 'text' : 'password'} placeholder="••••••••" value={confirmPw}
+            onChange={e => { setConfirmPw(e.target.value); setErr(p => ({ ...p, confirmPw: '' })) }}
+            style={{ ...cpI.style, paddingRight: '2.8rem' }} onFocus={cpI.onFocus} onBlur={cpI.onBlur} />
+          <button type="button" onClick={() => setShow(v => !v)} style={{ position: 'absolute', right: '0.85rem', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
+            <img src={show ? EyeOff : EyeOn} alt="toggle password" style={{ width: '22px', height: '22px' }} />
+          </button>
+        </div>
       </F>
 
       {/* Terms */}
@@ -621,18 +641,9 @@ const AuthPage = ({ initialView = 'login' }) => {
         <div style={{ padding: '2rem 2rem 0' }}>
           {/* Logo */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.75rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
-              <div style={{
-                width: 34, height: 34, borderRadius: 9,
-                background: `linear-gradient(135deg, ${C.gold}, ${C.goldD})`,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-              }}>
-                <span style={{ fontSize: '1rem', fontWeight: 900, color: C.navy }}>B</span>
-              </div>
-              <span style={{ fontSize: '1.15rem', fontWeight: 800, color: C.navy, letterSpacing: '-0.03em' }}>
-                BidKar<span style={{ color: C.gold }}>.in</span>
-              </span>
-            </div>
+            <a href="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center' }}>
+              <img src={LongLogo} alt="BidKar Logo" style={{ width: 110, height: 'auto', objectFit: 'contain' }} />
+            </a>
 
             {/* Step pills */}
             <div style={{ display: 'flex', gap: 5, alignItems: 'center' }}>

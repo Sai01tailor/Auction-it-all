@@ -6,11 +6,15 @@ const { uploadImage } = require("../middlewares/multer.middleware");
 
 // Public Routes
 router.get("/filter-options", itemController.getFilterOptions); // must be before /:id
+router.get("/user/my-bids", authMiddleware, itemController.getMyBids); // User's active bids
 router.get("/", itemController.getActiveItems);
 router.get("/:id", itemController.getItemById);
-
+router.get("/:id/bids", itemController.getItemBids);
+router.get("/:id/blind-reveal", itemController.getBlindReveal);
 
 // Protected Routes
+router.post("/:id/buy-dutch", authMiddleware, itemController.buyDutch);
+router.post("/:id/blind-bid", authMiddleware, itemController.submitBlindBid);
 router.post(
   "/",
   authMiddleware, // 1. Verify the JWT and attach req.user

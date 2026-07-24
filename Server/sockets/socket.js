@@ -1,6 +1,7 @@
 const socketIo = require("socket.io");
 const jwt = require("jsonwebtoken");
 const DistributedLock = require("../redis/distributed.lock");
+const AuctionCache = require("../redis/auction.cache");
 const AuditLog = require("../models/auditLog.model");
 
 // Import all your exact models
@@ -9,7 +10,7 @@ const Wallet = require("../models/wallet.model");
 const Bid = require("../models/bid.model"); // The history ledger
 
 // <-- NEW (Notifications): Import the Model and Mailer
-const Notification = require("../models/notification.model");
+const Notification = require("../models/Notification.model");
 const { sendEmail } = require("../utils/mailer");
 
 // Import User model and Leaderboard Service
@@ -43,18 +44,43 @@ const initSockets = (server) => {
     // Join personal room for private popup alerts
     socket.join(`user:${socket.user.userId}`);
 
+    const emitRoomViewers = (auctionId) => {
+      const room = io.sockets.adapter.rooms.get(`auction:${auctionId}`);
+      const viewerCount = room ? room.size : 0;
+      io.to(`auction:${auctionId}`).emit("room_viewers_update", { auctionId, viewerCount });
+    };
+
     // Join/Leave Auction Rooms
     socket.on("join_auction", async (auctionId) => {
       socket.join(`auction:${auctionId}`);
       console.log(`User ${socket.user.userId} joined room: auction:${auctionId}`);
+      emitRoomViewers(auctionId);
 
       // Instantly fetch and send Top 5 on join
       const leaderboard = await LeaderboardService.getTopBidders(auctionId);
       socket.emit("leaderboard_update", { leaderboard });
+
+      // Fetch and send persistent bid history from DB on join
+      try {
+        const bids = await Bid.find({ auctionId })
+          .populate('bidderId', 'username')
+          .sort({ createdAt: -1 })
+          .limit(50);
+        socket.emit("bid_history", {
+          bids: bids.map(b => ({
+            bidder: { username: b.bidderId?.username || 'Anonymous' },
+            amount: b.amount,
+            timestamp: b.createdAt
+          }))
+        });
+      } catch (err) {
+        console.error("Failed to emit bid history on join:", err);
+      }
     });
 
     socket.on("leave_auction", (auctionId) => {
       socket.leave(`auction:${auctionId}`);
+      emitRoomViewers(auctionId);
     });
 
     // THE CORE BIDDING ENGINE
@@ -173,14 +199,24 @@ const initSockets = (server) => {
         item.winnerId = userId;
         await item.save({ validateBeforeSave: false });
 
-        // Update Redis and get the new rankings
+        // Update Redis leaderboard and get the new rankings
         const leaderboard = await LeaderboardService.updateLeaderboard(auctionId, user.username, amount);
+
+        // Bust wallet & transaction cache so both users see fresh data instantly
+        // (no more 15-min / 1-hr stale window from the read-through cache)
+        await Promise.all([
+          AuctionCache.clearCache(`wallet_balance:${userId}`),
+          AuctionCache.clearCache(`tx_history:${userId}:page:1`),
+          previousHighestBidderId && AuctionCache.clearCache(`wallet_balance:${previousHighestBidderId}`),
+          previousHighestBidderId && AuctionCache.clearCache(`tx_history:${previousHighestBidderId}:page:1`),
+        ].filter(Boolean));
 
         // 7. Broadcasts
         io.to(`auction:${auctionId}`).emit("new_bid_update", {
           auctionId,
           newHighestBid: amount,
           bidderId: userId,
+          username: user.username,
           timestamp: new Date(),
         });
 
@@ -271,6 +307,15 @@ const initSockets = (server) => {
         socket.emit("bid_rejected", { message: error.message });
       } finally {
         await DistributedLock.releaseLock(lockKey, lockToken);
+      }
+    });
+
+    socket.on("disconnecting", () => {
+      for (const room of socket.rooms) {
+        if (room.startsWith("auction:")) {
+          const auctionId = room.replace("auction:", "");
+          setTimeout(() => emitRoomViewers(auctionId), 100);
+        }
       }
     });
 

@@ -1,31 +1,17 @@
 import React from 'react'
+import LongLogo from '../../assets/LongLogo.png';
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 
+/* ── sub-components ── */
+const handleScrollTop = () => {
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+};
+
 function BidKarLogo() {
   return (
-    <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', textDecoration: 'none', flexShrink: 0 }}>
-      {/* <div style={{
-        width: '34px', height: '34px',
-        borderRadius: '9px',
-        background: 'linear-gradient(135deg, #fece4488, #e5b630)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        flexShrink: 0,
-        boxShadow: '0 2px 8px rgba(254,206,68,0.4)',
-      }}>
-        <span style={{ fontSize: '1.05rem', fontWeight: 800, color: '#002366', lineHeight: 1 }}>B</span>
-      </div>
-      <span style={{
-        fontSize: '1.35rem',
-        fontWeight: 800,
-        color: 'var(--color-brand-primary)',
-        letterSpacing: '-0.04em',
-        lineHeight: 1,
-        whiteSpace: 'nowrap',
-      }}>
-        BidKar<span style={{ color: '#fece4488' }}>.in</span> */}
-      {/* </span> */}
-      <img src='src/assets/LongLogo.png' alt="logo" style={{ width: '100px', height: 'auto', filter: 'drop-shadow(1px 0px 0px #fece4488) drop-shadow(-1px 0px 0px #fece4488) drop-shadow(0px 1px 0px #fece4488) drop-shadow(0px -1px 0px #fece4488)' }} />
+    <Link to="/" onClick={handleScrollTop} style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', textDecoration: 'none', flexShrink: 0 }}>
+      <img src={LongLogo} alt="BidKar Logo" style={{ width: '100px', height: 'auto', filter: 'drop-shadow(1px 0px 0px #fece4488) drop-shadow(-1px 0px 0px #fece4488) drop-shadow(0px 1px 0px #fece4488) drop-shadow(0px -1px 0px #fece4488)' }} />
     </Link>
   );
 }
@@ -80,6 +66,7 @@ const FooterLinkGroup = ({ title, links, colIndex }) => (
         <motion.div variants={linkHover} style={{ display: 'inline-block' }}>
           <Link
             to={to}
+            onClick={handleScrollTop}
             style={{
               fontSize: '0.9rem',
               fontWeight: 400,
@@ -305,6 +292,7 @@ const Footer = () => {
               <Link
                 key={label}
                 to={to}
+                onClick={handleScrollTop}
                 style={{
                   fontSize: '0.78rem',
                   color: '#6b7280',

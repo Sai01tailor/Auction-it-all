@@ -16,9 +16,7 @@ export default function HandoffRoomPage() {
   const [showChecklistModal, setShowChecklistModal] = useState(true);
   const [disclaimerChecked, setDisclaimerChecked] = useState(false);
 
-  // Chat message states
-  const [messages, setMessages] = useState([]);
-  const [newMsgText, setNewMsgText] = useState('');
+
   
   // Review Modal states
   const [showReviewModal, setShowReviewModal] = useState(false);
@@ -73,20 +71,20 @@ export default function HandoffRoomPage() {
                 sellerAgreedChecks: false,
                 sellerMarkedPaid: false,
                 buyerMarkedReceived: false,
-                depositCaptured: false,
+                depositCaptured: true,
                 buyer: {
-                  _id: isUserBuyer ? user._id : 'buyer_fallback_id',
+                  _id: isUserBuyer ? (user.userId || user._id) : 'buyer_fallback_id',
                   username: isUserBuyer ? user.username : 'Buyer (Sai)',
                   kycStatus: 'Verified',
-                  email: 'Locked - Pending Deposit Capture',
-                  phone: 'Locked - Pending Deposit Capture'
+                  email: user?.email || 'buyer@example.com',
+                  phone: '+91 98765 43210'
                 },
                 seller: {
-                  _id: isUserSeller ? user._id : (item.sellerId?._id || item.sellerId),
+                  _id: isUserSeller ? (user.userId || user._id) : (item.sellerId?._id || item.sellerId),
                   username: isUserSeller ? user.username : (item.sellerId?.username || 'Seller'),
                   kycStatus: 'Verified',
-                  email: 'Locked - Pending Deposit Capture',
-                  phone: 'Locked - Pending Deposit Capture'
+                  email: 'seller@example.com',
+                  phone: '+91 99999 88888'
                 },
                 itemTitle: item.title,
                 hammerPrice: item.currentHighestBid || item.startingPrice
@@ -104,69 +102,11 @@ export default function HandoffRoomPage() {
     }
   };
 
-  const loadMessages = async (handoffId) => {
-    if (handoffId && handoffId.startsWith('fallback_')) {
-      try {
-        const savedMsgs = localStorage.getItem(`handoff_messages:${itemId}`);
-        setMessages(savedMsgs ? JSON.parse(savedMsgs) : []);
-      } catch (err) {
-        console.error('Failed to load fallback messages', err);
-      }
-      return;
-    }
-    try {
-      const res = await api.get(`/handoff/${handoffId}/messages`);
-      setMessages(res.data.messages || []);
-    } catch (err) {
-      console.error('Failed to load messages', err);
-    }
-  };
-
   useEffect(() => {
     loadHandoffDetails();
   }, [itemId, user]);
 
-  useEffect(() => {
-    if (!handoff) return;
-    loadMessages(handoff._id);
 
-    // Poll messages every 3 seconds for mock real-time
-    const interval = setInterval(() => {
-      loadMessages(handoff._id);
-    }, 3000);
-    return () => clearInterval(interval);
-  }, [handoff]);
-
-  // Capture Deposit (Buyer action)
-  const handleCaptureDeposit = async () => {
-    if (!handoff) return;
-    if (handoff._id.startsWith('fallback_')) {
-      const updated = {
-        ...handoff,
-        depositCaptured: true,
-        buyer: {
-          ...handoff.buyer,
-          email: user?.email || 'buyer@example.com',
-          phone: '+91 98765 43210'
-        },
-        seller: {
-          ...handoff.seller,
-          email: 'seller@example.com',
-          phone: '+91 99999 88888'
-        }
-      };
-      localStorage.setItem(`handoff_fallback:${itemId}`, JSON.stringify(updated));
-      setHandoff(updated);
-      return;
-    }
-    try {
-      const res = await api.post(`/handoff/${handoff._id}/capture-deposit`);
-      setHandoff(res.data.handoff);
-      loadHandoffDetails();
-    } catch (err) {
-      alert(err.response?.data?.message || 'Failed to capture deposit');
-    }
-  };
 
   // Toggle checklist checkbox
   const handleChecklistToggle = async (type, checked) => {
@@ -258,36 +198,7 @@ export default function HandoffRoomPage() {
     }
   };
 
-  const handleSendMessage = async (e) => {
-    e.preventDefault();
-    if (!newMsgText.trim() || !handoff) return;
-    if (handoff._id.startsWith('fallback_')) {
-      const newMsg = {
-        _id: `msg_${Date.now()}`,
-        senderId: {
-          _id: user?._id,
-          username: user?.username || 'Sai',
-          role: user?.role
-        },
-        text: newMsgText,
-        createdAt: new Date().toISOString()
-      };
-      const savedMsgs = localStorage.getItem(`handoff_messages:${itemId}`);
-      const list = savedMsgs ? JSON.parse(savedMsgs) : [];
-      list.push(newMsg);
-      localStorage.setItem(`handoff_messages:${itemId}`, JSON.stringify(list));
-      setMessages(list);
-      setNewMsgText('');
-      return;
-    }
-    try {
-      const res = await api.post(`/handoff/${handoff._id}/messages`, { text: newMsgText });
-      setMessages(prev => [...prev, res.data.message]);
-      setNewMsgText('');
-    } catch (err) {
-      console.error('Failed to send message', err);
-    }
-  };
+
 
   // Submit Mutual Review
   const handleSubmitReview = async (e) => {
@@ -368,8 +279,12 @@ export default function HandoffRoomPage() {
     );
   }
 
-  const isBuyer = !!(user?._id && handoff?.buyer?._id && user._id.toString() === handoff.buyer._id.toString());
-  const isSeller = !!(user?._id && handoff?.seller?._id && user._id.toString() === handoff.seller._id.toString());
+  const currentUserId = (user?.userId || user?._id)?.toString();
+  const buyerId = (typeof handoff?.buyer === 'object' ? (handoff?.buyer?._id || handoff?.buyer?.id) : handoff?.buyer)?.toString();
+  const sellerId = (typeof handoff?.seller === 'object' ? (handoff?.seller?._id || handoff?.seller?.id) : handoff?.seller)?.toString();
+
+  const isBuyer = !!(currentUserId && buyerId && currentUserId === buyerId);
+  const isSeller = !!(currentUserId && sellerId && currentUserId === sellerId);
   const opponent = isBuyer ? handoff.seller : handoff.buyer;
 
   // 48h check for Dispute button
@@ -381,285 +296,208 @@ export default function HandoffRoomPage() {
       <AuthController />
       <Header />
 
-      {/* Main Grid: Mobile stacks vertically, desktop splits */}
-      <div style={{ maxWidth: '1200px', margin: '2rem auto', padding: '0 1.5rem', display: 'grid', gridTemplateColumns: '1fr', gap: '2rem' }} className="lg:grid-cols-[1fr_360px]">
-        
-        {/* Left Column: Progress Stepper & Chat */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+      {/* ── Page Header Band ── */}
+      <div style={{
+        background: 'linear-gradient(160deg, var(--color-brand-primary-dark) 0%, var(--color-brand-primary) 100%)',
+        padding: '2.5rem 0 5rem',
+        position: 'relative',
+        overflow: 'hidden',
+      }}>
+        {/* Subtle decorative dot pattern */}
+        <div style={{ position: 'absolute', inset: 0, opacity: 0.04, backgroundImage: 'radial-gradient(#fff 1.5px,transparent 0)', backgroundSize: '20px 20px', pointerEvents: 'none' }} />
+        <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 1.5rem', position: 'relative', zIndex: 2 }}>
+          <p style={{ margin: '0 0 0.4rem', fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(254,206,68,0.9)' }}>
+            Logistical Trading Terminal
+          </p>
+          <h1 style={{
+            margin: '0',
+            fontSize: 'clamp(1.5rem, 3vw, 2rem)',
+            fontWeight: 800, color: '#fff',
+            letterSpacing: '-0.03em',
+          }}>
+            Handoff Room: {handoff?.itemTitle}
+          </h1>
+        </div>
+      </div>
+
+      {/* Main Grid: Overlapping Container */}
+      <div style={{ maxWidth: '1200px', margin: '-2.25rem auto 0', padding: '0 1.5rem', position: 'relative', zIndex: 10 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '2rem' }} className="lg:grid-cols-[1fr_360px]">
           
-          {/* Handoff Stepper */}
-          <div style={{ background: '#fff', border: '1px solid var(--color-border-subtle)', borderRadius: '24px', padding: '1.5rem', boxShadow: '0 4px 20px rgba(0,35,102,0.01)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
-              <span style={{ fontSize: '0.72rem', textTransform: 'uppercase', color: 'var(--color-brand-primary)', fontWeight: 800 }}>Logistical Stepper Status</span>
-              <span style={{ fontSize: '0.85rem', fontWeight: 800, color: 'var(--color-brand-accent-dark)' }}>📍 Hammer Value: ₹{handoff.hammerPrice?.toLocaleString('en-IN')}</span>
-            </div>
+          {/* Left Column: Progress Stepper & Verified Contact Info */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+            
+            {/* Handoff Stepper */}
+            <div style={{ background: '#fff', border: '1px solid var(--color-border-subtle)', borderRadius: '24px', padding: '1.5rem', boxShadow: '0 4px 20px rgba(0,35,102,0.01)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+                <span style={{ fontSize: '0.72rem', textTransform: 'uppercase', color: 'var(--color-brand-primary)', fontWeight: 800 }}>Logistical Stepper Status</span>
+                <span style={{ fontSize: '0.85rem', fontWeight: 800, color: 'var(--color-brand-accent-dark)' }}>📍 Hammer Value: ₹{handoff.hammerPrice?.toLocaleString('en-IN')}</span>
+              </div>
 
-            {/* Steps Progress */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', position: 'relative' }}>
-              {['Contacted', 'Meeting Scheduled', 'Payment Received', 'Item Received'].map((step, idx) => {
-                const stepStates = ['Contacted', 'Meeting Scheduled', 'Payment Received', 'Item Received'];
-                const activeIdx = stepStates.indexOf(handoff.stepperState);
-                const isCompleted = idx <= activeIdx;
-                
-                return (
-                  <div key={idx} style={{ textAlign: 'center', flex: 1, position: 'relative', zIndex: 5 }}>
-                    <div style={{
-                      width: '32px',
-                      height: '32px',
-                      borderRadius: '50%',
-                      background: isCompleted ? 'var(--color-brand-primary)' : '#e2e8f0',
-                      color: isCompleted ? 'var(--color-brand-accent)' : 'var(--color-text-muted)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      margin: '0 auto 0.4rem',
-                      fontWeight: 800,
-                      fontSize: '0.85rem',
-                      border: '2px solid #fff',
-                      boxShadow: '0 4px 10px rgba(0,0,0,0.02)'
-                    }}>
-                      {idx + 1}
-                    </div>
-                    <span style={{ fontSize: '0.68rem', fontWeight: 800, color: isCompleted ? 'var(--color-text-rich)' : 'var(--color-text-muted)' }}>{step}</span>
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* Dynamic control options inside stepper */}
-            <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.5rem', borderTop: '1px dashed var(--color-border-subtle)', paddingTop: '1rem' }}>
-              {handoff.stepperState === 'Contacted' && (
-                <button
-                  onClick={() => handleAdvanceStepper('Meeting Scheduled')}
-                  style={{ padding: '0.5rem 1.25rem', background: 'var(--color-brand-primary)', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer' }}
-                >
-                  🗓️ Schedule Meetup coordinates
-                </button>
-              )}
-            </div>
-          </div>
-
-          {/* Secure chat portal */}
-          <div style={{ background: '#fff', border: '1px solid var(--color-border-subtle)', borderRadius: '24px', padding: '1.5rem', boxShadow: '0 4px 20px rgba(0,35,102,0.01)', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-            <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 800, color: 'var(--color-brand-primary)' }}>💬 Handoff Negotiation Chat</h3>
-
-            {/* Messages box */}
-            <div style={{ height: '350px', overflowY: 'auto', border: '1px solid var(--color-border-subtle)', borderRadius: '16px', padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.85rem', background: 'var(--color-surface-bg)' }}>
-              <AnimatePresence initial={false}>
-                {messages.map((msg, mIdx) => {
-                  const isSelf = msg.senderId?._id?.toString() === user?._id?.toString();
+              {/* Steps Progress */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', position: 'relative' }}>
+                {['Contacted', 'Meeting Scheduled', 'Payment Received', 'Item Received'].map((step, idx) => {
+                  const stepStates = ['Contacted', 'Meeting Scheduled', 'Payment Received', 'Item Received'];
+                  const activeIdx = stepStates.indexOf(handoff.stepperState);
+                  const isCompleted = idx <= activeIdx;
+                  
                   return (
-                    <motion.div
-                      key={msg._id || mIdx}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0 }}
-                      transition={{ duration: 0.25 }}
-                      style={{
-                        maxWidth: '75%',
-                        alignSelf: isSelf ? 'flex-end' : 'flex-start',
-                        background: isSelf ? 'var(--color-brand-primary)' : '#f1f5f9',
-                        color: isSelf ? '#ffffff' : '#0f172a',
-                        padding: '0.75rem 1.1rem',
-                        borderRadius: '16px',
-                        border: isSelf ? 'none' : '1px solid var(--color-border-subtle)',
-                        boxShadow: '0 2px 8px rgba(0,0,0,0.02)'
-                      }}
-                    >
-                      <span style={{ 
-                        fontSize: '0.65rem', 
-                        fontWeight: 800, 
-                        color: isSelf ? 'rgba(255, 255, 255, 0.75)' : 'var(--color-brand-primary)', 
-                        display: 'block', 
-                        marginBottom: '0.25rem',
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.05em'
+                    <div key={idx} style={{ textAlign: 'center', flex: 1, position: 'relative', zIndex: 5 }}>
+                      <div style={{
+                        width: '32px',
+                        height: '32px',
+                        borderRadius: '50%',
+                        background: isCompleted ? 'var(--color-brand-primary)' : '#e2e8f0',
+                        color: isCompleted ? 'var(--color-brand-accent)' : 'var(--color-text-muted)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        margin: '0 auto 0.4rem',
+                        fontWeight: 800,
+                        fontSize: '0.85rem',
+                        border: '2px solid #fff',
+                        boxShadow: '0 4px 10px rgba(0,0,0,0.02)'
                       }}>
-                        {isSelf ? 'You' : msg.senderId?.username}
-                      </span>
-                      <p style={{ margin: 0, fontSize: '0.85rem', lineHeight: '1.45', color: isSelf ? '#ffffff' : '#334155' }}>{msg.text}</p>
-                    </motion.div>
+                        {idx + 1}
+                      </div>
+                      <span style={{ fontSize: '0.68rem', fontWeight: 800, color: isCompleted ? 'var(--color-text-rich)' : 'var(--color-text-muted)' }}>{step}</span>
+                    </div>
                   );
                 })}
-              </AnimatePresence>
+              </div>
+
+              {/* Dynamic control options inside stepper */}
+              <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.5rem', borderTop: '1px dashed var(--color-border-subtle)', paddingTop: '1rem' }}>
+                {handoff.stepperState === 'Contacted' && (
+                  <button
+                    onClick={() => handleAdvanceStepper('Meeting Scheduled')}
+                    style={{ padding: '0.5rem 1.25rem', background: 'var(--color-brand-primary)', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer' }}
+                  >
+                    🗓️ Schedule Meetup coordinates
+                  </button>
+                )}
+              </div>
             </div>
 
-            {/* Input bar */}
-            <form onSubmit={handleSendMessage} style={{ display: 'flex', gap: '0.75rem' }}>
-              <input
-                type="text"
-                required
-                value={newMsgText}
-                onChange={e => setNewMsgText(e.target.value)}
-                placeholder="Negotiate time/place details safely here..."
-                style={{
-                  flex: 1,
-                  padding: '0.75rem 1rem',
-                  border: '1.5px solid var(--color-border-subtle)',
-                  borderRadius: '12px',
-                  fontSize: '0.88rem',
-                  outline: 'none'
-                }}
-              />
-              <button
-                type="submit"
-                style={{
-                  padding: '0.75rem 1.5rem',
-                  background: 'var(--color-brand-primary)',
-                  color: '#fff',
-                  border: 'none',
-                  borderRadius: '12px',
-                  fontWeight: 700,
-                  cursor: 'pointer'
-                }}
-              >
-                Send
-              </button>
-            </form>
-          </div>
+            {/* Verified Contact Card (now on the left side, replacing chat) */}
+            <div style={{ background: '#fff', border: '1px solid var(--color-border-subtle)', borderRadius: '24px', padding: '1.5rem', boxShadow: '0 4px 20px rgba(0,35,102,0.01)' }}>
+              <h3 style={{ margin: '0 0 0.5rem', fontSize: '1.1rem', fontWeight: 800, color: 'var(--color-brand-primary)' }}>
+                🔒 Verified Contact Card
+              </h3>
+              <p style={{ margin: '0 0 1.25rem', fontSize: '0.82rem', color: 'var(--color-text-muted)', lineHeight: '1.4' }}>
+                Handoff chat is disabled. Please contact the other party directly using the verified credentials below to coordinate your meetup details.
+              </p>
 
-        </div>
-
-        {/* Right Column: Privacy guard contact info & Checklist panel */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-          
-          {/* Privacy Guard Card */}
-          <div style={{ background: '#fff', border: '1px solid var(--color-border-subtle)', borderRadius: '24px', padding: '1.5rem', boxShadow: '0 4px 20px rgba(0,35,102,0.01)' }}>
-            <h3 style={{ margin: '0 0 1rem', fontSize: '1rem', fontWeight: 800, color: 'var(--color-brand-primary)' }}>🔒 Verified Contact Card</h3>
-            
-            {handoff.depositCaptured ? (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem', fontSize: '0.85rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1.25rem', background: 'var(--color-surface-bg)', padding: '1.25rem', borderRadius: '16px', border: '1px solid var(--color-border-subtle)' }}>
                 <div style={{ background: '#ecfdf5', color: '#047857', padding: '0.5rem 0.75rem', borderRadius: '8px', fontWeight: 700, fontSize: '0.75rem', textAlign: 'center' }}>
-                  ✔ Escrow Deposit CAPTURED (UNLOCKED)
+                  ✔ 10% Escrow Deposit CAPTURED on Hammering (UNLOCKED)
                 </div>
-                <div>
-                  <span style={{ color: 'var(--color-text-muted)', fontSize: '0.72rem', display: 'block' }}>Name</span>
-                  <strong>{opponent?.username || 'Sai (Buyer)'}</strong>
-                </div>
-                <div>
-                  <span style={{ color: 'var(--color-text-muted)', fontSize: '0.72rem', display: 'block' }}>Verified Phone</span>
-                  <strong>{opponent?.phone || '+91 98765 43210'}</strong>
-                </div>
-                <div>
-                  <span style={{ color: 'var(--color-text-muted)', fontSize: '0.72rem', display: 'block' }}>Verified Email</span>
-                  <strong>{opponent?.email || 'buyer@example.com'}</strong>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.25rem' }}>
+                  <div>
+                    <span style={{ color: 'var(--color-text-muted)', fontSize: '0.72rem', display: 'block', textTransform: 'uppercase', fontWeight: 700, marginBottom: '0.2rem' }}>Role</span>
+                    <strong style={{ color: 'var(--color-brand-primary)', textTransform: 'uppercase' }}>{isBuyer ? 'Seller' : 'Buyer'}</strong>
+                  </div>
+                  <div>
+                    <span style={{ color: 'var(--color-text-muted)', fontSize: '0.72rem', display: 'block', textTransform: 'uppercase', fontWeight: 700, marginBottom: '0.2rem' }}>Username</span>
+                    <strong style={{ color: 'var(--color-text-rich)' }}>{opponent?.username || 'Sai'}</strong>
+                  </div>
+                  <div>
+                    <span style={{ color: 'var(--color-text-muted)', fontSize: '0.72rem', display: 'block', textTransform: 'uppercase', fontWeight: 700, marginBottom: '0.2rem' }}>Verified Phone</span>
+                    <strong style={{ color: 'var(--color-text-rich)' }}>{opponent?.phone || '+91 98765 43210'}</strong>
+                  </div>
+                  <div>
+                    <span style={{ color: 'var(--color-text-muted)', fontSize: '0.72rem', display: 'block', textTransform: 'uppercase', fontWeight: 700, marginBottom: '0.2rem' }}>Verified Email</span>
+                    <strong style={{ color: 'var(--color-text-rich)' }}>{opponent?.email || 'buyer@example.com'}</strong>
+                  </div>
                 </div>
               </div>
-            ) : (
-              <div style={{ textAlign: 'center', padding: '1rem 0' }}>
-                <span style={{ fontSize: '2rem', display: 'block', marginBottom: '0.5rem' }}>🔒</span>
-                <p style={{ margin: '0 0 1rem', fontSize: '0.8rem', color: 'var(--color-text-muted)', lineHeight: '1.5' }}>
-                  Contact details are locked under platform security rules until the 10% deposit is captured.
-                </p>
+            </div>
 
-                {isBuyer && (
+          </div>
+
+          {/* Right Column: Checklist panel */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+            
+            {/* Stepper Checklist checklist */}
+            <div style={{ background: '#fff', border: '1px solid var(--color-border-subtle)', borderRadius: '24px', padding: '1.5rem', boxShadow: '0 4px 20px rgba(0,35,102,0.01)' }}>
+              <h3 style={{ margin: '0 0 1.25rem', fontSize: '1rem', fontWeight: 800, color: 'var(--color-brand-primary)' }}>✍️ Escrow Mutual Agreements</h3>
+              
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', fontSize: '0.82rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                  <input
+                    type="checkbox"
+                    disabled={!isBuyer}
+                    checked={handoff.buyerAgreedChecks}
+                    onChange={e => handleChecklistToggle('buyer', e.target.checked)}
+                    style={{ width: '18px', height: '18px', cursor: isBuyer ? 'pointer' : 'not-allowed' }}
+                  />
+                  <span style={{ fontWeight: 600, color: 'var(--color-text-rich)' }}>
+                    Buyer verified checklist conditions
+                  </span>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', borderBottom: '1px solid var(--color-border-subtle)', paddingBottom: '1rem', marginBottom: '0.5rem' }}>
+                  <input
+                    type="checkbox"
+                    disabled={!isSeller}
+                    checked={handoff.sellerAgreedChecks}
+                    onChange={e => handleChecklistToggle('seller', e.target.checked)}
+                    style={{ width: '18px', height: '18px', cursor: isSeller ? 'pointer' : 'not-allowed' }}
+                  />
+                  <span style={{ fontWeight: 600, color: 'var(--color-text-rich)' }}>
+                    Seller verified checklist conditions
+                  </span>
+                </div>
+
+                {/* Action Buttons */}
+                {isSeller && handoff.stepperState === 'Meeting Scheduled' && (
                   <button
-                    onClick={handleCaptureDeposit}
+                    onClick={handleConfirmPayment}
                     style={{
-                      width: '100%',
-                      padding: '0.75rem',
-                      background: 'linear-gradient(135deg, var(--color-brand-accent) 0%, var(--color-brand-accent-dark) 100%)',
-                      color: 'var(--color-brand-primary-dark)',
-                      border: 'none',
-                      borderRadius: '10px',
-                      fontWeight: 800,
-                      fontSize: '0.85rem',
-                      cursor: 'pointer',
-                      boxShadow: '0 4px 12px rgba(254,206,68,0.2)'
+                      width: '100%', padding: '0.8rem', background: '#10b981', color: '#fff',
+                      border: 'none', borderRadius: '10px', fontWeight: 800, fontSize: '0.8rem', cursor: 'pointer',
+                      boxShadow: '0 4px 12px rgba(16,185,129,0.2)'
                     }}
                   >
-                    💳 Authorize 10% Capture
+                    🤝 Confirm 90% Payment Received (Kill switch)
                   </button>
                 )}
 
-                {isSeller && (
-                  <div style={{ background: '#fff7ed', border: '1px solid #ffedd5', padding: '0.75rem', borderRadius: '10px', fontSize: '0.75rem', color: '#c2410c', fontWeight: 600 }}>
-                    Waiting for buyer to authorize 10% deposit capture from wallet.
-                  </div>
+                {isBuyer && handoff.stepperState === 'Payment Received' && (
+                  <button
+                    onClick={handleConfirmReceived}
+                    style={{
+                      width: '100%', padding: '0.8rem', background: '#10b981', color: '#fff',
+                      border: 'none', borderRadius: '10px', fontWeight: 800, fontSize: '0.8rem', cursor: 'pointer',
+                      boxShadow: '0 4px 12px rgba(16,185,129,0.2)'
+                    }}
+                  >
+                    ✔ Confirm Item Received & Close Escrow
+                  </button>
                 )}
-              </div>
-            )}
-          </div>
 
-          {/* Stepper Checklist checklist */}
-          <div style={{ background: '#fff', border: '1px solid var(--color-border-subtle)', borderRadius: '24px', padding: '1.5rem', boxShadow: '0 4px 20px rgba(0,35,102,0.01)' }}>
-            <h3 style={{ margin: '0 0 1.25rem', fontSize: '1rem', fontWeight: 800, color: 'var(--color-brand-primary)' }}>✍️ Escrow Mutual Agreements</h3>
-            
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', fontSize: '0.82rem' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                <input
-                  type="checkbox"
-                  disabled={!isBuyer}
-                  checked={handoff.buyerAgreedChecks}
-                  onChange={e => handleChecklistToggle('buyer', e.target.checked)}
-                  style={{ width: '18px', height: '18px', cursor: isBuyer ? 'pointer' : 'not-allowed' }}
-                />
-                <span style={{ fontWeight: 600, color: 'var(--color-text-rich)' }}>
-                  Buyer verified checklist conditions
-                </span>
-              </div>
-
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', borderBottom: '1px solid var(--color-border-subtle)', paddingBottom: '1rem', marginBottom: '0.5rem' }}>
-                <input
-                  type="checkbox"
-                  disabled={!isSeller}
-                  checked={handoff.sellerAgreedChecks}
-                  onChange={e => handleChecklistToggle('seller', e.target.checked)}
-                  style={{ width: '18px', height: '18px', cursor: isSeller ? 'pointer' : 'not-allowed' }}
-                />
-                <span style={{ fontWeight: 600, color: 'var(--color-text-rich)' }}>
-                  Seller verified checklist conditions
-                </span>
-              </div>
-
-              {/* Action Buttons */}
-              {isSeller && handoff.stepperState === 'Meeting Scheduled' && (
                 <button
-                  onClick={handleConfirmPayment}
+                  onClick={() => navigate(`/invoice/${itemId}`)}
+                  style={{ width: '100%', padding: '0.75rem', background: 'var(--color-surface-bg)', border: '1px solid var(--color-border-subtle)', borderRadius: '10px', fontWeight: 700, fontSize: '0.78rem', color: 'var(--color-brand-primary)', cursor: 'pointer' }}
+                >
+                  📄 View Printable Invoice receipt
+                </button>
+
+                <button
+                  onClick={() => navigate('/disputes')}
                   style={{
-                    width: '100%', padding: '0.8rem', background: '#10b981', color: '#fff',
-                    border: 'none', borderRadius: '10px', fontWeight: 800, fontSize: '0.8rem', cursor: 'pointer',
-                    boxShadow: '0 4px 12px rgba(16,185,129,0.2)'
+                    width: '100%', padding: '0.75rem', background: 'none', border: '1px solid #ef4444',
+                    borderRadius: '10px', fontWeight: 700, fontSize: '0.78rem', color: '#ef4444', cursor: 'pointer'
                   }}
                 >
-                  🤝 Confirm 90% Payment Received (Kill switch)
+                  ⚠️ Raise Mediation Dispute
                 </button>
-              )}
-
-              {isBuyer && handoff.stepperState === 'Payment Received' && (
-                <button
-                  onClick={handleConfirmReceived}
-                  style={{
-                    width: '100%', padding: '0.8rem', background: '#10b981', color: '#fff',
-                    border: 'none', borderRadius: '10px', fontWeight: 800, fontSize: '0.8rem', cursor: 'pointer',
-                    boxShadow: '0 4px 12px rgba(16,185,129,0.2)'
-                  }}
-                >
-                  ✔ Confirm Item Received & Close Escrow
-                </button>
-              )}
-
-              <button
-                onClick={() => navigate(`/invoice/${itemId}`)}
-                style={{ width: '100%', padding: '0.75rem', background: 'var(--color-surface-bg)', border: '1px solid var(--color-border-subtle)', borderRadius: '10px', fontWeight: 700, fontSize: '0.78rem', color: 'var(--color-brand-primary)', cursor: 'pointer' }}
-              >
-                📄 View Printable Invoice receipt
-              </button>
-
-              <button
-                onClick={() => navigate('/disputes')}
-                style={{
-                  width: '100%', padding: '0.75rem', background: 'none', border: '1px solid #ef4444',
-                  borderRadius: '10px', fontWeight: 700, fontSize: '0.78rem', color: '#ef4444', cursor: 'pointer'
-                }}
-              >
-                ⚠️ Raise Mediation Dispute
-              </button>
+              </div>
             </div>
+
           </div>
 
         </div>
-
       </div>
 
       {/* SAFETY CHECKLIST MODAL POPUP (P22) */}

@@ -194,26 +194,22 @@ export default function TransactionLedgerPage() {
       {/* ── HERO BANNER (same as BidderDashboardPage) ── */}
       <div style={{
         background: 'linear-gradient(135deg,var(--color-brand-primary-dark) 0%,var(--color-brand-primary) 55%,#1a3c7a 100%)',
-        padding: '2rem 2rem 3.5rem',
+        padding: '1.5rem 0.65rem 3.5rem',
         position: 'relative', overflow: 'hidden',
       }}>
         <div style={{ position: 'absolute', inset: 0, opacity: 0.05, backgroundImage: 'radial-gradient(#fff 1.5px,transparent 0)', backgroundSize: '22px 22px', pointerEvents: 'none' }} />
         <div style={{ maxWidth: '1100px', margin: '0 auto', position: 'relative', zIndex: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
           <div>
-            {/* <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', background: 'rgba(254,206,68,0.12)', border: '1px solid rgba(254,206,68,0.25)', padding: '0.3rem 0.85rem', borderRadius: '20px', marginBottom: '0.75rem' }}>
-              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--color-brand-accent)" strokeWidth="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /></svg>
-              <span style={{ fontSize: '0.65rem', fontWeight: 800, color: 'var(--color-brand-accent)', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Passbook Ledger</span>
-            </div> */}
-            <h1 style={{ margin: 0, fontSize: '1.8rem', fontWeight: 900, color: '#fff', letterSpacing: '-0.02em' }}>Transaction Ledger</h1>
-            <p style={{ margin: '0.3rem 0 0', fontSize: '0.85rem', color: 'rgba(255,255,255,0.65)' }}>Real-time audit log for all escrow, top-up, and refund operations</p>
+            <h1 style={{ margin: 0, fontSize: 'clamp(1.2rem, 3.5vw, 1.8rem)', fontWeight: 900, color: '#fff', letterSpacing: '-0.02em' }}>Transaction Ledger</h1>
+            <p style={{ margin: '0.25rem 0 0', fontSize: '0.78rem', color: 'rgba(255,255,255,0.65)' }}>Real-time audit log for all escrow, top-up, and refund operations</p>
           </div>
           <button
             onClick={() => navigate('/wallet')}
             style={{
-              padding: '0.65rem 1.25rem',
+              padding: '0.55rem 1.1rem',
               background: 'rgba(255,255,255,0.1)', color: '#fff',
               border: '1px solid rgba(255,255,255,0.2)', borderRadius: '12px',
-              fontSize: '0.82rem', fontWeight: 700, cursor: 'pointer',
+              fontSize: '0.78rem', fontWeight: 700, cursor: 'pointer',
               display: 'inline-flex', alignItems: 'center', gap: '0.45rem',
               transition: 'background 0.15s', backdropFilter: 'blur(8px)',
             }}
@@ -227,18 +223,18 @@ export default function TransactionLedgerPage() {
       </div>
 
       {/* ── MAIN CONTENT (overlaps hero) ── */}
-      <div style={{ maxWidth: '1100px', margin: '-1.75rem auto 4rem', padding: '0 1.5rem', position: 'relative', zIndex: 10 }}>
+      <div style={{ maxWidth: '1100px', margin: '-1.75rem auto 4rem', padding: '0 0.65rem', position: 'relative', zIndex: 10 }}>
 
         {/* STATS STRIP */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '1rem', marginBottom: '1.5rem' }}>
+        <div className="wallet-stats-strip">
           {statsCards.map(s => (
-            <div key={s.label} style={{ background: '#fff', border: '1px solid var(--color-border-subtle)', borderRadius: '18px', padding: '1.1rem 1.25rem', boxShadow: '0 4px 20px rgba(0,35,102,0.02)', display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
+            <div key={s.label} style={{ background: '#fff', border: '1px solid var(--color-border-subtle)', borderRadius: '18px', padding: '0.9rem 1.1rem', boxShadow: '0 4px 20px rgba(0,35,102,0.02)', display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
               <div style={{ width: '38px', height: '38px', borderRadius: '10px', background: `${s.color}12`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: s.color, flexShrink: 0 }}>
                 {s.icon}
               </div>
               <div>
                 <p style={{ margin: 0, fontSize: '0.68rem', color: 'var(--color-text-muted)', fontWeight: 600 }}>{s.label}</p>
-                <strong style={{ fontSize: '1.35rem', fontWeight: 900, color: s.color, letterSpacing: '-0.02em' }}>₹{s.value.toLocaleString('en-IN')}</strong>
+                <strong style={{ fontSize: '1.2rem', fontWeight: 900, color: s.color, letterSpacing: '-0.02em' }}>₹{s.value.toLocaleString('en-IN')}</strong>
               </div>
             </div>
           ))}
@@ -248,22 +244,20 @@ export default function TransactionLedgerPage() {
         <div style={{ background: '#fff', border: '1px solid var(--color-border-subtle)', borderRadius: '24px', boxShadow: '0 4px 24px rgba(0,35,102,0.025)', overflow: 'hidden' }}>
 
           {/* Toolbar: filter pills + search */}
-          <div style={{ borderBottom: '1px solid var(--color-border-subtle)', padding: '0.9rem 1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem', background: 'var(--color-surface-bg)' }}>
+          <div style={{ borderBottom: '1px solid var(--color-border-subtle)', padding: '0.75rem 0.85rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.65rem', background: 'var(--color-surface-bg)' }}>
             {/* Filter pills */}
-            <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', gap: '0.3rem', flexWrap: 'wrap' }}>
               {TYPE_FILTERS.map(f => (
                 <button
                   key={f.key}
                   onClick={() => handleFilterChange(f.key)}
                   style={{
-                    padding: '0.4rem 0.9rem', borderRadius: '8px', border: '1.5px solid',
+                    padding: '0.35rem 0.75rem', borderRadius: '8px', border: '1.5px solid',
                     borderColor: activeFilter === f.key ? 'var(--color-brand-primary)' : 'var(--color-border-subtle)',
                     background: activeFilter === f.key ? 'var(--color-brand-primary)' : '#fff',
                     color: activeFilter === f.key ? '#fff' : 'var(--color-text-muted)',
-                    fontSize: '0.78rem', fontWeight: 700, cursor: 'pointer', transition: 'all 0.15s',
+                    fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', transition: 'all 0.15s',
                   }}
-                  onMouseEnter={e => { if (activeFilter !== f.key) { e.currentTarget.style.borderColor = 'var(--color-brand-primary)'; e.currentTarget.style.color = 'var(--color-brand-primary)'; } }}
-                  onMouseLeave={e => { if (activeFilter !== f.key) { e.currentTarget.style.borderColor = 'var(--color-border-subtle)'; e.currentTarget.style.color = 'var(--color-text-muted)'; } }}
                 >
                   {f.label}
                 </button>
@@ -271,7 +265,7 @@ export default function TransactionLedgerPage() {
             </div>
 
             {/* Search bar */}
-            <div style={{ position: 'relative', minWidth: '200px', maxWidth: '280px', width: '100%' }}>
+            <div style={{ position: 'relative', flex: 1, minWidth: '160px', width: '100%' }}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2.5" style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}>
                 <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
               </svg>
@@ -282,9 +276,9 @@ export default function TransactionLedgerPage() {
                 placeholder="Search by ID or description..."
                 style={{
                   width: '100%', boxSizing: 'border-box',
-                  padding: '0.5rem 0.85rem 0.5rem 2.1rem',
+                  padding: '0.45rem 0.75rem 0.45rem 2rem',
                   border: '1.5px solid var(--color-border-subtle)',
-                  borderRadius: '10px', fontSize: '0.8rem', fontFamily: 'inherit',
+                  borderRadius: '10px', fontSize: '0.78rem', fontFamily: 'inherit',
                   background: '#fff', outline: 'none', transition: 'border-color 0.15s',
                 }}
                 onFocus={e => e.currentTarget.style.borderColor = 'var(--color-brand-primary)'}
@@ -293,8 +287,8 @@ export default function TransactionLedgerPage() {
             </div>
           </div>
 
-          {/* Column headers */}
-          <div style={{ display: 'grid', gridTemplateColumns: '120px 140px 1fr 120px 110px 140px', gap: 0, padding: '0.7rem 1.5rem', background: 'var(--color-surface-bg)', borderBottom: '1px solid var(--color-border-subtle)', fontSize: '0.68rem', fontWeight: 800, color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+          {/* Column headers (Desktop only) */}
+          <div className="ledger-table-header">
             <div>TX ID</div>
             <div>Timestamp</div>
             <div>Description</div>
@@ -324,47 +318,80 @@ export default function TransactionLedgerPage() {
 
               return (
                 <div key={tx.id} style={{ borderBottom: '1px solid var(--color-border-subtle)' }}>
-                  {/* Main row */}
+                  {/* Main row grid */}
                   <div
                     onClick={() => toggleExpand(tx.id)}
+                    className="ledger-row-grid"
                     style={{
-                      display: 'grid', gridTemplateColumns: '120px 140px 1fr 120px 110px 140px',
-                      alignItems: 'center', padding: '0.95rem 1.5rem',
                       cursor: 'pointer', transition: 'background 0.12s',
                     }}
                     onMouseEnter={e => e.currentTarget.style.background = 'rgba(0,35,102,0.012)'}
                     onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                   >
-                    {/* ID */}
-                    <div style={{ fontFamily: 'monospace', fontSize: '0.78rem', color: 'var(--color-text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {/* Desktop ID */}
+                    <div className="hidden md:block" style={{ fontFamily: 'monospace', fontSize: '0.78rem', color: 'var(--color-text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {String(tx.id).slice(0, 10)}…
                     </div>
 
-                    {/* Date */}
-                    <div style={{ fontSize: '0.78rem', color: 'var(--color-text-muted)' }}>
+                    {/* Desktop Date */}
+                    <div className="hidden md:block" style={{ fontSize: '0.78rem', color: 'var(--color-text-muted)' }}>
                       <span style={{ display: 'block' }}>{new Date(tx.date).toLocaleDateString('en-IN')}</span>
                       <span style={{ fontSize: '0.7rem' }}>{new Date(tx.date).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}</span>
                     </div>
 
-                    {/* Description */}
-                    <div style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--color-brand-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', paddingRight: '0.5rem' }}>
+                    {/* Mobile Header Line: Title & Amount */}
+                    <div className="flex md:hidden items-start justify-between gap-2">
+                      <div style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--color-brand-primary)' }}>
+                        {tx.title}
+                      </div>
+                      <div style={{ fontFamily: 'monospace', fontWeight: 900, fontSize: '0.88rem', color: isCredit ? '#10b981' : '#ef4444', flexShrink: 0 }}>
+                        {isCredit ? '+' : '-'} ₹{tx.amount.toLocaleString('en-IN')}
+                      </div>
+                    </div>
+
+                    {/* Desktop Description */}
+                    <div className="hidden md:block" style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--color-brand-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', paddingRight: '0.5rem' }}>
                       {tx.title}
                     </div>
 
-                    {/* Amount */}
-                    <div style={{ textAlign: 'right', fontFamily: 'monospace', fontWeight: 800, fontSize: '0.9rem', color: isCredit ? '#10b981' : '#ef4444' }}>
+                    {/* Desktop Amount */}
+                    <div className="hidden md:block" style={{ textAlign: 'right', fontFamily: 'monospace', fontWeight: 800, fontSize: '0.9rem', color: isCredit ? '#10b981' : '#ef4444' }}>
                       {isCredit ? '+' : '-'} ₹{tx.amount.toLocaleString('en-IN')}
                     </div>
 
-                    {/* Status badge */}
-                    <div style={{ textAlign: 'center' }}>
+                    {/* Mobile Sub Line: Date + Badge + Receipt Button */}
+                    <div className="flex md:hidden items-center justify-between gap-2 mt-1 pt-1" style={{ borderTop: '1px solid rgba(0,0,0,0.04)' }}>
+                      <div style={{ fontSize: '0.7rem', color: 'var(--color-text-muted)' }}>
+                        {new Date(tx.date).toLocaleDateString('en-IN')} · {new Date(tx.date).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                        <span style={{ display: 'inline-block', padding: '0.15rem 0.5rem', fontSize: '0.65rem', fontWeight: 700, borderRadius: '20px', background: badge.bg, color: badge.color, border: `1px solid ${badge.border}` }}>
+                          {badge.label}
+                        </span>
+                        {canDownloadReceipt && (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handleDownloadReceipt(tx); }}
+                            disabled={isDownloading}
+                            style={{
+                              padding: '0.25rem 0.55rem', background: '#fff', border: '1px solid var(--color-brand-primary)',
+                              borderRadius: '6px', cursor: 'pointer', fontWeight: 700, fontSize: '0.68rem', color: 'var(--color-brand-primary)'
+                            }}
+                          >
+                            Receipt PDF
+                          </button>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Desktop Status Badge */}
+                    <div className="hidden md:block" style={{ textAlign: 'center' }}>
                       <span style={{ display: 'inline-block', padding: '0.2rem 0.65rem', fontSize: '0.68rem', fontWeight: 700, borderRadius: '20px', background: badge.bg, color: badge.color, border: `1.5px solid ${badge.border}` }}>
                         {badge.label}
                       </span>
                     </div>
 
-                    {/* Actions — inline receipt download for SUCCESS top-ups */}
-                    <div style={{ textAlign: 'center' }} onClick={e => e.stopPropagation()}>
+                    {/* Actions — inline receipt download for SUCCESS top-ups (Desktop only) */}
+                    <div className="hidden md:block" style={{ textAlign: 'center' }} onClick={e => e.stopPropagation()}>
                       {canDownloadReceipt ? (
                         <button
                           onClick={() => handleDownloadReceipt(tx)}

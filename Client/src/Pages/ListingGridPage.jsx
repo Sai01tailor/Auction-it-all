@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import Header from '../Components/Global/Header';
-import FilterSidebar from '../Components/Listing/FilterSidebar';
+import FilterSidebar, { MobileFilterSheet } from '../Components/Listing/FilterSidebar';
 import AuctionGrid from '../Components/Listing/AuctionGrid';
 import SearchBar from '../Components/Listing/SearchBar';
 import { getActiveAuctions } from '../services/auctionService';
@@ -41,6 +41,7 @@ const PAGE_SIZE = 16;
 
 export default function ListingGridPage() {
   const [searchParams, setSearchParams] = useSearchParams();
+  const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
 
   const [filters, setFilters] = useState(() => ({
     ...DEFAULT_FILTERS,
@@ -127,25 +128,25 @@ export default function ListingGridPage() {
     filters.priceRange[1] < 10_00_000;
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--color-surface-bg)' }}>
+    <div style={{ minHeight: '100vh', background: 'var(--color-surface-bg)', paddingBottom: '3.5rem' }}>
       <Header />
 
       {/* ── Page Header Band ── */}
       <div style={{
         background: 'linear-gradient(160deg, var(--color-brand-primary-dark) 0%, var(--color-brand-primary) 100%)',
-        padding: '2.5rem 0 5rem',
+        padding: '2rem 0 4.5rem',
         position: 'relative',
         overflow: 'hidden',
       }}>
         {/* Subtle decorative dot pattern */}
         <div style={{ position: 'absolute', inset: 0, opacity: 0.04, backgroundImage: 'radial-gradient(#fff 1.5px,transparent 0)', backgroundSize: '20px 20px', pointerEvents: 'none' }} />
-        <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 1.5rem', position: 'relative', zIndex: 2 }}>
+        <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 0.65rem', position: 'relative', zIndex: 2 }}>
           <p style={{ margin: '0 0 0.4rem', fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(254,206,68,0.9)' }}>
             Live Auction Marketplace
           </p>
           <h1 style={{
             margin: '0 0 1.25rem',
-            fontSize: 'clamp(1.5rem, 3vw, 2rem)',
+            fontSize: 'clamp(1.3rem, 3vw, 2rem)',
             fontWeight: 800, color: '#fff',
             letterSpacing: '-0.03em',
           }}>
@@ -153,7 +154,7 @@ export default function ListingGridPage() {
             {total > 0 && (
               <span style={{
                 marginLeft: '0.75rem',
-                fontSize: '1rem',
+                fontSize: '0.85rem',
                 fontWeight: 600,
                 background: 'rgba(255,255,255,0.15)',
                 color: 'rgba(255,255,255,0.85)',
@@ -175,11 +176,11 @@ export default function ListingGridPage() {
         </div>
       </div>
 
+      {/* ── Upper Bidding Engine Navigation: Desktop Buttons & Mobile Dropdown ── */}
+      <div style={{ maxWidth: '1280px', margin: '-2rem auto 0', padding: '0 0.65rem', position: 'relative', zIndex: 10 }}>
 
-
-      {/* ── Bidding Engine Navigation Tabs ── */}
-      <div style={{ maxWidth: '1280px', margin: '-2.25rem auto 0', padding: '0 1.5rem', position: 'relative', zIndex: 10 }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.5rem', background: 'var(--color-surface-main)', border: '1px solid var(--color-border-subtle)', borderRadius: '20px', padding: '0.45rem', boxShadow: '0 10px 30px rgba(0,0,0,0.06)' }}>
+        {/* Desktop Engine Grid (Hidden on Mobile) */}
+        <div className="hidden md:grid" style={{ gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.5rem', background: 'var(--color-surface-main)', border: '1px solid var(--color-border-subtle)', borderRadius: '20px', padding: '0.45rem', boxShadow: '0 10px 30px rgba(0,0,0,0.06)' }}>
           {ENGINES.map(eng => {
             const active = (filters.engine || 'ALL') === eng.id;
             return (
@@ -203,26 +204,37 @@ export default function ListingGridPage() {
                   transition: 'all 0.2s',
                 }}
               >
-                {/* <span style={{ fontSize: '1.1rem' }}>{eng.icon}</span> */}
                 <span>{eng.label}</span>
               </button>
             );
           })}
         </div>
+
+        {/* Mobile Engine Dropdown Select (Visible only on Mobile) */}
+        <div className="block md:hidden">
+          <div style={{ background: '#fff', border: '1.5px solid var(--color-border-subtle)', borderRadius: '16px', padding: '0.6rem 0.85rem', boxShadow: '0 6px 20px rgba(0,35,102,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem' }}>
+
+            <select
+              value={filters.engine || 'ALL'}
+              onChange={e => handleFilterChange({ ...filters, engine: e.target.value })}
+              style={{ flex: 1, padding: '0.45rem 0.65rem', borderRadius: '10px', border: '1.5px solid var(--color-brand-primary)', fontSize: '0.85rem', fontWeight: 700, color: 'var(--color-brand-primary)', background: 'rgba(0,35,102,0.04)', outline: 'none', cursor: 'pointer' }}
+            >
+              {ENGINES.map(eng => <option key={eng.id} value={eng.id}>{eng.label}</option>)}
+            </select>
+          </div>
+        </div>
+
       </div>
 
       {/* ── Main Layout: Sidebar + Grid ── */}
-      <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '2rem 1.5rem' }}>
+      <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '1.25rem 0.5rem' }}>
         <div style={{ display: 'flex', gap: '1.75rem', alignItems: 'flex-start' }}>
 
-          {/* Left Sidebar */}
-          <div style={{ flexShrink: 0, display: 'none' }} className="listing-sidebar">
-            {/* The sidebar is shown via CSS media query — hidden on mobile via class */}
-          </div>
+          {/* Left Desktop Sidebar */}
           <FilterSidebar filters={filters} onFilterChange={handleFilterChange} />
 
           {/* Main grid area */}
-          <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ flex: 1, minWidth: 0, width: '100%' }}>
             {/* Active filter chips */}
             {hasActiveFilters && (
               <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '1rem' }}>
@@ -255,6 +267,40 @@ export default function ListingGridPage() {
           </div>
         </div>
       </div>
+
+      {/* Mobile Fixed Bottom Filter Bar (like Flipkart & Myntra) */}
+      <div className="block md:hidden" style={{
+        position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 90,
+        background: '#ffffff', borderTop: '1px solid var(--color-border-subtle)',
+        padding: '0.65rem 1rem', boxShadow: '0 -4px 20px rgba(0,0,0,0.1)',
+      }}>
+        <button
+          onClick={() => setIsMobileFilterOpen(true)}
+          style={{
+            width: '100%', padding: '0.75rem', borderRadius: '12px', border: 'none',
+            background: 'var(--color-brand-primary)', color: '#fff',
+            fontSize: '0.9rem', fontWeight: 800, cursor: 'pointer',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
+            boxShadow: '0 4px 14px rgba(0,35,102,0.18)',
+          }}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" /></svg>
+          Filter & Sort
+          {hasActiveFilters && (
+            <span style={{ background: 'var(--color-brand-accent)', color: 'var(--color-brand-primary-dark)', borderRadius: '20px', padding: '0.15rem 0.55rem', fontSize: '0.72rem', fontWeight: 900 }}>
+              Active
+            </span>
+          )}
+        </button>
+      </div>
+
+      {/* Mobile Bottom Filter Sheet Drawer Modal */}
+      <MobileFilterSheet
+        isOpen={isMobileFilterOpen}
+        onClose={() => setIsMobileFilterOpen(false)}
+        filters={filters}
+        onFilterChange={handleFilterChange}
+      />
     </div>
   );
 }

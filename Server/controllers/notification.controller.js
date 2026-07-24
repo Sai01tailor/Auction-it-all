@@ -1,18 +1,24 @@
-const Notification = require('../models/notification.model');
+const Notification = require('../models/Notification.model');
 
 // Get all notifications for the logged-in user
 exports.getMyNotifications = async (req, res) => {
   try {
-    const notifications = await Notification.find({ userId: req.user._id })
+    const query = { userId: req.user._id };
+    if (req.query.type && req.query.type !== 'All') {
+      query.type = req.query.type;
+    }
+
+    const notifications = await Notification.find(query)
       .sort({ createdAt: -1 })
-      .limit(10); // only send top 10 
+      .limit(30);
 
     // Count unread messages for the red badge icon
-    const unreadCount = notifications.filter(n => !n.isRead).length;
+    const unreadCount = await Notification.countDocuments({ userId: req.user._id, isRead: false });
 
     res.status(200).json({
       success: true,
       unreadCount,
+      notifications,
       data: notifications
     });
   } catch (error) {

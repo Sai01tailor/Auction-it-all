@@ -82,6 +82,28 @@ const itemSchema = new mongoose.Schema({
         type: String,
         enum: ['ENGLISH', 'DUTCH', 'BLIND'],
         default: 'ENGLISH'
+    },
+    priceFloor: {
+        type: Number,
+        default: 0
+    },
+    dropInterval: {
+        type: Number,
+        default: 20
+    },
+    dropAmount: {
+        type: Number,
+        default: 0
+    },
+    currentQuantity: {
+        type: Number,
+        default: 1
+    },
+    submissionDeadline: {
+        type: Date
+    },
+    revealTime: {
+        type: Date
     }
 }, {
     timestamps: true // Automatically tracks createdAt and updatedAt

@@ -5,6 +5,7 @@ import { createCustomItem } from '../services/auctionService';
 import { useAuth } from '../Context/AuthContext';
 import Header from '../Components/Global/Header';
 import AuthController from '../Components/Global/AuthController';
+import DesktopOnlyNoticePage from './DesktopOnlyNoticePage';
 
 export default function CreateListingPage() {
   const navigate = useNavigate();
@@ -12,6 +13,19 @@ export default function CreateListingPage() {
 
   // Multi-step index (1, 2, 3)
   const [step, setStep] = useState(1);
+
+  // Mobile device check to block creating listing on mobile
+  const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' ? window.innerWidth < 768 : false);
+
+  React.useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  if (isMobile) {
+    return <DesktopOnlyNoticePage />;
+  }
 
   // Form Field States
   const [title, setTitle] = useState('');

@@ -28,6 +28,7 @@ import BidderDashboardPage from './Pages/BidderDashboardPage'
 
 // Phase 4 — Seller Management
 import CreateListingPage from './Pages/CreateListingPage'
+import DesktopOnlyNoticePage from './Pages/DesktopOnlyNoticePage'
 import SellerStudioPage from './Pages/SellerStudioPage'
 import SellerProfilePage from './Pages/SellerProfilePage'
 
@@ -67,8 +68,9 @@ const App = () => {
         <Route path="/settings"         element={<UserSettingsPage />} />
 
         {/* Phase 4 — Seller Management */}
-        <Route path="/seller/create"    element={<CreateListingPage />} />
-        <Route path="/seller/studio"    element={<SellerStudioPage />} />
+        <Route path="/seller/create"              element={<CreateListingPage />} />
+        <Route path="/seller/create-desktop-only" element={<DesktopOnlyNoticePage />} />
+        <Route path="/seller/studio"              element={<SellerStudioPage />} />
         <Route path="/seller/:id"       element={<SellerProfilePage />} />
 
         {/* Phase 5 — Closing & Operations */}

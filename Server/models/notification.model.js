@@ -17,7 +17,7 @@ const notificationSchema = new mongoose.Schema({
   },
   type: {
     type: String,
-    enum: ['All', 'Bids', 'Payments', 'System Alerts'],
+    enum: ['All', 'Bids', 'Payments', 'System Alerts', 'OUTBID'],
     default: 'System Alerts',
     index: true
   },

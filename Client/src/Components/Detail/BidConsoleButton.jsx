@@ -16,9 +16,13 @@ export default function BidConsoleButton({ item, currentBid }) {
   const { biddingPower } = useWallet();
   const navigate = useNavigate();
   const [hover, setHover] = useState(false);
+
+  // Key watchlist per-user so two accounts on the same browser never share it
+  const watchlistKey = `watchlist:${user?.userId || user?._id || 'guest'}`;
+
   const [isWatchlisted, setIsWatchlisted] = useState(() => {
     try {
-      const saved = localStorage.getItem('watchlist');
+      const saved = localStorage.getItem(watchlistKey);
       const list = saved ? JSON.parse(saved) : [];
       return list.some(x => x._id === item._id);
     } catch {
@@ -28,7 +32,7 @@ export default function BidConsoleButton({ item, currentBid }) {
 
   const handleWatchlistToggle = () => {
     try {
-      const saved = localStorage.getItem('watchlist');
+      const saved = localStorage.getItem(watchlistKey);
       let list = saved ? JSON.parse(saved) : [];
       if (isWatchlisted) {
         list = list.filter(x => x._id !== item._id);
@@ -39,7 +43,7 @@ export default function BidConsoleButton({ item, currentBid }) {
         setIsWatchlisted(true);
         toast.success('Added to watchlist! ');
       }
-      localStorage.setItem('watchlist', JSON.stringify(list));
+      localStorage.setItem(watchlistKey, JSON.stringify(list));
     } catch (err) {
       console.error('Failed to toggle watchlist', err);
     }

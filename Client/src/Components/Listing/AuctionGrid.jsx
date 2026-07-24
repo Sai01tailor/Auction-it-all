@@ -96,13 +96,9 @@ export default function AuctionGrid({ items = [], loading, error, hasMore, onLoa
   const SKELETON_COUNT = 8;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', flex: 1 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', flex: 1, width: '100%' }}>
       {/* Grid */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
-        gap: '1.25rem',
-      }}>
+      <div className="mobile-auction-grid">
         {/* Skeletons on first load */}
         {loading && items.length === 0 &&
           Array.from({ length: SKELETON_COUNT }).map((_, i) => <SkeletonCard key={i} />)
@@ -126,11 +122,7 @@ export default function AuctionGrid({ items = [], loading, error, hasMore, onLoa
 
       {/* Infinite scroll skeleton rows */}
       {loading && items.length > 0 && (
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
-          gap: '1.25rem',
-        }}>
+        <div className="mobile-auction-grid">
           {Array.from({ length: 4 }).map((_, i) => <SkeletonCard key={i} />)}
         </div>
       )}

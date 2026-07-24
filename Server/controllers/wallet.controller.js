@@ -21,8 +21,8 @@ exports.getWalletBalance=async(req,res)=>{
         currency:wallet.currency
         } : { availableMoney: 0, frozenMoney: 0, currency: 'INR' };
 
-        // Save to cache for 1hr 
-        await AuctionCache.setCache(cacheKey,3600,walletData);
+        // Save to cache for 30 seconds (short safety-net; cache is actively busted on bid/payment writes)
+        await AuctionCache.setCache(cacheKey, 30, walletData);
 
         res.status(200).json({success:true,data:walletData})
 

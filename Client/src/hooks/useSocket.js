@@ -13,10 +13,20 @@ import { useAuth } from '../Context/AuthContext';
 export function useSocket(auctionId, initialBid = 0, auctionType = 'ENGLISH', item = null) {
   const { user } = useAuth();
   const [currentBid, setCurrentBid] = useState(initialBid);
-  const [totalBids, setTotalBids] = useState(0);
-  const [lastBidder, setLastBidder] = useState(null);
+  const [totalBids, setTotalBids] = useState(item?.bidsCount ?? item?.bids?.length ?? 0);
+  const [lastBidder, setLastBidder] = useState(() => {
+    if (item?.winnerId) {
+      const isMe = (item.winnerId._id || item.winnerId) === user?.userId;
+      return {
+        username: isMe ? 'You' : (item.winnerId.username || `Bidder_${(item.winnerId._id || item.winnerId).slice(-4)}`)
+      };
+    }
+    return null;
+  });
   const [isConnected, setIsConnected] = useState(false);
   const [socketError, setSocketError] = useState(null);
+  const [bidHistoryList, setBidHistoryList] = useState([]);
+  const [viewerCount, setViewerCount] = useState(1);
 
   // Dutch specific states
   const [quantityRemaining, setQuantityRemaining] = useState(
@@ -40,7 +50,10 @@ export function useSocket(auctionId, initialBid = 0, auctionType = 'ENGLISH', it
     if (initialBid > 0) {
       setCurrentBid(initialBid);
     }
-  }, [initialBid]);
+    if (item?.bidsCount !== undefined) {
+      setTotalBids(item.bidsCount);
+    }
+  }, [initialBid, item?.bidsCount]);
 
   // Sync initial Dutch quantity
   useEffect(() => {
@@ -55,8 +68,6 @@ export function useSocket(auctionId, initialBid = 0, auctionType = 'ENGLISH', it
 
     const token = getCookie('auth_token');
     if (!token) {
-      // Security middleware on the server requires authentication token.
-      // Guests don't have token; skip connection to avoid terminal spams / closed ws connection errors.
       return;
     }
 
@@ -71,12 +82,44 @@ export function useSocket(auctionId, initialBid = 0, auctionType = 'ENGLISH', it
 
     socket.on('connect', () => {
       setIsConnected(true);
-      // Join the auction room using the server's expected join_auction event name and raw string payload
       socket.emit('join_auction', auctionId);
     });
 
     socket.on('disconnect', () => {
       setIsConnected(false);
+    });
+
+    socket.on('room_viewers_update', (payload) => {
+      if (payload.auctionId === auctionId) {
+        setViewerCount(payload.viewerCount || 1);
+      }
+    });
+
+    socket.on('outbid_alert', (data) => {
+      setSocketError(`⚡ Outbid Alert: ${data.message || "You've been outbid on this item!"}`);
+    });
+
+    // English bid history initial sync
+    socket.on('bid_history', (payload) => {
+      const history = payload.bids || [];
+      const formatted = history.map(b => {
+        const isMe = b.bidder?.username === user?.username;
+        return {
+          bidder: isMe ? 'You' : (b.bidder?.username || 'Bidder'),
+          amount: b.amount,
+          timestamp: new Date(b.timestamp).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+        };
+      });
+      setBidHistoryList(formatted);
+      setTotalBids(history.length);
+      if (history.length > 0) {
+        const top = history[0];
+        const isMe = top.bidder?.username === user?.username;
+        setLastBidder({
+          username: isMe ? 'You' : (top.bidder?.username || 'Bidder')
+        });
+        setCurrentBid(top.amount);
+      }
     });
 
     // English bid updates
@@ -88,8 +131,22 @@ export function useSocket(auctionId, initialBid = 0, auctionType = 'ENGLISH', it
       setTotalBids(prev => prev + 1);
 
       const isMe = payload.bidderId === user?.userId;
-      setLastBidder({
-        username: isMe ? 'You' : `Bidder_${payload.bidderId.slice(-4)}`
+      const name = isMe ? 'You' : (payload.username || `Bidder_${payload.bidderId.slice(-4)}`);
+      
+      setLastBidder({ username: name });
+
+      const newTimeStr = new Date(payload.timestamp || Date.now()).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+      setBidHistoryList(prev => {
+        if (prev.length > 0 && prev[0].amount === payload.newHighestBid) return prev;
+        return [
+          {
+            bidder: name,
+            amount: payload.newHighestBid,
+            timestamp: newTimeStr
+          },
+          ...prev
+        ];
       });
     });
 
@@ -97,17 +154,37 @@ export function useSocket(auctionId, initialBid = 0, auctionType = 'ENGLISH', it
       setSocketError(payload.message);
     });
 
-    // Dutch: client-side countdown display
+    // Dutch: client-side dynamic price & countdown computation
     if (auctionType === 'DUTCH' && item) {
       const interval = item.dropInterval || 20;
-      setNextDropCountdown(interval);
+      const dropAmt = item.dropAmount || Math.max(100, Math.floor(item.startingPrice * 0.04));
+      const floor = item.priceFloor || Math.max(1, Math.floor(item.startingPrice * 0.45));
+      const startMs = new Date(item.startTime).getTime();
 
-      dutchTimerRef.current = setInterval(() => {
-        setNextDropCountdown(prev => {
-          if (prev <= 1) return interval;
-          return prev - 1;
-        });
-      }, 1000);
+      const updateDutchPrice = () => {
+        const now = Date.now();
+        if (now < startMs) {
+          setCurrentBid(item.startingPrice);
+          setNextDropCountdown(Math.ceil((startMs - now) / 1000));
+          return;
+        }
+
+        const elapsedSeconds = Math.floor((now - startMs) / 1000);
+        const drops = Math.floor(elapsedSeconds / interval);
+        const activePrice = Math.max(floor, item.startingPrice - (drops * dropAmt));
+
+        setCurrentBid(activePrice);
+
+        if (activePrice === floor) {
+          setNextDropCountdown(0);
+        } else {
+          const secondsIntoCurrentDrop = elapsedSeconds % interval;
+          setNextDropCountdown(interval - secondsIntoCurrentDrop);
+        }
+      };
+
+      updateDutchPrice();
+      dutchTimerRef.current = setInterval(updateDutchPrice, 1000);
     }
 
     // Blind: poll for reveal status
@@ -192,6 +269,8 @@ export function useSocket(auctionId, initialBid = 0, auctionType = 'ENGLISH', it
     nextDropCountdown,
     blindBidsList,
     isRevealed,
+    bidHistoryList,
+    viewerCount,
     placeBidEvent,
     placeBidSocket,
     buyNowDutchEvent,

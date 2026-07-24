@@ -127,9 +127,9 @@ export default function AuctionDetailPage() {
   }
 
   const seller = item?.sellerId ? {
-    ...item.sellerId,
-    kycStatus: sellerProfile?.kycStatus ?? item.sellerId.kycStatus,
-    createdAt: sellerProfile?.joinedDate ? new Date(sellerProfile.joinedDate) : item.sellerId.createdAt,
+    ...(typeof item.sellerId === 'object' ? item.sellerId : {}),
+    kycStatus: sellerProfile?.kycStatus ?? item.sellerId?.kycStatus,
+    createdAt: item.sellerId?.createdAt || sellerProfile?.createdAt || sellerProfile?.joinedDate,
   } : null;
 
   return (

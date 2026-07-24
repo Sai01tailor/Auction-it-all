@@ -503,6 +503,65 @@
   }
 
   /* =========================================
+     FLIPKART-STYLE MOBILE 2-COLUMN GRID & BOTTOM FILTER SHEET
+     ========================================= */
+  .mobile-auction-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  @media (min-width: 640px) {
+    .mobile-auction-grid {
+      gap: 0.85rem;
+    }
+  }
+
+  @media (min-width: 768px) {
+    .mobile-auction-grid {
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 1.25rem;
+    }
+  }
+
+  /* Bottom sheet modal styling */
+  .bottom-sheet-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    animation: fadeIn 0.2s ease-out;
+  }
+
+  .bottom-sheet-content {
+    background: #ffffff;
+    border-top-left-radius: 24px;
+    border-top-right-radius: 24px;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.2);
+    animation: slideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes slideUp {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+  }
+
+  /* =========================================
      SELLER PROFILE PAGE RESPONSIVE LAYOUT
      ========================================= */
   .seller-profile-grid {
@@ -543,6 +602,285 @@
   @media (min-width: 1024px) {
     .contact-grid {
       grid-template-columns: 290px 1fr;
+    }
+  }
+
+  /* =========================================
+     CUSTOM SLIM GLOWING SCROLLBAR
+     ========================================= */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.25);
+    border-radius: 10px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #fece44 0%, #10b981 100%);
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(254, 206, 68, 0.4);
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #fece44;
+  }
+
+  /* Firefox support */
+  .custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: #fece44 rgba(0, 0, 0, 0.25);
+  }
+
+  /* =========================================
+     BIDDER DASHBOARD RESPONSIVE ORDER & GRID
+     ========================================= */
+  .bidder-dashboard-layout {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+
+  .dashboard-profile-card { order: 1; }
+  .dashboard-main-content { order: 2; }
+  .dashboard-stats-card   { order: 3; }
+  .dashboard-wallet-card  { order: 4; }
+  .dashboard-quick-links  { order: 5; }
+
+  @media (min-width: 900px) {
+    .bidder-dashboard-layout {
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      grid-template-areas:
+        "profile main"
+        "stats   main"
+        "wallet  main"
+        "links   main";
+      gap: 1.75rem;
+      align-items: start;
+    }
+
+    .dashboard-profile-card { grid-area: profile; order: unset; }
+    .dashboard-stats-card   { grid-area: stats;   order: unset; }
+    .dashboard-wallet-card  { grid-area: wallet;  order: unset; }
+    .dashboard-quick-links  { grid-area: links;   order: unset; }
+    .dashboard-main-content { grid-area: main;    order: unset; }
+  }
+
+  /* =========================================
+     ENGLISH CONSOLE TOP HEADER & EXIT BUTTON
+     ========================================= */
+  .console-top-bar {
+    display: flex;
+    flex-direction: column-reverse;
+    gap: 0.85rem;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    padding-bottom: 1rem;
+  }
+
+  .console-header-title-box {
+    text-align: left;
+  }
+
+  .console-exit-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.65rem 1rem;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 12px;
+    color: #ffffff;
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+    backdrop-filter: blur(8px);
+    transition: all 0.2s ease;
+  }
+
+  .console-exit-btn:hover {
+    background: rgba(239, 68, 68, 0.15);
+    border-color: rgba(239, 68, 68, 0.4);
+    color: #fca5a5;
+  }
+
+  .console-exit-btn:active {
+    transform: scale(0.98);
+  }
+
+  @media (min-width: 768px) {
+    .console-top-bar {
+      flex-direction: row;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .console-header-title-box {
+      text-align: right;
+    }
+
+    .console-exit-btn {
+      width: auto;
+      padding: 0.5rem 1rem;
+      border-radius: 10px;
+    }
+  }
+
+  /* =========================================
+     WALLET TOP UP PAGE RESPONSIVE GRID
+     ========================================= */
+  .wallet-stats-strip {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
+  }
+
+  @media (min-width: 640px) {
+    .wallet-stats-strip {
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+  }
+
+  .wallet-main-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+
+  @media (min-width: 900px) {
+    .wallet-main-grid {
+      grid-template-columns: minmax(0, 1fr) 1.2fr;
+      gap: 1.5rem;
+    }
+  }
+
+  /* =========================================
+     TRANSACTION LEDGER RESPONSIVE TABLE & CARDS
+     ========================================= */
+  .ledger-table-header {
+    display: none;
+  }
+
+  .ledger-row-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+    padding: 0.85rem 1rem;
+  }
+
+  @media (min-width: 768px) {
+    .ledger-table-header {
+      display: grid;
+      grid-template-columns: 120px 140px 1fr 120px 110px 140px;
+      gap: 0;
+      padding: 0.7rem 1.5rem;
+      background: var(--color-surface-bg);
+      border-bottom: 1px solid var(--color-border-subtle);
+      font-size: 0.68rem;
+      font-weight: 800;
+      color: var(--color-text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .ledger-row-grid {
+      display: grid;
+      grid-template-columns: 120px 140px 1fr 120px 110px 140px;
+      align-items: center;
+      padding: 0.95rem 1.5rem;
+      gap: 0;
+    }
+  }
+
+  /* =========================================
+     SELLER STUDIO RESPONSIVE ORDER & GRID
+     ========================================= */
+  .seller-dashboard-layout {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+
+  .seller-profile-card { order: 1; }
+  .seller-main-content { order: 2; }
+  .seller-quick-links  { order: 3; }
+  .seller-tips-card    { order: 4; }
+
+  @media (min-width: 900px) {
+    .seller-dashboard-layout {
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      grid-template-areas:
+        "profile main"
+        "links   main"
+        "tips    main";
+      gap: 1.75rem;
+      align-items: start;
+    }
+
+    .seller-profile-card { grid-area: profile; order: unset; }
+    .seller-quick-links  { grid-area: links;   order: unset; }
+    .seller-tips-card    { grid-area: tips;    order: unset; }
+    .seller-main-content { grid-area: main;    order: unset; }
+  }
+
+  /* =========================================
+     CONTACT US RESPONSIVE LAYOUT
+     ========================================= */
+  .contact-sidebar {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+    position: static !important;
+  }
+
+  .contact-tab-btn {
+    padding: 0.75rem 0.65rem !important;
+    border-radius: 12px !important;
+  }
+
+  .contact-workspace {
+    padding: 1.25rem 0.85rem !important;
+    border-radius: 18px !important;
+  }
+
+  @media (min-width: 768px) {
+    .contact-sidebar {
+      grid-template-columns: repeat(4, 1fr);
+    }
+    .contact-tab-btn {
+      padding: 1rem 0.85rem !important;
+      border-radius: 14px !important;
+    }
+    .contact-workspace {
+      padding: 1.75rem 1.5rem !important;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .contact-sidebar {
+      display: flex;
+      flex-direction: column;
+      gap: 0.65rem;
+      position: sticky !important;
+      top: 90px;
+    }
+    .contact-tab-btn {
+      padding: 1.25rem !important;
+      border-radius: 16px !important;
+    }
+    .contact-workspace {
+      padding: 2.5rem !important;
+      border-radius: 24px !important;
     }
   }
 }

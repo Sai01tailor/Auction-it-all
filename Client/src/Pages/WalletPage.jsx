@@ -129,20 +129,16 @@ export default function WalletPage() {
       </AnimatePresence>
 
       {/* ── HERO BANNER (same structure as Dashboard / Ledger) ── */}
-      <div style={{ background: 'linear-gradient(135deg,var(--color-brand-primary-dark) 0%,var(--color-brand-primary) 55%,#1a3c7a 100%)', padding: '2rem 2rem 3.5rem', position: 'relative', overflow: 'hidden' }}>
+      <div style={{ background: 'linear-gradient(135deg,var(--color-brand-primary-dark) 0%,var(--color-brand-primary) 55%,#1a3c7a 100%)', padding: '1.5rem 0.65rem 3.5rem', position: 'relative', overflow: 'hidden' }}>
         <div style={{ position: 'absolute', inset: 0, opacity: 0.05, backgroundImage: 'radial-gradient(#fff 1.5px,transparent 0)', backgroundSize: '22px 22px', pointerEvents: 'none' }} />
-        <div style={{ maxWidth: '1100px', margin: '0 auto', position: 'relative', zIndex: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1.5rem' }}>
+        <div style={{ maxWidth: '1100px', margin: '0 auto', position: 'relative', zIndex: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
           <div>
-            {/* <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', background: 'rgba(254,206,68,0.12)', border: '1px solid rgba(254,206,68,0.25)', padding: '0.3rem 0.85rem', borderRadius: '20px', marginBottom: '0.75rem' }}>
-              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--color-brand-accent)" strokeWidth="2.5"><rect x="2" y="5" width="20" height="14" rx="2" /><line x1="2" y1="10" x2="22" y2="10" /></svg>
-              <span style={{ fontSize: '0.65rem', fontWeight: 800, color: 'var(--color-brand-accent)', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Escrow Wallet</span>
-            </div> */}
-            <h1 style={{ margin: 0, fontSize: '1.8rem', fontWeight: 900, color: '#fff', letterSpacing: '-0.02em' }}>My Cash Wallet</h1>
-            <p style={{ margin: '0.3rem 0 0', fontSize: '0.85rem', color: 'rgba(255,255,255,0.65)' }}>Escrow deposits &amp; instant bidding power management</p>
+            <h1 style={{ margin: 0, fontSize: 'clamp(1.2rem, 3.5vw, 1.8rem)', fontWeight: 900, color: '#fff', letterSpacing: '-0.02em' }}>My Cash Wallet</h1>
+            <p style={{ margin: '0.25rem 0 0', fontSize: '0.78rem', color: 'rgba(255,255,255,0.65)' }}>Escrow deposits &amp; instant bidding power management</p>
           </div>
           <button
             onClick={() => navigate('/ledger')}
-            style={{ padding: '0.65rem 1.25rem', background: 'rgba(255,255,255,0.1)', color: '#fff', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '12px', fontSize: '0.82rem', fontWeight: 700, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '0.45rem', transition: 'background 0.15s', backdropFilter: 'blur(8px)' }}
+            style={{ padding: '0.55rem 1.1rem', background: 'rgba(255,255,255,0.1)', color: '#fff', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '12px', fontSize: '0.78rem', fontWeight: 700, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '0.45rem', transition: 'background 0.15s', backdropFilter: 'blur(8px)' }}
             onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.18)'}
             onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
           >
@@ -153,30 +149,30 @@ export default function WalletPage() {
       </div>
 
       {/* ── CONTENT (overlaps banner) ── */}
-      <div style={{ maxWidth: '1100px', margin: '-1.75rem auto 4rem', padding: '0 1.5rem', position: 'relative', zIndex: 10 }}>
+      <div style={{ maxWidth: '1100px', margin: '-1.75rem auto 4rem', padding: '0 0.65rem', position: 'relative', zIndex: 10 }}>
 
         {/* STATS STRIP */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '1rem', marginBottom: '1.5rem' }}>
+        <div className="wallet-stats-strip">
           {[
             { label: 'Cash Balance', value: `₹${walletBalance.toLocaleString('en-IN')}`, color: 'var(--color-brand-primary)', icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect x="2" y="5" width="20" height="14" rx="2" /><line x1="2" y1="10" x2="22" y2="10" /></svg> },
             { label: 'Bidding Power', value: `₹${biddingPower.toLocaleString('en-IN')}`, color: '#10b981', icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" /></svg> },
             { label: '10× Multiplier', value: '10×', color: '#f59e0b', icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="20" x2="12" y2="10" /><line x1="18" y1="20" x2="18" y2="4" /><line x1="6" y1="20" x2="6" y2="16" /></svg> },
           ].map(s => (
-            <div key={s.label} style={{ background: '#fff', border: '1px solid var(--color-border-subtle)', borderRadius: '18px', padding: '1.1rem 1.25rem', boxShadow: '0 4px 20px rgba(0,35,102,0.02)', display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
+            <div key={s.label} style={{ background: '#fff', border: '1px solid var(--color-border-subtle)', borderRadius: '18px', padding: '0.9rem 1.1rem', boxShadow: '0 4px 20px rgba(0,35,102,0.02)', display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
               <div style={{ width: '38px', height: '38px', borderRadius: '10px', background: `${s.color}12`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: s.color, flexShrink: 0 }}>{s.icon}</div>
               <div>
-                <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--color-text-rich)', fontWeight: 600, opacity: 0.65 }}>{s.label}</p>
-                <strong style={{ fontSize: '1.25rem', fontWeight: 900, color: s.color, letterSpacing: '-0.02em' }}>{s.value}</strong>
+                <p style={{ margin: 0, fontSize: '0.72rem', color: 'var(--color-text-rich)', fontWeight: 600, opacity: 0.65 }}>{s.label}</p>
+                <strong style={{ fontSize: '1.15rem', fontWeight: 900, color: s.color, letterSpacing: '-0.02em' }}>{s.value}</strong>
               </div>
             </div>
           ))}
         </div>
 
-        {/* MAIN CARD: two-column */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) 1.2fr', gap: '1.5rem' }} className="wallet-grid">
+        {/* MAIN CARD: responsive two-column */}
+        <div className="wallet-main-grid">
 
           {/* ── LEFT: Gauge + Balance + Quick-add ── */}
-          <div style={{ background: '#fff', border: '1px solid var(--color-border-subtle)', borderRadius: '24px', padding: '2rem', display: 'flex', flexDirection: 'column', alignItems: 'center', boxShadow: '0 4px 24px rgba(0,35,102,0.02)' }}>
+          <div style={{ background: '#fff', border: '1px solid var(--color-border-subtle)', borderRadius: '24px', padding: '1.25rem', display: 'flex', flexDirection: 'column', alignItems: 'center', boxShadow: '0 4px 24px rgba(0,35,102,0.02)' }}>
 
             {/* SVG ring */}
             <div style={{ position: 'relative', width: '200px', height: '200px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -239,7 +235,7 @@ export default function WalletPage() {
           </div>
 
           {/* ── RIGHT: Leverage Calculator ── */}
-          <div style={{ background: '#fff', border: '1px solid var(--color-border-subtle)', borderRadius: '24px', padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1.5rem', boxShadow: '0 4px 24px rgba(0,35,102,0.02)' }}>
+          <div style={{ background: '#fff', border: '1px solid var(--color-border-subtle)', borderRadius: '24px', padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '1.25rem', boxShadow: '0 4px 24px rgba(0,35,102,0.02)' }}>
 
             {/* Heading */}
             <div>

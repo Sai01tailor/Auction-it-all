@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import LongLogo from '../../assets/LongLogo.png';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../Context/AuthContext';
 import { useWallet } from '../../Context/WalletContext';
@@ -29,34 +30,16 @@ const MOBILE_NAV_LINKS = [
   { label: 'Contact Us', to: '/contact/email' },
 ];
 
-/* ── Logo ── */
-function BidKarLogo() {
+/* ── Logo Component ── */
+export function BigLogo({ style = {}, compact = false }) {
   return (
-    <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', textDecoration: 'none', flexShrink: 0 }}>
-      {/* <div style={{
-        width: '34px', height: '34px',
-        borderRadius: '9px',
-        background: 'linear-gradient(135deg, #fece44, #e5b630)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        flexShrink: 0,
-        boxShadow: '0 2px 8px rgba(254,206,68,0.4)',
-      }}>
-        <span style={{ fontSize: '1.05rem', fontWeight: 800, color: '#002366', lineHeight: 1 }}>B</span>
-      </div>
-      <span style={{
-        fontSize: '1.35rem',
-        fontWeight: 800,
-        color: 'var(--color-brand-primary)',
-        letterSpacing: '-0.04em',
-        lineHeight: 1,
-        whiteSpace: 'nowrap',
-      }}>
-        BidKar<span style={{ color: '#fece44' }}>.in</span> */}
-      {/* </span> */}
-      <img src='src/assets/LongLogo.png' alt="logo" style={{ width: '100px', height: 'auto' }} />
+    <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', textDecoration: 'none', flexShrink: 0, ...style }}>
+      <img src={LongLogo} alt="BidKar Logo" style={{ width: compact ? '82px' : '110px', height: 'auto', objectFit: 'contain' }} />
     </Link>
   );
 }
+
+export const BidKarLogo = BigLogo;
 
 /* ── Search Bar ── */
 function SearchBar({ onSearch, collapsed }) {
@@ -245,10 +228,9 @@ function AuthSection({ user }) {
           {[
             { label: ' My Profile', to: '/dashboard' },
             { label: ' My Bids', to: '/dashboard' },
-            { label: ' Seller Studio', to: '/seller/studio' },
             { label: ' Settings', to: '/settings' },
-          ].map(({ label, to }) => (
-            <Link key={to} to={to} onClick={() => setOpen(false)} style={{
+          ].map(({ label, to }, idx) => (
+            <Link key={idx} to={to} onClick={() => setOpen(false)} style={{
               display: 'block',
               padding: '0.5rem 0.75rem',
               fontSize: '0.85rem',
@@ -272,7 +254,22 @@ function AuthSection({ user }) {
 
 /* ── Mobile Drawer ── */
 function MobileDrawer({ open, onClose }) {
+  const { user, logout } = useAuth();
   if (!open) return null;
+
+  const loggedInLinks = [
+    { label: 'Auctions', to: '/auctions' },
+    { label: 'Ending Soon', to: '/auctions?sort=ending' },
+    { label: 'Bidder Dashboard', to: '/dashboard' },
+    { label: 'TopUP Wallet', to: '/wallet' },
+    { label: 'Disputes', to: '/disputes' },
+    { label: 'How It Works', to: '/how-it-works' },
+  ];
+
+  const guestLinks = MOBILE_NAV_LINKS;
+
+  const linksToRender = user ? loggedInLinks : guestLinks;
+
   return (
     <>
       <div
@@ -285,7 +282,7 @@ function MobileDrawer({ open, onClose }) {
       />
       <div style={{
         position: 'fixed', top: 0, left: 0, bottom: 0,
-        width: '75vw', maxWidth: '300px',
+        width: '78vw', maxWidth: '300px',
         background: '#fff',
         zIndex: 200,
         display: 'flex', flexDirection: 'column',
@@ -295,16 +292,17 @@ function MobileDrawer({ open, onClose }) {
         animation: 'slideInLeft 0.25s ease',
       }}>
         <style>{`@keyframes slideInLeft { from { transform: translateX(-100%) } to { transform: translateX(0) } }`}</style>
-        <BidKarLogo />
-        <div style={{ height: '1px', background: 'var(--color-border-subtle)', margin: '1rem 0' }} />
-        {MOBILE_NAV_LINKS.map(link => (
+        <BigLogo />
+        <div style={{ height: '1px', background: 'var(--color-border-subtle)', margin: '0.85rem 0' }} />
+
+        {linksToRender.map(link => (
           <Link
             key={link.to}
             to={link.to}
             onClick={onClose}
             style={{
-              padding: '0.75rem 0.5rem',
-              fontSize: '1rem',
+              padding: '0.65rem 0.5rem',
+              fontSize: '0.92rem',
               fontWeight: 600,
               color: 'var(--color-text-rich)',
               textDecoration: 'none',
@@ -315,17 +313,53 @@ function MobileDrawer({ open, onClose }) {
             {link.label}
           </Link>
         ))}
-        <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-          <Link to="/login" onClick={onClose}>
-            <button style={{ width: '100%', padding: '0.7rem', background: 'var(--color-brand-primary)', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: 600, cursor: 'pointer' }}>
-              Sign In
-            </button>
-          </Link>
-          <Link to="/sign-up" onClick={onClose}>
-            <button style={{ width: '100%', padding: '0.7rem', background: 'transparent', color: 'var(--color-brand-primary)', border: '1.5px solid var(--color-brand-primary)', borderRadius: '8px', fontWeight: 600, cursor: 'pointer' }}>
-              Register
-            </button>
-          </Link>
+
+        <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: '0.65rem', pt: '1rem', borderTop: '1px solid var(--color-border-subtle)' }}>
+          {user ? (
+            <>
+              <div style={{ padding: '0.4rem 0.5rem', background: 'var(--color-surface-bg)', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'var(--color-brand-primary)', color: '#fff', fontSize: '0.75rem', fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  {user.username ? user.username.slice(0, 2).toUpperCase() : 'U'}
+                </div>
+                <div style={{ overflow: 'hidden' }}>
+                  <p style={{ margin: 0, fontSize: '0.8rem', fontWeight: 800, color: 'var(--color-brand-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {user.username}
+                  </p>
+                  <p style={{ margin: 0, fontSize: '0.68rem', color: 'var(--color-text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {user.email}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  logout();
+                  onClose();
+                }}
+                style={{
+                  width: '100%', padding: '0.65rem',
+                  background: '#fef2f2', color: '#991b1b',
+                  border: '1.5px solid #fecaca', borderRadius: '10px',
+                  fontWeight: 700, fontSize: '0.82rem', cursor: 'pointer',
+                  transition: 'background 0.15s',
+                }}
+              >
+                Logout
+              </button>
+            </>
+          ) : (
+            <>
+              <Link to="/login" onClick={onClose}>
+                <button style={{ width: '100%', padding: '0.7rem', background: 'var(--color-brand-primary)', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: 600, cursor: 'pointer' }}>
+                  Sign In
+                </button>
+              </Link>
+              <Link to="/sign-up" onClick={onClose}>
+                <button style={{ width: '100%', padding: '0.7rem', background: 'transparent', color: 'var(--color-brand-primary)', border: '1.5px solid var(--color-brand-primary)', borderRadius: '8px', fontWeight: 600, cursor: 'pointer' }}>
+                  Register
+                </button>
+              </Link>
+            </>
+          )}
         </div>
       </div>
     </>
@@ -343,7 +377,8 @@ function NotificationBell() {
   const fetchNotifications = async () => {
     try {
       const res = await api.get('/notifications', { params: { type: filter } });
-      setNotifications(res.data.notifications || []);
+      const list = res.data.notifications || res.data.data || [];
+      setNotifications(list);
     } catch (err) {
       console.error('Failed to fetch notifications', err);
     }
@@ -497,7 +532,7 @@ export default function Header() {
   const { user } = useAuth();
   const { walletBalance } = useWallet();
   const [scrolled, setScrolled] = useState(false);
-  const [mobile, setMobile] = useState(false);
+  const [mobile, setMobile] = useState(typeof window !== 'undefined' ? window.innerWidth < 768 : false);
   const [drawerOpen, setDrawer] = useState(false);
 
   useEffect(() => {
@@ -515,17 +550,17 @@ export default function Header() {
   const headerStyle = {
     position: 'sticky', top: 0, zIndex: 50,
     width: '100%',
-    height: '68px',
+    height: mobile ? '62px' : '68px',
     display: 'flex',
     alignItems: 'center',
-    gap: '1rem',
-    padding: mobile ? '0 1rem' : '0 2rem',
+    gap: mobile ? '0.6rem' : '1rem',
+    padding: mobile ? '0 0.85rem' : '0 2rem',
     background: scrolled ? 'rgba(255,255,255,0.92)' : 'rgba(255,255,255,0.75)',
     backdropFilter: 'blur(14px)',
     borderBottom: '1px solid',
     borderColor: scrolled ? 'var(--color-border-subtle)' : 'rgba(229,231,235,0.4)',
     boxShadow: scrolled ? '0 2px 16px rgba(0,35,102,0.07)' : 'none',
-    transition: 'all 0.3s ease',
+    transition: 'background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease',
     boxSizing: 'border-box',
   };
 
@@ -553,8 +588,8 @@ export default function Header() {
           </button>
         )}
 
-        {/* Logo */}
-        <BidKarLogo />
+        {/* Logo (compact 82px on mobile to fit alongside header controls) */}
+        <BigLogo compact={mobile} />
 
         {/* Desktop nav links */}
         {!mobile && (
@@ -592,7 +627,7 @@ export default function Header() {
         <SearchBar collapsed={mobile} />
 
         {/* Right Side Alignment Wrapper */}
-        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '1rem', flexShrink: 0 }}>
+        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: mobile ? '0.45rem' : '1rem', flexShrink: 0 }}>
           {/* Wallet Balance Badge */}
           {user && (
             <Link
@@ -600,9 +635,9 @@ export default function Header() {
               style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: '0.45rem',
+                gap: mobile ? '0.3rem' : '0.45rem',
                 flexShrink: 0,
-                padding: '0.35rem 0.8rem',
+                padding: mobile ? '0.25rem 0.55rem' : '0.35rem 0.8rem',
                 background: 'rgba(254,206,68,0.08)',
                 border: '1.5px solid rgba(254,206,68,0.4)',
                 borderRadius: '20px',
@@ -618,14 +653,16 @@ export default function Header() {
                 e.currentTarget.style.transform = 'translateY(0)';
               }}
             >
-              <span style={{ fontSize: '0.85rem', lineHeight: 1 }}><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FBBF24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M20 12V8H6a2 2 0 0 1-2-2c0-1.1.9-2 2-2h12v4" />
-                <path d="M4 6v12c0 1.1.9 2 2 2h14v-4" />
-                <path d="M18 12a2 2 0 0 0-2 2c0 1.1.9 2 2 2h4v-4h-4z" />
-                <circle cx="6" cy="18" r="2" />
-                <circle cx="18" cy="6" r="2" />
-              </svg></span>
-              <span style={{ fontSize: '0.78rem', fontWeight: 800, color: 'var(--color-brand-primary)', whiteSpace: 'nowrap' }} className="tabular-nums">
+              <span style={{ fontSize: '0.85rem', lineHeight: 1 }}>
+                <svg xmlns="http://www.w3.org/2000/svg" width={mobile ? "15" : "18"} height={mobile ? "15" : "18"} viewBox="0 0 24 24" fill="none" stroke="#FBBF24" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M20 12V8H6a2 2 0 0 1-2-2c0-1.1.9-2 2-2h12v4" />
+                  <path d="M4 6v12c0 1.1.9 2 2 2h14v-4" />
+                  <path d="M18 12a2 2 0 0 0-2 2c0 1.1.9 2 2 2h4v-4h-4z" />
+                  <circle cx="6" cy="18" r="2" />
+                  <circle cx="18" cy="6" r="2" />
+                </svg>
+              </span>
+              <span style={{ fontSize: mobile ? '0.68rem' : '0.78rem', fontWeight: 800, color: 'var(--color-brand-primary)', whiteSpace: 'nowrap' }} className="tabular-nums">
                 ₹{walletBalance.toLocaleString('en-IN')}
               </span>
             </Link>
@@ -633,7 +670,7 @@ export default function Header() {
 
           {/* Auth */}
           {user && <NotificationBell />}
-          <AuthSection user={user} />
+          {!mobile && <AuthSection user={user} />}
         </div>
       </header>
 

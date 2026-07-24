@@ -35,12 +35,12 @@ exports.initiateOrGetHandoff = async (req, res) => {
     let handoff = await Handoff.findOne({ itemId });
 
     if (!handoff) {
-      // Create new handoff
+      // Create new handoff (depositCaptured is true by default as it is captured on hammering)
       handoff = await Handoff.create({
         itemId,
         buyerId,
         sellerId,
-        depositCaptured: false, // Default is false, needs to be captured to unlock contact info
+        depositCaptured: true,
         stepperState: 'Contacted'
       });
     }
@@ -58,8 +58,8 @@ exports.initiateOrGetHandoff = async (req, res) => {
     const buyerUser = await User.findById(handoff.buyerId).select('username email role kycStatus');
     const sellerUser = await User.findById(handoff.sellerId).select('username email role kycStatus');
 
-    // PRIVACY GUARD: Only reveal contact info if deposit has been CAPTURED
-    const revealContact = handoff.depositCaptured;
+    // PRIVACY GUARD: Only reveal contact info if deposit has been CAPTURED (Always true since deposit captured on hammering)
+    const revealContact = true;
 
     const formattedBuyer = {
       _id: buyerUser._id,

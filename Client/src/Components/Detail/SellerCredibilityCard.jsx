@@ -34,8 +34,21 @@ function getInitials(username, email) {
 }
 
 function getMemberSince(createdAt) {
-  if (!createdAt) return 'Member';
+  if (!createdAt || createdAt === 'recently' || createdAt === 'Joined recently' || createdAt === 'Recent Member') {
+    return 'Recently Joined';
+  }
+  if (typeof createdAt === 'string') {
+    if (createdAt.startsWith('Joined ')) {
+      const clean = createdAt.replace('Joined ', '');
+      if (clean === 'recently' || clean === 'Recently') return 'Recently Joined';
+      return clean;
+    }
+    if (createdAt === 'recently') return 'Recently Joined';
+  }
   const date = new Date(createdAt);
+  if (isNaN(date.getTime())) {
+    return 'Recently Joined';
+  }
   return date.toLocaleDateString('en-IN', { month: 'long', year: 'numeric' });
 }
 
@@ -104,7 +117,7 @@ export default function SellerCredibilityCard({ seller, item }) {
   const initials = getInitials(seller.username, seller.email);
   const kycStatus = seller.kycStatus ?? 'Unverified';
   const isVerified = kycStatus.toLowerCase() === 'verified';
-  const since = getMemberSince(seller.createdAt);
+  const since = getMemberSince(seller.createdAt, seller._id || seller.username);
 
   return (
     <div

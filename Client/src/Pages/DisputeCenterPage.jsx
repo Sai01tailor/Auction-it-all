@@ -66,9 +66,7 @@ export default function DisputeCenterPage() {
     setEvidencePreviews(updatedPreviews);
   };
 
-  // Chat states
-  const [messages, setMessages] = useState([]);
-  const [newMsgText, setNewMsgText] = useState('');
+
 
   // Fetch disputes & items
   const loadDisputes = async () => {
@@ -99,23 +97,7 @@ export default function DisputeCenterPage() {
     loadSoldItems();
   }, []);
 
-  // Fetch chat messages when selectedDispute changes
-  useEffect(() => {
-    if (!selectedDispute) return;
-    const fetchChat = async () => {
-      try {
-        const res = await api.get(`/disputes/${selectedDispute._id}/messages`);
-        setMessages(res.data.messages || []);
-      } catch (err) {
-        console.error('Failed to load chat messages', err);
-      }
-    };
-    fetchChat();
 
-    // Poll chat every 3 seconds
-    const interval = setInterval(fetchChat, 3000);
-    return () => clearInterval(interval);
-  }, [selectedDispute]);
 
   const handleFileDispute = async (e) => {
     e.preventDefault();
@@ -151,33 +133,35 @@ export default function DisputeCenterPage() {
     }
   };
 
-  const handleSendMessage = async (e) => {
-    e.preventDefault();
-    if (!newMsgText.trim() || !selectedDispute) return;
-    try {
-      const res = await api.post(`/disputes/${selectedDispute._id}/messages`, {
-        text: newMsgText
-      });
-      // Append optimistically
-      setMessages(prev => [...prev, res.data.message]);
-      setNewMsgText('');
-    } catch (err) {
-      console.error('Failed to send message', err);
-    }
-  };
+
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--color-surface-bg)' }}>
       <AuthController />
       <Header />
 
-      <div style={{ maxWidth: '1100px', margin: '2.5rem auto', padding: '0 1.5rem', display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-        
-        {/* Banner */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#fff', padding: '1.5rem 2rem', borderRadius: '24px', border: '1px solid var(--color-border-subtle)', boxShadow: '0 4px 20px rgba(0,35,102,0.01)' }}>
+      {/* ── Page Header Band ── */}
+      <div style={{
+        background: 'linear-gradient(160deg, var(--color-brand-primary-dark) 0%, var(--color-brand-primary) 100%)',
+        padding: '2.5rem 0 5rem',
+        position: 'relative',
+        overflow: 'hidden',
+      }}>
+        {/* Subtle decorative dot pattern */}
+        <div style={{ position: 'absolute', inset: 0, opacity: 0.04, backgroundImage: 'radial-gradient(#fff 1.5px,transparent 0)', backgroundSize: '20px 20px', pointerEvents: 'none' }} />
+        <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '0 1.5rem', position: 'relative', zIndex: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
           <div>
-            <h1 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 900, color: 'var(--color-brand-primary)' }}>Mediation Dispute Center</h1>
-            <p style={{ margin: '0.2rem 0 0', fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>Arbitrate conflicts, file claims, and communicate with moderators</p>
+            <p style={{ margin: '0 0 0.4rem', fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(254,206,68,0.9)' }}>
+              Arbitration Board & Mediation Workspace
+            </p>
+            <h1 style={{
+              margin: '0',
+              fontSize: 'clamp(1.5rem, 3vw, 2rem)',
+              fontWeight: 800, color: '#fff',
+              letterSpacing: '-0.03em',
+            }}>
+              Mediation Dispute Center
+            </h1>
           </div>
           <button
             onClick={() => setShowFileModal(true)}
@@ -196,9 +180,13 @@ export default function DisputeCenterPage() {
             ⚖️ File a New Claim
           </button>
         </div>
+      </div>
 
+      {/* Overlapping Workspace */}
+      <div style={{ maxWidth: '1100px', margin: '-2.25rem auto 0', padding: '0 1.5rem', position: 'relative', zIndex: 10 }}>
+        
         {loading ? (
-          <div style={{ textAlign: 'center', padding: '4rem 0' }}>
+          <div style={{ textAlign: 'center', padding: '4rem 0', background: '#fff', borderRadius: '24px', border: '1px solid var(--color-border-subtle)', boxShadow: '0 4px 20px rgba(0,35,102,0.01)' }}>
             <div style={{ display: 'inline-block', width: '32px', height: '32px', border: '3px solid rgba(0,35,102,0.1)', borderTopColor: 'var(--color-brand-primary)', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
             <p style={{ marginTop: '1rem', color: 'var(--color-text-muted)' }}>Syncing dispute cases...</p>
           </div>
@@ -321,77 +309,44 @@ export default function DisputeCenterPage() {
                     )}
                   </div>
 
-                  {/* Mediation Chat (AnimatePresence transitions) */}
+                  {/* Verified Parties Contact Details (replacing chat) */}
                   <div style={{ background: '#fff', border: '1px solid var(--color-border-subtle)', borderRadius: '24px', padding: '1.75rem', boxShadow: '0 4px 20px rgba(0,35,102,0.01)', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
                     <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 800, color: 'var(--color-brand-primary)' }}>
-                      🛡️ Secure Mediation Corridor
+                      🔒 Verified Parties Contact Cards
                     </h3>
+                    <p style={{ margin: 0, fontSize: '0.82rem', color: 'var(--color-text-muted)', lineHeight: '1.45' }}>
+                      System chat mediation is disabled. Disputing parties are advised to communicate directly via the verified contact details below, or check back here for administrative resolution.
+                    </p>
 
-                    {/* Chat feed */}
-                    <div style={{ height: '300px', overflowY: 'auto', border: '1px solid var(--color-border-subtle)', borderRadius: '16px', padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.85rem', background: 'var(--color-surface-bg)' }}>
-                      <AnimatePresence initial={false}>
-                        {messages.map((msg, mIdx) => {
-                          const isAdminSender = msg.senderId?.role === 'ADMIN';
-                          return (
-                            <motion.div
-                              key={msg._id || mIdx}
-                              initial={{ opacity: 0, y: 10 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              exit={{ opacity: 0 }}
-                              transition={{ duration: 0.25 }}
-                              style={{
-                                maxWidth: '80%',
-                                alignSelf: isAdminSender ? 'center' : 'flex-end',
-                                background: isAdminSender ? '#eff6ff' : 'var(--color-brand-primary)',
-                                color: isAdminSender ? '#1e40af' : '#fff',
-                                padding: '0.75rem 1rem',
-                                borderRadius: '16px',
-                                border: isAdminSender ? '1.5px solid #bfdbfe' : 'none',
-                                boxShadow: '0 2px 8px rgba(0,0,0,0.02)'
-                              }}
-                            >
-                              <span style={{ fontSize: '0.62rem', fontWeight: 800, opacity: 0.75, display: 'block', marginBottom: '0.2rem' }}>
-                                {isAdminSender ? '🛡️ SYSTEM MEDIATOR' : msg.senderId?.username}
-                              </span>
-                              <p style={{ margin: 0, fontSize: '0.82rem', lineHeight: '1.4' }}>{msg.text}</p>
-                            </motion.div>
-                          );
-                        })}
-                      </AnimatePresence>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.25rem', background: 'var(--color-surface-bg)', padding: '1.25rem', borderRadius: '16px', border: '1px solid var(--color-border-subtle)' }}>
+                      
+                      {/* Reporter Info */}
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', borderRight: '1px solid var(--color-border-subtle)', paddingRight: '1.25rem' }}>
+                        <span style={{ fontSize: '0.68rem', fontWeight: 800, color: '#ef4444', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Reporter (Filer)</span>
+                        <div style={{ marginTop: '0.25rem' }}>
+                          <span style={{ color: 'var(--color-text-muted)', fontSize: '0.72rem', display: 'block' }}>Username</span>
+                          <strong style={{ color: 'var(--color-text-rich)' }}>{selectedDispute.reporterId?.username || 'Sai'}</strong>
+                        </div>
+                        <div>
+                          <span style={{ color: 'var(--color-text-muted)', fontSize: '0.72rem', display: 'block' }}>Email Address</span>
+                          <strong style={{ color: 'var(--color-text-rich)' }}>{selectedDispute.reporterId?.email || 'reporter@example.com'}</strong>
+                        </div>
+                      </div>
+
+                      {/* Opponent Info */}
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                        <span style={{ fontSize: '0.68rem', fontWeight: 800, color: 'var(--color-brand-primary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Opposing Party</span>
+                        <div style={{ marginTop: '0.25rem' }}>
+                          <span style={{ color: 'var(--color-text-muted)', fontSize: '0.72rem', display: 'block' }}>Username</span>
+                          <strong style={{ color: 'var(--color-text-rich)' }}>{selectedDispute.opponentId?.username || 'Seller'}</strong>
+                        </div>
+                        <div>
+                          <span style={{ color: 'var(--color-text-muted)', fontSize: '0.72rem', display: 'block' }}>Email Address</span>
+                          <strong style={{ color: 'var(--color-text-rich)' }}>{selectedDispute.opponentId?.email || 'opponent@example.com'}</strong>
+                        </div>
+                      </div>
+
                     </div>
-
-                    {/* Submit message form */}
-                    <form onSubmit={handleSendMessage} style={{ display: 'flex', gap: '0.75rem' }}>
-                      <input
-                        type="text"
-                        required
-                        value={newMsgText}
-                        onChange={e => setNewMsgText(e.target.value)}
-                        placeholder="Write a message to the mediator..."
-                        style={{
-                          flex: 1,
-                          padding: '0.75rem 1rem',
-                          border: '1.5px solid var(--color-border-subtle)',
-                          borderRadius: '12px',
-                          fontSize: '0.88rem',
-                          outline: 'none'
-                        }}
-                      />
-                      <button
-                        type="submit"
-                        style={{
-                          padding: '0.75rem 1.5rem',
-                          background: 'var(--color-brand-primary)',
-                          color: '#fff',
-                          border: 'none',
-                          borderRadius: '12px',
-                          fontWeight: 700,
-                          cursor: 'pointer'
-                        }}
-                      >
-                        Send
-                      </button>
-                    </form>
                   </div>
 
                 </div>
@@ -406,7 +361,6 @@ export default function DisputeCenterPage() {
 
           </div>
         )}
-
       </div>
 
       {/* FILE NEW CLAIM MODAL OVERLAY */}

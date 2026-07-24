@@ -202,22 +202,18 @@ export default function SellerStudioPage() {
       {/* ── FULL-WIDTH GRADIENT HERO HEADER ── */}
       <div style={{
         background: 'linear-gradient(135deg, var(--color-brand-primary-dark) 0%, var(--color-brand-primary) 55%, #1a3c7a 100%)',
-        padding: '2rem 2rem 3.5rem',
+        padding: '1.5rem 0.65rem 3.5rem',
         position: 'relative',
         overflow: 'hidden',
       }}>
         {/* Dot grid overlay */}
         <div style={{ position: 'absolute', inset: 0, opacity: 0.05, backgroundImage: 'radial-gradient(#fff 1.5px,transparent 0)', backgroundSize: '22px 22px', pointerEvents: 'none' }} />
-        <div style={{ maxWidth: '1100px', margin: '0 auto', position: 'relative', zIndex: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1.5rem' }}>
+        <div style={{ maxWidth: '1100px', margin: '0 auto', position: 'relative', zIndex: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
           <div>
-            {/* <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', background: 'rgba(254,206,68,0.12)', border: '1px solid rgba(254,206,68,0.25)', padding: '0.3rem 0.85rem', borderRadius: '20px', marginBottom: '0.75rem' }}>
-              <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#10b981' }} />
-              <span style={{ fontSize: '0.65rem', fontWeight: 800, color: 'var(--color-brand-accent)', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Seller Hub Active</span>
-            </div> */}
-            <h1 style={{ margin: 0, fontSize: '1.8rem', fontWeight: 900, color: '#fff', letterSpacing: '-0.02em' }}>
+            <h1 style={{ margin: 0, fontSize: 'clamp(1.2rem, 3.5vw, 1.8rem)', fontWeight: 900, color: '#fff', letterSpacing: '-0.02em' }}>
               {user?.username ? `${user.username}'s Seller Studio` : 'Seller Studio'}
             </h1>
-            <p style={{ margin: '0.3rem 0 0', fontSize: '0.85rem', color: 'rgba(255,255,255,0.65)' }}>
+            <p style={{ margin: '0.25rem 0 0', fontSize: '0.78rem', color: 'rgba(255,255,255,0.65)' }}>
               Track live bids, complete local escrow handoffs, and manage premium listings.
             </p>
           </div>
@@ -225,9 +221,9 @@ export default function SellerStudioPage() {
             <button
               onClick={() => navigate('/seller/create')}
               style={{
-                padding: '0.7rem 1.4rem',
+                padding: '0.55rem 1.1rem',
                 background: 'var(--color-brand-accent)', color: 'var(--color-brand-primary-dark)',
-                border: 'none', borderRadius: '12px', fontSize: '0.82rem', fontWeight: 800,
+                border: 'none', borderRadius: '12px', fontSize: '0.78rem', fontWeight: 800,
                 cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '0.4rem',
                 boxShadow: '0 4px 16px rgba(254,206,68,0.2)', transition: 'all 0.15s',
               }}
@@ -242,76 +238,71 @@ export default function SellerStudioPage() {
       </div>
 
       {/* ── OVERLAPPING CONTENT WRAPPER ── */}
-      <div style={{ maxWidth: '1100px', margin: '-1.75rem auto 4rem', padding: '0 1.5rem', position: 'relative', zIndex: 10 }}>
+      <div style={{ maxWidth: '1100px', margin: '-1.75rem auto 4rem', padding: '0 0.65rem', position: 'relative', zIndex: 10 }}>
 
-        {/* ── 2-COLUMN GRID LAYOUT ── */}
-        <div style={{ display: 'grid', gridTemplateColumns: '280px 1fr', gap: '1.75rem', alignItems: 'start' }} className="wallet-grid">
+        {/* ── RESPONSIVE FLATTENED GRID & ORDER LAYOUT ── */}
+        <div className="seller-dashboard-layout">
 
-          {/* ── LEFT COLUMN (Profile + Navigation) ── */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-
-            {/* Profile Card */}
-            <div style={{ background: '#fff', border: '1px solid var(--color-border-subtle)', borderRadius: '20px', padding: '1.5rem', boxShadow: '0 4px 20px rgba(0,35,102,0.02)', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
-              <div style={{ width: '58px', height: '58px', borderRadius: '50%', background: 'linear-gradient(135deg,var(--color-brand-primary-dark),var(--color-brand-primary))', color: '#fff', fontSize: '1.25rem', fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '0.8rem', boxShadow: '0 4px 14px rgba(0,35,102,0.15)' }}>
-                {user?.username ? user.username.slice(0, 2).toUpperCase() : 'SE'}
-              </div>
-              <h3 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 900, color: 'var(--color-brand-primary)' }}>
-                {user?.username || 'Premium Seller'}
-              </h3>
-              <p style={{ margin: '0.2rem 0 0.85rem', fontSize: '0.72rem', color: 'var(--color-text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '100%' }}>
-                {user?.email || 'seller@bidkar.in'}
-              </p>
-              {user?.role === 'SELLER' || user?.role === 'ADMIN' ? (
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem', background: '#ecfdf5', color: '#047857', padding: '0.3rem 0.75rem', borderRadius: '20px', fontSize: '0.65rem', fontWeight: 800, border: '1px solid #a7f3d0', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                  <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /><polyline points="9 11 11 13 15 9" /></svg>
-                  Active Seller
-                </span>
-              ) : (
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem', background: '#fef2f2', color: '#991b1b', padding: '0.3rem 0.75rem', borderRadius: '20px', fontSize: '0.65rem', fontWeight: 800, border: '1px solid #fecaca', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                  <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>
-                  KYC Pending
-                </span>
-              )}
+          {/* 1. Profile Card (Order 1 on mobile) */}
+          <div className="seller-profile-card" style={{ background: '#fff', border: '1px solid var(--color-border-subtle)', borderRadius: '20px', padding: '1.5rem', boxShadow: '0 4px 20px rgba(0,35,102,0.02)', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
+            <div style={{ width: '58px', height: '58px', borderRadius: '50%', background: 'linear-gradient(135deg,var(--color-brand-primary-dark),var(--color-brand-primary))', color: '#fff', fontSize: '1.25rem', fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '0.8rem', boxShadow: '0 4px 14px rgba(0,35,102,0.15)' }}>
+              {user?.username ? user.username.slice(0, 2).toUpperCase() : 'SE'}
             </div>
-
-            {/* Quick nav links */}
-            <div style={{ background: '#fff', border: '1px solid var(--color-border-subtle)', borderRadius: '20px', padding: '0.5rem', boxShadow: '0 4px 20px rgba(0,35,102,0.02)' }}>
-              {[
-                { label: 'Create Listing', path: '/seller/create', icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg> },
-                { label: 'Storefront Profile', path: `/seller/${user?._id || user?.id || 'me'}`, icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg> },
-                { label: 'Bidder Dashboard', path: '/dashboard', icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect x="3" y="3" width="7" height="9" /><rect x="14" y="3" width="7" height="5" /><rect x="14" y="12" width="7" height="9" /><rect x="3" y="16" width="7" height="5" /></svg> },
-                { label: 'Disputes Center', path: '/disputes', icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /><polyline points="9 11 11 13 15 9" /></svg> },
-              ].map(link => (
-                <button
-                  key={link.path}
-                  onClick={() => navigate(link.path)}
-                  style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '0.65rem', padding: '0.7rem 0.85rem', borderRadius: '12px', border: 'none', background: 'transparent', color: 'var(--color-text-rich)', fontWeight: 600, fontSize: '0.82rem', cursor: 'pointer', textAlign: 'left', transition: 'background 0.15s, color 0.15s' }}
-                  onMouseEnter={e => { e.currentTarget.style.background = 'rgba(0,35,102,0.05)'; e.currentTarget.style.color = 'var(--color-brand-primary)'; }}
-                  onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--color-text-rich)'; }}
-                >
-                  <span style={{ color: 'var(--color-brand-primary)', display: 'inline-flex', flexShrink: 0 }}>{link.icon}</span>
-                  {link.label}
-                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ marginLeft: 'auto', color: 'var(--color-text-muted)' }}><polyline points="9 18 15 12 9 6" /></svg>
-                </button>
-              ))}
-            </div>
-
-            {/* Quick Selling Tips Card */}
-            <div style={{ background: 'linear-gradient(135deg,var(--color-brand-primary-dark) 0%,var(--color-brand-primary) 100%)', borderRadius: '20px', padding: '1.25rem', color: '#fff', boxShadow: '0 4px 20px rgba(0,35,102,0.05)', position: 'relative', overflow: 'hidden' }}>
-              <div style={{ position: 'absolute', inset: 0, opacity: 0.03, backgroundImage: 'radial-gradient(#fff 1.5px,transparent 0)', backgroundSize: '16px 16px', pointerEvents: 'none' }} />
-              <h4 style={{ margin: '0 0 0.5rem', fontSize: '0.8rem', fontWeight: 800, color: 'var(--color-brand-accent)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Escrow Guarantee</h4>
-              <p style={{ margin: 0, fontSize: '0.72rem', lineHeight: 1.5, color: 'rgba(255,255,255,0.75)' }}>
-                Funds are secured in escrow at hammer time. Meet the buyer at the coordinates to confirm exchange and release funds instantly.
-              </p>
-            </div>
-
+            <h3 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 900, color: 'var(--color-brand-primary)' }}>
+              {user?.username || 'Premium Seller'}
+            </h3>
+            <p style={{ margin: '0.2rem 0 0.85rem', fontSize: '0.72rem', color: 'var(--color-text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '100%' }}>
+              {user?.email || 'seller@bidkar.in'}
+            </p>
+            {user?.role === 'SELLER' || user?.role === 'ADMIN' ? (
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem', background: '#ecfdf5', color: '#047857', padding: '0.3rem 0.75rem', borderRadius: '20px', fontSize: '0.65rem', fontWeight: 800, border: '1px solid #a7f3d0', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /><polyline points="9 11 11 13 15 9" /></svg>
+                Active Seller
+              </span>
+            ) : (
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem', background: '#fef2f2', color: '#991b1b', padding: '0.3rem 0.75rem', borderRadius: '20px', fontSize: '0.65rem', fontWeight: 800, border: '1px solid #fecaca', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>
+                KYC Pending
+              </span>
+            )}
           </div>
 
-          {/* ── RIGHT COLUMN (Metrics + Listings Grid) ── */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+          {/* 3. Quick nav links (Order 3 on mobile) */}
+          <div className="seller-quick-links" style={{ background: '#fff', border: '1px solid var(--color-border-subtle)', borderRadius: '20px', padding: '0.5rem', boxShadow: '0 4px 20px rgba(0,35,102,0.02)' }}>
+            {[
+              { label: 'Create Listing', path: '/seller/create', icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg> },
+              { label: 'Storefront Profile', path: `/seller/${user?._id || user?.id || 'me'}`, icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg> },
+              { label: 'Bidder Dashboard', path: '/dashboard', icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect x="3" y="3" width="7" height="9" /><rect x="14" y="3" width="7" height="5" /><rect x="14" y="12" width="7" height="9" /><rect x="3" y="16" width="7" height="5" /></svg> },
+              { label: 'Disputes Center', path: '/disputes', icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /><polyline points="9 11 11 13 15 9" /></svg> },
+            ].map(link => (
+              <button
+                key={link.path}
+                onClick={() => navigate(link.path)}
+                style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '0.65rem', padding: '0.7rem 0.85rem', borderRadius: '12px', border: 'none', background: 'transparent', color: 'var(--color-text-rich)', fontWeight: 600, fontSize: '0.82rem', cursor: 'pointer', textAlign: 'left', transition: 'background 0.15s, color 0.15s' }}
+                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(0,35,102,0.05)'; e.currentTarget.style.color = 'var(--color-brand-primary)'; }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--color-text-rich)'; }}
+              >
+                <span style={{ color: 'var(--color-brand-primary)', display: 'inline-flex', flexShrink: 0 }}>{link.icon}</span>
+                {link.label}
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ marginLeft: 'auto', color: 'var(--color-text-muted)' }}><polyline points="9 18 15 12 9 6" /></svg>
+              </button>
+            ))}
+          </div>
+
+          {/* 4. Quick Selling Tips Card (Order 4 on mobile) */}
+          <div className="seller-tips-card" style={{ background: 'linear-gradient(135deg,var(--color-brand-primary-dark) 0%,var(--color-brand-primary) 100%)', borderRadius: '20px', padding: '1.25rem', color: '#fff', boxShadow: '0 4px 20px rgba(0,35,102,0.05)', position: 'relative', overflow: 'hidden' }}>
+            <div style={{ position: 'absolute', inset: 0, opacity: 0.03, backgroundImage: 'radial-gradient(#fff 1.5px,transparent 0)', backgroundSize: '16px 16px', pointerEvents: 'none' }} />
+            <h4 style={{ margin: '0 0 0.5rem', fontSize: '0.8rem', fontWeight: 800, color: 'var(--color-brand-accent)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Escrow Guarantee</h4>
+            <p style={{ margin: 0, fontSize: '0.72rem', lineHeight: 1.5, color: 'rgba(255,255,255,0.75)' }}>
+              Funds are secured in escrow at hammer time. Meet the buyer at the coordinates to confirm exchange and release funds instantly.
+            </p>
+          </div>
+
+          {/* 2. MAIN RIGHT COLUMN (Order 2 on mobile) */}
+          <div className="seller-main-content" style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
 
             {/* Overview / Stats Cards Grid */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.25rem' }}>
+            <div className="wallet-stats-strip">
               {statsLoading ? (
                 Array(3).fill(0).map((_, i) => (
                   <div key={i} style={{ background: '#fff', border: '1px solid var(--color-border-subtle)', borderRadius: '16px', padding: '1.25rem', height: '110px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -359,20 +350,21 @@ export default function SellerStudioPage() {
             </div>
 
             {/* Tab bar + search header */}
-            <div style={{ background: '#fff', border: '1px solid var(--color-border-subtle)', borderRadius: '20px', padding: '0.75rem 1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem', boxShadow: '0 4px 20px rgba(0,35,102,0.02)' }}>
-              <div style={{ display: 'flex', gap: '0.25rem' }}>
+            <div style={{ background: '#fff', border: '1px solid var(--color-border-subtle)', borderRadius: '20px', padding: '0.6rem 0.85rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.65rem', boxShadow: '0 4px 20px rgba(0,35,102,0.02)' }}>
+              <div style={{ display: 'flex', gap: '0.15rem', overflowX: 'auto', maxWidth: '100%' }}>
                 {tabs.map(tab => (
                   <button
                     key={tab.key}
                     onClick={() => { setActiveTab(tab.key); setSearch(''); }}
                     style={{
-                      display: 'inline-flex', alignItems: 'center', gap: '0.4rem',
-                      padding: '0.65rem 0.85rem',
+                      display: 'inline-flex', alignItems: 'center', gap: '0.3rem',
+                      padding: '0.55rem 0.65rem',
                       background: 'none', border: 'none',
                       borderBottom: activeTab === tab.key ? '2.5px solid var(--color-brand-primary)' : '2.5px solid transparent',
                       color: activeTab === tab.key ? 'var(--color-brand-primary)' : 'var(--color-text-muted)',
                       fontWeight: activeTab === tab.key ? 800 : 600,
-                      fontSize: '0.82rem', cursor: 'pointer',
+                      fontSize: '0.78rem', cursor: 'pointer',
+                      whiteSpace: 'nowrap',
                       transition: 'color 0.15s, border-color 0.15s',
                     }}
                   >
@@ -382,7 +374,7 @@ export default function SellerStudioPage() {
               </div>
 
               {/* Search */}
-              <div style={{ position: 'relative', minWidth: '180px', maxWidth: '240px', width: '100%' }}>
+              <div style={{ position: 'relative', flex: 1, minWidth: '160px', width: '100%' }}>
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2.5" style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}>
                   <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
                 </svg>

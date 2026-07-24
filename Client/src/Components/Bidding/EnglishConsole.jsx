@@ -6,9 +6,11 @@ import { placeBid } from '../../services/auctionService';
 import LiveLeaderboard from './LiveLeaderboard';
 import Header from '../Global/Header';
 import { useWallet } from '../../Context/WalletContext';
+import { useAuth } from '../../Context/AuthContext';
 
 export default function EnglishConsole({ item }) {
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   // Socket state hook
   const {
@@ -17,14 +19,18 @@ export default function EnglishConsole({ item }) {
     lastBidder,
     placeBidSocket,
     socketError,
-    setSocketError
+    setSocketError,
+    bidHistoryList,
+    viewerCount
   } = useSocket(item._id, item.currentHighestBid, 'ENGLISH', item);
+
+  const bidderName = typeof lastBidder === 'object' ? lastBidder?.username : lastBidder;
+  const isHighestBidder = bidderName === 'You' || bidderName === 'you' || (user?.username && bidderName === user.username);
 
   // UI state
   const [customBid, setCustomBid] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
   const [shake, setShake] = useState(false);
-  const [bidHistory, setBidHistory] = useState([]);
   const [alertMsg, setAlertMsg] = useState(null);
   const [activePhoto, setActivePhoto] = useState(item.photos?.[0] || '');
 
@@ -77,28 +83,16 @@ export default function EnglishConsole({ item }) {
     return () => clearInterval(interval);
   }, [endTime]);
 
-  // Synchronize local bid history when currentBid updates
+  // Synchronize outbid alert when leading bidder changes
   useEffect(() => {
-    if (currentBid && lastBidder) {
-      const newBidRecord = {
-        timestamp: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
-        bidder: lastBidder.username,
-        amount: currentBid,
-      };
-
-      setBidHistory(prev => {
-        // Prevent duplicate logs
-        if (prev.length > 0 && prev[0].amount === currentBid) return prev;
-
-        // Show outbid alert if user is outbid
-        if (prev.length > 0 && prev[0].bidder === 'You' && lastBidder.username !== 'You') {
-          triggerAlert('You have been outbid! Place a higher bid.');
-        }
-
-        return [newBidRecord, ...prev].slice(0, 50);
-      });
+    if (bidHistoryList.length > 1) {
+      const lastBid = bidHistoryList[0];
+      const prevBid = bidHistoryList[1];
+      if (prevBid.bidder === 'You' && lastBid.bidder !== 'You') {
+        triggerAlert('You have been outbid! Place a higher bid.');
+      }
     }
-  }, [currentBid, lastBidder]);
+  }, [bidHistoryList]);
 
   const triggerAlert = (msg) => {
     setAlertMsg(msg);
@@ -121,6 +115,12 @@ export default function EnglishConsole({ item }) {
     setShake(false);
 
     // 1. Validation checks
+    if (isHighestBidder) {
+      setErrorMsg('You are already the highest bidder! Bidding is locked until you are outbid.');
+      setShake(true);
+      return;
+    }
+
     if (amount <= currentBid) {
       setErrorMsg(`Bid must be greater than current highest bid (₹${currentBid.toLocaleString()})`);
       setShake(true);
@@ -205,16 +205,17 @@ export default function EnglishConsole({ item }) {
       <div style={{ flex: 1, maxWidth: '1280px', width: '100%', margin: '0 auto', padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
 
         {/* Back navigation & Title bar */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '1rem' }}>
+        <div className="console-top-bar">
           <button
             onClick={() => navigate(`/auction/${item._id}`)}
-            style={{ background: 'rgba(255,255,255,0.08)', color: '#fff', border: '1px solid rgba(255,255,255,0.1)', padding: '0.5rem 1rem', borderRadius: '10px', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.4rem', transition: 'all 0.2s' }}
-            onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.15)'}
-            onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'}
+            className="console-exit-btn"
           >
-            ← Exit Console
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M19 12H5M12 19l-7-7 7-7" />
+            </svg>
+            Exit Live Console
           </button>
-          <div style={{ textAlign: 'right' }}>
+          <div className="console-header-title-box">
             <h2 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 800, color: '#fff' }}>{item.title}</h2>
             <p style={{ margin: 0, fontSize: '0.78rem', color: 'rgba(255,255,255,0.5)' }}>English Bidding Console · Live Room</p>
           </div>
@@ -330,7 +331,7 @@ export default function EnglishConsole({ item }) {
               {/* Presets Grid */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.75rem', marginBottom: '1.25rem' }}>
                 {smartIncrements.map((price, idx) => {
-                  const cannotBid = price > TOTAL_BIDDING_POWER;
+                  const cannotBid = price > TOTAL_BIDDING_POWER || isHighestBidder;
                   return (
                     <button
                       key={idx}
@@ -368,7 +369,7 @@ export default function EnglishConsole({ item }) {
                     >
                       + ₹{(price - currentBid).toLocaleString()}
                       <span style={{ display: 'block', fontSize: '0.68rem', color: cannotBid ? '#fca5a5' : 'rgba(255,255,255,0.4)', marginTop: '0.1rem', fontWeight: 500 }}>
-                        {cannotBid ? 'LOCKED' : `₹${price.toLocaleString()}`}
+                        {isHighestBidder ? 'LEADING' : cannotBid ? 'LOCKED' : `₹${price.toLocaleString()}`}
                       </span>
                     </button>
                   );
@@ -386,8 +387,14 @@ export default function EnglishConsole({ item }) {
                     <input
                       id="custom-bid-input"
                       type="text"
-                      disabled={TOTAL_BIDDING_POWER < (currentBid + minIncrement)}
-                      placeholder={TOTAL_BIDDING_POWER < (currentBid + minIncrement) ? 'INSUFFICIENT POWER' : `Min: ${(currentBid + minIncrement).toLocaleString()}`}
+                      disabled={TOTAL_BIDDING_POWER < (currentBid + minIncrement) || isHighestBidder}
+                      placeholder={
+                        isHighestBidder
+                          ? 'YOU ARE THE HIGHEST BIDDER'
+                          : TOTAL_BIDDING_POWER < (currentBid + minIncrement)
+                            ? 'INSUFFICIENT POWER'
+                            : `Min: ${(currentBid + minIncrement).toLocaleString()}`
+                      }
                       value={customBid}
                       onChange={e => setCustomBid(e.target.value.replace(/[^0-9]/g, ''))}
                       style={{
@@ -401,13 +408,20 @@ export default function EnglishConsole({ item }) {
                         fontWeight: 700,
                         outline: 'none',
                         transition: 'border-color 0.2s',
-                        opacity: TOTAL_BIDDING_POWER < (currentBid + minIncrement) ? 0.5 : 1,
+                        opacity: (TOTAL_BIDDING_POWER < (currentBid + minIncrement) || isHighestBidder) ? 0.5 : 1,
                       }}
                       onFocus={e => e.target.style.borderColor = '#fece44'}
                       onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.15)'}
                     />
                   </div>
                 </div>
+
+                {isHighestBidder && (
+                  <div style={{ color: '#10b981', fontSize: '0.78rem', background: 'rgba(16, 185, 129, 0.08)', border: '1px solid rgba(16, 185, 129, 0.2)', padding: '0.6rem 0.85rem', borderRadius: '10px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12" /></svg>
+                    <span>You are currently the highest bidder (Leading). Bidding is locked until someone outbids you.</span>
+                  </div>
+                )}
 
                 {errorMsg && (
                   <p style={{ margin: 0, fontSize: '0.78rem', color: '#fca5a5', display: 'flex', alignItems: 'center', gap: '0.3rem', fontWeight: 600 }}>
@@ -420,7 +434,7 @@ export default function EnglishConsole({ item }) {
                   </p>
                 )}
 
-                {TOTAL_BIDDING_POWER < (currentBid + minIncrement) && (
+                {TOTAL_BIDDING_POWER < (currentBid + minIncrement) && !isHighestBidder && (
                   <div style={{ color: '#fca5a5', fontSize: '0.75rem', background: 'rgba(239, 68, 68, 0.08)', border: '1px solid rgba(239, 68, 68, 0.2)', padding: '0.5rem 0.75rem', borderRadius: '8px', fontWeight: 600, display: 'flex', alignItems: 'start', gap: '0.4rem' }}>
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: '2px' }}>
                       <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
@@ -433,33 +447,33 @@ export default function EnglishConsole({ item }) {
 
                 <button
                   type="submit"
-                  disabled={TOTAL_BIDDING_POWER < (currentBid + minIncrement) || (customBid && parseInt(customBid.replace(/,/g, ''), 10) > TOTAL_BIDDING_POWER)}
+                  disabled={isHighestBidder || TOTAL_BIDDING_POWER < (currentBid + minIncrement) || (customBid && parseInt(customBid.replace(/,/g, ''), 10) > TOTAL_BIDDING_POWER)}
                   style={{
-                    background: (TOTAL_BIDDING_POWER < (currentBid + minIncrement) || (customBid && parseInt(customBid.replace(/,/g, ''), 10) > TOTAL_BIDDING_POWER)) ? '#1f2937' : 'var(--color-brand-primary)',
-                    color: (TOTAL_BIDDING_POWER < (currentBid + minIncrement) || (customBid && parseInt(customBid.replace(/,/g, ''), 10) > TOTAL_BIDDING_POWER)) ? 'rgba(255,255,255,0.3)' : '#fff',
+                    background: (isHighestBidder || TOTAL_BIDDING_POWER < (currentBid + minIncrement) || (customBid && parseInt(customBid.replace(/,/g, ''), 10) > TOTAL_BIDDING_POWER)) ? '#1f2937' : 'var(--color-brand-primary)',
+                    color: (isHighestBidder || TOTAL_BIDDING_POWER < (currentBid + minIncrement) || (customBid && parseInt(customBid.replace(/,/g, ''), 10) > TOTAL_BIDDING_POWER)) ? 'rgba(255,255,255,0.3)' : '#fff',
                     border: 'none',
                     borderRadius: '12px',
                     padding: '0.8rem',
                     fontWeight: 800,
                     fontSize: '0.95rem',
-                    cursor: (TOTAL_BIDDING_POWER < (currentBid + minIncrement) || (customBid && parseInt(customBid.replace(/,/g, ''), 10) > TOTAL_BIDDING_POWER)) ? 'not-allowed' : 'pointer',
+                    cursor: (isHighestBidder || TOTAL_BIDDING_POWER < (currentBid + minIncrement) || (customBid && parseInt(customBid.replace(/,/g, ''), 10) > TOTAL_BIDDING_POWER)) ? 'not-allowed' : 'pointer',
                     transition: 'all 0.2s',
-                    boxShadow: (TOTAL_BIDDING_POWER < (currentBid + minIncrement) || (customBid && parseInt(customBid.replace(/,/g, ''), 10) > TOTAL_BIDDING_POWER)) ? 'none' : '0 4px 12px rgba(0,35,102,0.3)',
+                    boxShadow: (isHighestBidder || TOTAL_BIDDING_POWER < (currentBid + minIncrement) || (customBid && parseInt(customBid.replace(/,/g, ''), 10) > TOTAL_BIDDING_POWER)) ? 'none' : '0 4px 12px rgba(0,35,102,0.3)',
                   }}
                   onMouseEnter={e => {
-                    if (!(TOTAL_BIDDING_POWER < (currentBid + minIncrement) || (customBid && parseInt(customBid.replace(/,/g, ''), 10) > TOTAL_BIDDING_POWER))) {
+                    if (!(isHighestBidder || TOTAL_BIDDING_POWER < (currentBid + minIncrement) || (customBid && parseInt(customBid.replace(/,/g, ''), 10) > TOTAL_BIDDING_POWER))) {
                       e.currentTarget.style.background = 'var(--color-brand-primary-light)';
                       e.currentTarget.style.boxShadow = '0 6px 16px rgba(0,35,102,0.4)';
                     }
                   }}
                   onMouseLeave={e => {
-                    if (!(TOTAL_BIDDING_POWER < (currentBid + minIncrement) || (customBid && parseInt(customBid.replace(/,/g, ''), 10) > TOTAL_BIDDING_POWER))) {
+                    if (!(isHighestBidder || TOTAL_BIDDING_POWER < (currentBid + minIncrement) || (customBid && parseInt(customBid.replace(/,/g, ''), 10) > TOTAL_BIDDING_POWER))) {
                       e.currentTarget.style.background = 'var(--color-brand-primary)';
                       e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,35,102,0.3)';
                     }
                   }}
                 >
-                  Confirm Bidding Order
+                  {isHighestBidder ? 'Bidding Locked (You are Leading)' : 'Confirm Bidding Order'}
                 </button>
               </form>
             </motion.div>
@@ -471,7 +485,8 @@ export default function EnglishConsole({ item }) {
               currentBid={currentBid}
               totalBids={totalBids}
               lastBidder={lastBidder}
-              bidHistory={bidHistory}
+              bidHistory={bidHistoryList}
+              viewerCount={viewerCount}
             />
           </div>
         </div>
