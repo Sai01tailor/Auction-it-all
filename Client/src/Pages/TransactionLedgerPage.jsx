@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import Header from '../Components/Global/Header';
+import SEO from '../Components/Global/SEO';
 import AuthController from '../Components/Global/AuthController';
 import { toast } from 'react-toastify';
 import api from '../../Config/Axios';
@@ -188,6 +189,10 @@ export default function TransactionLedgerPage() {
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--color-surface-bg)' }}>
+      <SEO
+        title="Transaction Ledger & Escrow Statements"
+        description="View transaction history, download PDF payment receipts, and audit locked escrow deposits on BidKar.in."
+      />
       <AuthController />
       <Header />
 

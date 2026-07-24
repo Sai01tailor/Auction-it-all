@@ -133,7 +133,7 @@ function SearchBar({ onSearch, collapsed }) {
 }
 
 /* ── User Avatar / Auth ── */
-function AuthSection({ user }) {
+function AuthSection({ user, mobile = false }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
 
@@ -145,15 +145,15 @@ function AuthSection({ user }) {
 
   if (!user) {
     return (
-      <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexShrink: 0 }}>
+      <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center', flexShrink: 0 }}>
         <Link to="/login">
           <button id="header-sign-in" style={{
-            padding: '0.45rem 1.1rem',
+            padding: mobile ? '0.35rem 0.8rem' : '0.45rem 1.1rem',
             background: 'var(--color-brand-primary)',
             color: '#fff',
             border: 'none',
             borderRadius: '8px',
-            fontSize: '0.875rem',
+            fontSize: mobile ? '0.78rem' : '0.875rem',
             fontWeight: 600,
             cursor: 'pointer',
             whiteSpace: 'nowrap',
@@ -162,22 +162,24 @@ function AuthSection({ user }) {
             Sign In
           </button>
         </Link>
-        <Link to="/sign-up">
-          <button id="header-sign-up" style={{
-            padding: '0.45rem 1.1rem',
-            background: 'rgba(254,206,68,0.15)',
-            color: 'var(--color-brand-primary)',
-            border: '1.5px solid rgba(254,206,68,0.6)',
-            borderRadius: '8px',
-            fontSize: '0.875rem',
-            fontWeight: 600,
-            cursor: 'pointer',
-            whiteSpace: 'nowrap',
-            transition: 'all 0.2s',
-          }}>
-            Register
-          </button>
-        </Link>
+        {!mobile && (
+          <Link to="/sign-up">
+            <button id="header-sign-up" style={{
+              padding: '0.45rem 1.1rem',
+              background: 'rgba(254,206,68,0.15)',
+              color: 'var(--color-brand-primary)',
+              border: '1.5px solid rgba(254,206,68,0.6)',
+              borderRadius: '8px',
+              fontSize: '0.875rem',
+              fontWeight: 600,
+              cursor: 'pointer',
+              whiteSpace: 'nowrap',
+              transition: 'all 0.2s',
+            }}>
+              Register
+            </button>
+          </Link>
+        )}
       </div>
     );
   }
@@ -670,7 +672,7 @@ export default function Header() {
 
           {/* Auth */}
           {user && <NotificationBell />}
-          {!mobile && <AuthSection user={user} />}
+          <AuthSection user={user} mobile={mobile} />
         </div>
       </header>
 

@@ -1,12 +1,16 @@
 {
   "rewrites": [
     {
+      "source": "/sitemap.xml",
+      "destination": "https://auction-it-all.onrender.com/sitemap.xml"
+    },
+    {
       "source": "/api/:path*",
-      "destination": "https://bidkar-backend.onrender.com/api/:path*"
+      "destination": "https://auction-it-all.onrender.com/api/:path*"
     },
     {
       "source": "/socket.io/:path*",
-      "destination": "https://bidkar-backend.onrender.com/socket.io/:path*"
+      "destination": "https://auction-it-all.onrender.com/socket.io/:path*"
     },
     {
       "source": "/(.*)",

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useWallet } from '../Context/WalletContext';
 import Header from '../Components/Global/Header';
+import SEO from '../Components/Global/SEO';
 import AuthController from '../Components/Global/AuthController';
 import { toast } from 'react-toastify';
 
@@ -50,6 +51,10 @@ export default function WalletPage() {
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--color-surface-bg)' }}>
+      <SEO
+        title="My Digital Wallet & Bidding Power"
+        description="Manage your wallet balance, calculate bidding power, top up funds securely with Razorpay, and check escrow reserves on BidKar.in."
+      />
       <AuthController />
       <Header />
 

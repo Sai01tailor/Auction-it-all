@@ -1,0 +1,18 @@
+User-agent: *
+Allow: /
+Allow: /auctions
+Allow: /auction/*
+Allow: /how-it-works
+Allow: /sitemap
+Allow: /contact/*
+Allow: /legal/*
+
+# Block private user dashboards and secure endpoints from indexing
+Disallow: /dashboard
+Disallow: /wallet
+Disallow: /ledger
+Disallow: /seller/studio
+Disallow: /handoff/*
+Disallow: /disputes
+
+Sitemap: https://bidkar.in/sitemap.xml

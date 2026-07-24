@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '../../Config/Axios';
 import Header from '../Components/Global/Header';
+import SEO from '../Components/Global/SEO';
 import AuthController from '../Components/Global/AuthController';
 import { useAuth } from '../Context/AuthContext';
 
@@ -98,6 +99,10 @@ export default function KYCPage() {
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--color-surface-bg)' }}>
+      <SEO
+        title="Bidder Identity Verification & Instant KYC"
+        description="Verify your identity with instant Aadhaar OTP verification on BidKar.in to unlock high-value auctions and seller features."
+      />
       <AuthController />
       <Header />
 

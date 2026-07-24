@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { createCustomItem } from '../services/auctionService';
 import { useAuth } from '../Context/AuthContext';
 import Header from '../Components/Global/Header';
+import SEO from '../Components/Global/SEO';
 import AuthController from '../Components/Global/AuthController';
 import DesktopOnlyNoticePage from './DesktopOnlyNoticePage';
 
@@ -259,6 +260,10 @@ export default function CreateListingPage() {
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--color-surface-bg)' }}>
+      <SEO
+        title="Create New Auction Listing — Seller Studio"
+        description="List verified items for auction on BidKar.in. Choose English, Dutch, or Blind bidding engines, upload high-res images, and set reserve prices."
+      />
       <AuthController />
       <Header />
 

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Header from '../Components/Global/Header';
+import SEO from '../Components/Global/SEO';
 import { toast } from 'react-toastify';
 import api from '../../Config/Axios';
 
@@ -40,6 +41,10 @@ export default function SitemapPage() {
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--color-surface-bg)' }}>
+      <SEO
+        title="HTML & XML Sitemap Index"
+        description="Explore active auction categories, platform routes, and XML sitemap for search engine crawlers on BidKar.in."
+      />
       <Header />
       
       {/* Banner - Full Bleed Hero matching Legal/HowItWorks */}
@@ -66,9 +71,34 @@ export default function SitemapPage() {
           <h1 style={{ color: 'var(--color-brand-accent)', margin: 0, fontSize: 'clamp(2.2rem, 5vw, 3.2rem)', fontWeight: 900, letterSpacing: '-0.03em', lineHeight: 1.15 }}>
             Sitemap Directory
           </h1>
-          <p style={{ margin: '0.6rem 0 0', fontSize: '0.95rem', color: 'rgba(255,255,255,0.7)', lineHeight: 1.6 }}>
+          <p style={{ margin: '0.6rem 0 1.25rem', fontSize: '0.95rem', color: 'rgba(255,255,255,0.7)', lineHeight: 1.6 }}>
             An indexed portal of active subcategories, bidding showcases, and corporate compliance routes for search crawlers and public navigators.
           </p>
+
+          <a
+            href="/sitemap.xml"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              padding: '0.55rem 1.2rem',
+              background: 'var(--color-brand-accent)',
+              color: 'var(--color-brand-primary-dark)',
+              borderRadius: '12px',
+              fontWeight: 800,
+              fontSize: '0.85rem',
+              textDecoration: 'none',
+              boxShadow: '0 4px 16px rgba(254,206,68,0.25)',
+              transition: 'transform 0.15s, background 0.15s',
+            }}
+            onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-1px)'}
+            onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+            View Dynamic sitemap.xml
+          </a>
         </div>
       </section>
 

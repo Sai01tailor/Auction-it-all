@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import api from '../../Config/Axios';
 import { useAuth } from '../Context/AuthContext';
 import Header from '../Components/Global/Header';
+import SEO from '../Components/Global/SEO';
 import AuthController from '../Components/Global/AuthController';
 import { toast } from 'react-toastify';
 import { deleteCookie } from '../Components/Global/CookieIT';
@@ -99,6 +100,10 @@ export default function UserSettingsPage() {
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--color-surface-bg)' }}>
+      <SEO
+        title="Account Settings & Security"
+        description="Update profile information, change passwords, and manage security credentials on BidKar.in."
+      />
       <AuthController />
       <Header />
 

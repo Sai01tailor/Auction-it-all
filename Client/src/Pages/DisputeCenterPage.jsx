@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import api from '../../Config/Axios';
 import { getActiveAuctions } from '../services/auctionService';
 import Header from '../Components/Global/Header';
+import SEO from '../Components/Global/SEO';
 import AuthController from '../Components/Global/AuthController';
 
 export default function DisputeCenterPage() {
@@ -137,6 +138,10 @@ export default function DisputeCenterPage() {
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--color-surface-bg)' }}>
+      <SEO
+        title="Dispute Center & Resolution Claims"
+        description="File and track escrow dispute claims on BidKar.in. Fair resolution for non-delivery or items not as described."
+      />
       <AuthController />
       <Header />
 

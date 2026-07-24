@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { getActiveAuctions } from '../services/auctionService';
 import { useSocket } from '../hooks/useSocket';
 import Header from '../Components/Global/Header';
+import SEO from '../Components/Global/SEO';
 import AuthController from '../Components/Global/AuthController';
 import { useAuth } from '../Context/AuthContext';
 import { useWallet } from '../Context/WalletContext';
@@ -218,6 +219,10 @@ export default function BidderDashboardPage() {
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--color-surface-bg)' }}>
+      <SEO
+        title="Bidder Dashboard & Live Activities"
+        description="Track active bids, manage watchlist items, monitor won escrows, and view seller activity on BidKar.in."
+      />
       <AuthController />
       <Header />
 

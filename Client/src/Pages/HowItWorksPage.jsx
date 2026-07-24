@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Header from '../Components/Global/Header';
+import SEO from '../Components/Global/SEO';
 import { toast } from 'react-toastify';
 
 function FAQItem({ faq, isOpen, onClick }) {
@@ -153,6 +154,10 @@ export default function HowItWorksPage() {
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--color-surface-bg)' }}>
+      <SEO
+        title="How Online Auctions Work — Bidding Engines & Escrow Guide"
+        description="Learn how English, Dutch, and Blind auctions work on BidKar.in. Understand 10x bidding power, deposit security, and escrow settlement."
+      />
       <Header />
 
       {/* ── 1. Modern Hero Section ── */}

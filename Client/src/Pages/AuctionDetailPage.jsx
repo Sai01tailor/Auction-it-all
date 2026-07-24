@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import Header from '../Components/Global/Header';
+import SEO from '../Components/Global/SEO';
 import MediaGallery from '../Components/Detail/MediaGallery';
 import BiddingStatsCard from '../Components/Detail/BiddingStatsCard';
 import SellerCredibilityCard from '../Components/Detail/SellerCredibilityCard';
@@ -134,6 +135,11 @@ export default function AuctionDetailPage() {
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--color-surface-bg)' }}>
+      <SEO
+        title={item ? `${item.title} — Bid ₹${(item.currentPrice ?? item.startingPrice ?? 0).toLocaleString('en-IN')}` : 'Auction Detail'}
+        description={item?.description ? item.description.slice(0, 160) : 'Bid on this exclusive verified item on BidKar.in'}
+        ogImage={typeof item?.images?.[0] === 'string' ? item.images[0] : item?.images?.[0]?.url}
+      />
       <Header />
 
       {/* ── Breadcrumb ── */}

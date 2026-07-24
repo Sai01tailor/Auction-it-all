@@ -17,6 +17,7 @@ const reviewRoutes = require('./routes/review.routes');
 const sellerRoutes = require('./routes/seller.routes');
 const auditLogRoutes = require('./routes/auditLog.routes');
 const KYCRoutes = require('./routes/kyc.routes')
+const sitemapRoutes = require('./routes/sitemap.routes');
 
 // middleware
 app.use(express.json());
@@ -35,6 +36,8 @@ app.use(
 app.use(passport.initialize());
 
 // routing below !
+app.use('/sitemap.xml', sitemapRoutes);
+app.use('/api/sitemap.xml', sitemapRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/items', itemRoutes);
 app.use('/api/payments', paymentRoutes);

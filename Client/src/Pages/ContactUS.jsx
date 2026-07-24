@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Header from '../Components/Global/Header';
+import SEO from '../Components/Global/SEO';
 import { toast } from 'react-toastify';
 import api from '../../Config/Axios';
 
@@ -92,6 +93,10 @@ export default function ContactUS() {
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--color-surface-bg)' }}>
+      <SEO
+        title="Contact Customer Support & Help Desk"
+        description="Get in touch with BidKar.in customer service via email, phone, or live support chat for assistance with auctions, deposits, and verification."
+      />
       <Header />
 
       {/* Banner - Full Bleed Hero */}

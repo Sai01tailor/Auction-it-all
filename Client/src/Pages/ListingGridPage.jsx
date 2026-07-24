@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import Header from '../Components/Global/Header';
+import SEO from '../Components/Global/SEO';
 import FilterSidebar, { MobileFilterSheet } from '../Components/Listing/FilterSidebar';
 import AuctionGrid from '../Components/Listing/AuctionGrid';
 import SearchBar from '../Components/Listing/SearchBar';
@@ -127,8 +128,18 @@ export default function ListingGridPage() {
     filters.priceRange[0] > 0 ||
     filters.priceRange[1] < 10_00_000;
 
+  const pageTitle = filters.search
+    ? `Search "${filters.search}" — Live Auctions`
+    : filters.category !== 'all'
+    ? `${filters.category.charAt(0).toUpperCase() + filters.category.slice(1)} Auctions`
+    : 'Browse All Live Auctions & Drops';
+
   return (
     <div style={{ minHeight: '100vh', background: 'var(--color-surface-bg)', paddingBottom: '3.5rem' }}>
+      <SEO
+        title={pageTitle}
+        description={`Explore live auctions on BidKar.in. Filter by category, price, and bidding engine (English, Dutch, Blind bidding).`}
+      />
       <Header />
 
       {/* ── Page Header Band ── */}

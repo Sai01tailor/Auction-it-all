@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Header from '../Components/Global/Header';
+import SEO from '../Components/Global/SEO';
 import CategoryGrid from '../Components/Home/CategoryGrid';
 import TrustBar from '../Components/Home/TrustBar';
 import Carousel from '../Components/Product/Carousel';
@@ -281,6 +282,10 @@ function SectionHeader({ eyebrow, title }) {
 export default function Home() {
   return (
     <div style={{ minHeight: '100vh' }}>
+      <SEO
+        title="BidKar.in | Live Online Auctions & Verified Marketplace"
+        description="BidKar.in is India's premier online auction platform. Bid live on verified electronics, luxury items, domain names, and art with escrow security."
+      />
       <Header />
       <PlatformStats />
       <Hero />
