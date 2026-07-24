@@ -88,29 +88,32 @@ const Footer = () => {
   const year = new Date().getFullYear()
 
   const marketplace = [
-    { label: 'Live Auction', to: '/auctions' },
-    { label: 'Ending Soon', to: '/auctions?sort=ending' },
-    { label: 'Category Sitemap', to: '/sitemap' },
-    { label: 'Featured Sellers', to: '/auctions' },
+    { label: 'Browse Live Auctions', to: '/auctions' },
+    { label: 'Ending Soon Drops', to: '/auctions?sort=ending' },
+    { label: 'Create Seller Listing', to: '/seller/create' },
+    { label: 'HTML & XML Sitemap Index', to: '/sitemap' },
+    { label: 'Dynamic sitemap.xml', to: '/sitemap.xml' },
   ]
   const helpTrust = [
-    { label: 'How it Works?', to: '/how-it-works' },
-    { label: 'Safety Handoff Guide', to: '/how-it-works' },
-    { label: 'Dispute Center', to: '/disputes' },
-    { label: 'FAQs', to: '/how-it-works' },
+    { label: 'How Online Auctions Work', to: '/how-it-works' },
+    { label: 'Bidder Activity Dashboard', to: '/dashboard' },
+    { label: 'Wallet & Bidding Power', to: '/wallet' },
+    { label: 'Transaction & Escrow Ledger', to: '/ledger' },
+    { label: 'KYC & Aadhaar Verification', to: '/kyc' },
+    { label: 'Dispute Resolution Center', to: '/disputes' },
   ]
   const contact = [
-    { label: 'Support Email', to: '/contact/email' },
-    { label: 'Emergency HelpLine', to: '/contact/helpline' },
-    { label: 'Grievance Officer', to: '/contact/grievance' },
-    { label: 'Office Address', to: '/contact/address' },
+    { label: 'Customer Help Desk', to: '/contact' },
+    { label: 'Support Email Ticket', to: '/contact/email' },
+    { label: 'Emergency Support Helpline', to: '/contact/helpline' },
+    { label: 'Grievance Officer Portal', to: '/contact/grievance' },
   ]
 
   const legalLinks = [
     { label: 'Terms of Service', to: '/legal/terms' },
     { label: 'Privacy Policy', to: '/legal/privacy' },
     { label: 'IT Act Compliance', to: '/legal/it-act' },
-    { label: 'TDS / Tax Info', to: '/legal/tax-info' },
+    { label: 'TDS & Tax Information', to: '/legal/tax-info' },
   ]
 
   return (

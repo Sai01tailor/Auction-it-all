@@ -2,9 +2,13 @@ console.log("app.js loaded")
 const express = require('express')
 const morgan = require('morgan')
 const cors = require('cors')
+const compression = require('compression');
 const passport = require('./strategies/google.strategy');
 
 const app = express()
+
+// Enable gzip/brotli compression for HTML, JSON, XML, and assets
+app.use(compression());
 
 // routes imports below !
 const authRoutes = require("./routes/auth.routes");

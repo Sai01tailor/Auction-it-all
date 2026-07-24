@@ -6,9 +6,9 @@ import { useEffect } from 'react';
  */
 export default function SEO({ title, description, keywords, ogImage, ogUrl }) {
   useEffect(() => {
-    // 1. Dynamic Page Title
-    const baseTitle = 'BidKar.in — Premier Online Live & Reserve Auctions';
-    const finalTitle = title ? `${title} | BidKar.in` : baseTitle;
+    // 1. Dynamic Page Title (Domain name omitted per SEO best practices)
+    const baseTitle = 'Premier Online Live & Reserve Auctions Platform';
+    const finalTitle = title ? `${title} — Online Auctions` : baseTitle;
     document.title = finalTitle;
 
     // Helper to create or update head meta tags
