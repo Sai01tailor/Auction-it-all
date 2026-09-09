@@ -1,26 +1,19 @@
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
-import GOOGLE_CLIENT_ID from '../Config/GoogleClient.jsx'
-import './index.css'
-import App from './App.jsx'
-import { BrowserRouter } from 'react-router-dom'
-import { GoogleOAuthProvider } from '@react-oauth/google'
-import { AuthProvider } from './Context/AuthContext.jsx'
-import { WalletProvider } from './Context/WalletContext.jsx'
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import App from './App';
+import './index.css';
 
-// Bootstrap Axios interceptors (auth token attachment + 401 handler)
-import '../Config/interceptor.js'
+console.log('🚀 App starting...');
+console.log('Root element:', document.getElementById('root'));
 
-createRoot(document.getElementById('root')).render(
-  <AuthProvider>
-    <WalletProvider>
-      <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
-        <BrowserRouter>
-          <StrictMode>
-            <App />
-          </StrictMode>
-        </BrowserRouter>
-      </GoogleOAuthProvider>
-    </WalletProvider>
-  </AuthProvider>,
-)
+try {
+  ReactDOM.createRoot(document.getElementById('root')).render(
+    <React.StrictMode>
+      <App />
+    </React.StrictMode>,
+  );
+  console.log('✅ React mounted successfully');
+} catch (error) {
+  console.error('❌ React render error:', error);
+  document.body.innerHTML = '<h1>Error: ' + error.message + '</h1><pre>' + error.stack + '</pre>';
+}

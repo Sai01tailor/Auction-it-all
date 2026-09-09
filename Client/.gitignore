@@ -23,8 +23,12 @@ dist-ssr
 *.sln
 *.sw?
 
-# Environment variables — never commit secrets
+# Environment
 .env
 .env.local
-.env.production
-# .env.example is intentionally NOT ignored (it's the safe template)
+.env.*.local
+
+# Dependencies
+package-lock.json
+yarn.lock
+pnpm-lock.yaml

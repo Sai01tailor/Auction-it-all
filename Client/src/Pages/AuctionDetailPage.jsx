@@ -1,278 +1,303 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
-import Header from '../Components/Global/Header';
-import SEO from '../Components/Global/SEO';
-import MediaGallery from '../Components/Detail/MediaGallery';
-import BiddingStatsCard from '../Components/Detail/BiddingStatsCard';
-import SellerCredibilityCard from '../Components/Detail/SellerCredibilityCard';
-import BidConsoleButton from '../Components/Detail/BidConsoleButton';
-import { getAuctionById, getSellerProfile } from '../services/auctionService';
-import { useSocket } from '../hooks/useSocket';
+import { useEffect, useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { itemsAPI, walletAPI } from '../services/api';
+import { useAuthStore } from '../store/authStore';
+import toast from 'react-hot-toast';
+import { formatDistanceToNow } from 'date-fns';
 
-/* ─────────────────────────────────────────────────────────────
-   P03: Auction Detail Page — /auction/:id
-   
-   Layout:
-     Breadcrumb → Two-column (gallery | right panel)
-                → Right panel: BiddingStatsCard + SellerCredibilityCard + CTA
-     Below fold: Description + Bidding Rules
-───────────────────────────────────────────────────────────── */
-
-/* ── Skeleton ── */
-function DetailSkeleton() {
-  return (
-    <div style={{ maxWidth: '1100px', margin: '2rem auto', padding: '0 1.5rem' }}>
-      <div className="skeleton-grid-container">
-        <div style={{ background: '#f3f4f6', borderRadius: '16px', aspectRatio: '4/3' }} className="animate-pulse" />
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} style={{ height: i === 0 ? '180px' : '80px', background: '#f3f4f6', borderRadius: '12px' }} className="animate-pulse" />
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/* ── Status badge ── */
-function StatusBadge({ status }) {
-  const cfg = {
-    ACTIVE: { label: ' Live', bg: '#ecfdf5', color: '#065f46', border: '#a7f3d0' },
-    SOLD: { label: ' Sold', bg: '#f9fafb', color: '#6b7280', border: '#e5e7eb' },
-    CANCELLED: { label: ' Cancelled', bg: '#fef2f2', color: '#991b1b', border: '#fecaca' },
-    DRAFT: { label: ' Draft', bg: '#fffbeb', color: '#92400e', border: '#fde68a' },
-  }[status] ?? { label: status, bg: '#f9fafb', color: '#6b7280', border: '#e5e7eb' };
-
-  return (
-    <span style={{
-      display: 'inline-flex', alignItems: 'center', gap: '0.3rem',
-      padding: '0.3rem 0.8rem',
-      background: cfg.bg, color: cfg.color,
-      border: `1.5px solid ${cfg.border}`,
-      borderRadius: '20px',
-      fontSize: '0.78rem', fontWeight: 700,
-      letterSpacing: '0.04em',
-    }}>
-      {status === 'ACTIVE' && (
-        <span style={{
-          width: '7px', height: '7px', borderRadius: '50%', background: '#10b981',
-          animation: 'bid-pulse 1.2s ease-out infinite', display: 'inline-block', flexShrink: 0,
-        }} />
-      )}
-      {cfg.label}
-    </span>
-  );
-}
-
-function formatDate(dateStr) {
-  if (!dateStr) return '—';
-  return new Date(dateStr).toLocaleString('en-IN', {
-    day: '2-digit', month: 'short', year: 'numeric',
-    hour: '2-digit', minute: '2-digit', hour12: true,
-  });
-}
-
-/* ── Main Page ── */
 export default function AuctionDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-
+  const { user } = useAuthStore();
   const [item, setItem] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [sellerProfile, setSellerProfile] = useState(null);
-
-  const { currentBid } = useSocket(id, item?.currentHighestBid ?? 0);
+  const [bids, setBids] = useState([]);
+  const [bidAmount, setBidAmount] = useState('');
+  const [walletBalance, setWalletBalance] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isBidding, setIsBidding] = useState(false);
 
   useEffect(() => {
-    if (!id) return;
-    setLoading(true);
-    setError(null);
-
-    getAuctionById(id)
-      .then(data => {
-        setItem(data);
-        const sellerIdVal = typeof data.sellerId === 'object' ? data.sellerId?._id : data.sellerId;
-        if (sellerIdVal) {
-          getSellerProfile(sellerIdVal)
-            .then(prof => setSellerProfile(prof))
-            .catch(err => console.warn('Failed to load seller profile details', err));
-        }
-      })
-      .catch(() => setError('Auction not found or an error occurred.'))
-      .finally(() => setLoading(false));
+    fetchData();
   }, [id]);
 
-  if (loading) return <><Header /><DetailSkeleton /></>;
+  const fetchData = async () => {
+    try {
+      setIsLoading(true);
+      const [itemRes, bidsRes] = await Promise.all([
+        itemsAPI.getItemById(id),
+        itemsAPI.getItemBids(id, { limit: 50 }),
+      ]);
+      setItem(itemRes.data);
+      setBids(bidsRes.data.bids);
 
-  if (error) {
+      if (user) {
+        const walletRes = await walletAPI.getBalance();
+        setWalletBalance(walletRes.data.balance);
+      }
+    } catch (error) {
+      toast.error('Failed to load auction details');
+      navigate('/browse');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handlePlaceBid = async (e) => {
+    e.preventDefault();
+
+    if (!user) {
+      navigate('/auth/login');
+      return;
+    }
+
+    const amount = parseFloat(bidAmount);
+    if (!amount || amount <= item.currentHighestBid) {
+      toast.error(`Bid must be higher than ${item.currentHighestBid}`);
+      return;
+    }
+
+    if (walletBalance && amount > walletBalance) {
+      toast.error('Insufficient wallet balance');
+      return;
+    }
+
+    setIsBidding(true);
+    try {
+      await itemsAPI.placeBid(id, amount);
+      toast.success('Bid placed successfully!');
+      setBidAmount('');
+      fetchData();
+    } catch (error) {
+      toast.error(error.message || 'Failed to place bid');
+    } finally {
+      setIsBidding(false);
+    }
+  };
+
+  if (isLoading) {
     return (
-      <>
-        <Header />
-        <div style={{
-          maxWidth: '600px', margin: '5rem auto', textAlign: 'center',
-          padding: '0 1.5rem',
-        }}>
-          <span style={{ fontSize: '3.5rem' }}>⚠️</span>
-          <h2 style={{ color: 'var(--color-brand-primary)' }}>Auction Not Found</h2>
-          <p style={{ color: 'var(--color-text-muted)' }}>{error}</p>
-          <button
-            onClick={() => navigate('/auctions')}
-            style={{ padding: '0.75rem 2rem', marginTop: '1rem', borderRadius: '10px', background: 'var(--color-brand-primary)', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: '0.95rem' }}
-          >
-            ← Back to Auctions
-          </button>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin">
+          <span className="material-symbols-outlined text-4xl">loading</span>
         </div>
-      </>
+      </div>
     );
   }
 
-  const seller = item?.sellerId ? {
-    ...(typeof item.sellerId === 'object' ? item.sellerId : {}),
-    kycStatus: sellerProfile?.kycStatus ?? item.sellerId?.kycStatus,
-    createdAt: item.sellerId?.createdAt || sellerProfile?.createdAt || sellerProfile?.joinedDate,
-  } : null;
+  if (!item) return null;
+
+  const timeRemaining = item.timeRemaining
+    ? formatDistanceToNow(new Date(Date.now() + item.timeRemaining * 1000), {
+        addSuffix: false,
+      })
+    : 'Ended';
+
+  const isEnding = item.timeRemaining && item.timeRemaining < 3600;
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--color-surface-bg)' }}>
-      <SEO
-        title={item ? `${item.title} — Bid ₹${(item.currentPrice ?? item.startingPrice ?? 0).toLocaleString('en-IN')}` : 'Auction Detail'}
-        description={item?.description ? item.description.slice(0, 160) : 'Bid on this exclusive verified item on BidKar.in'}
-        ogImage={typeof item?.images?.[0] === 'string' ? item.images[0] : item?.images?.[0]?.url}
-      />
-      <Header />
-
-      {/* ── Breadcrumb ── */}
-      <div style={{
-        background: '#fff',
-        borderBottom: '1px solid var(--color-border-subtle)',
-        padding: '0.75rem 0',
-      }}>
-        <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '0 1.5rem' }}>
-          <nav style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.82rem', color: 'var(--color-text-muted)' }}>
-            <Link to="/" style={{ color: 'var(--color-brand-primary)', fontWeight: 500, textDecoration: 'none' }}>Home</Link>
-            <span>›</span>
-            <Link to="/auctions" style={{ color: 'var(--color-brand-primary)', fontWeight: 500, textDecoration: 'none' }}>Auctions</Link>
-            <span>›</span>
-            <span style={{ color: 'var(--color-text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '280px' }}>
-              {item?.title ?? 'Item Detail'}
-            </span>
-          </nav>
-        </div>
-      </div>
-
-      {/* ── Main Content ── */}
-      <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '2rem 1.5rem' }}>
-
-        {/* Title + status row */}
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap', marginBottom: '1.75rem' }}>
-          <div style={{ flex: 1 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.6rem', flexWrap: 'wrap' }}>
-              <StatusBadge status={item?.status} />
-              {item?.endTime && (
-                <span style={{ fontSize: '0.78rem', color: 'var(--color-text-muted)' }}>
-                  Ends: {formatDate(item.endTime)}
-                </span>
-              )}
+    <div className="min-h-screen bg-background pb-20 md:pb-0">
+      <div className="container-main py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Left: Images */}
+          <div className="lg:col-span-2">
+            <div className="card overflow-hidden mb-6">
+              <img
+                src={item.photos?.[0] || 'https://via.placeholder.com/500x400'}
+                alt={item.title}
+                className="w-full h-96 md:h-[500px] object-cover"
+              />
             </div>
-            <h1 id="auction-title" style={{
-              margin: 0,
-              fontSize: 'clamp(1.4rem, 3vw, 2rem)',
-              fontWeight: 800,
-              color: 'var(--color-brand-primary)',
-              letterSpacing: '-0.02em',
-              lineHeight: 1.2,
-            }}>
-              {item?.title}
-            </h1>
-          </div>
-        </div>
-
-        {/* ── Responsive Layout ── */}
-        <div className="auction-detail-grid">
-          {/* Gallery */}
-          <div className="detail-grid-gallery">
-            <MediaGallery photos={item?.photos ?? []} title={item?.title} />
-          </div>
-
-          {/* Description Card */}
-          <div className="detail-grid-description" style={{
-            background: '#fff',
-            border: '1px solid var(--color-border-subtle)',
-            borderRadius: '16px',
-            padding: '1.5rem',
-            boxShadow: '0 2px 8px rgba(0,35,102,0.04)',
-          }}>
-            <h3 style={{ margin: '0 0 1rem', fontSize: '1rem', fontWeight: 700, color: 'var(--color-brand-primary)' }}>
-              About This Item
-            </h3>
-            <p style={{ margin: 0, fontSize: '0.93rem', color: 'var(--color-text-muted)', lineHeight: 1.75 }}>
-              {item?.description ?? 'No description provided.'}
-            </p>
-
-            {/* Auction details table */}
-            <div className="auction-details-table">
-              {[
-                { label: 'Starting Price', value: `₹${item?.startingPrice?.toLocaleString('en-IN') ?? '—'}` },
-                { label: 'Auction Start', value: formatDate(item?.startTime) },
-                { label: 'Auction End', value: formatDate(item?.endTime) },
-                { label: 'Item Status', value: item?.status ?? '—' },
-              ].map(({ label, value }) => (
-                <div key={label} style={{
-                  padding: '0.65rem 0.85rem',
-                  background: 'var(--color-surface-bg)',
-                  borderRadius: '10px',
-                  border: '1px solid var(--color-border-subtle)',
-                }}>
-                  <p style={{ margin: '0 0 0.2rem', fontSize: '0.67rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--color-text-muted)' }}>
-                    {label}
-                  </p>
-                  <p style={{ margin: 0, fontSize: '0.87rem', fontWeight: 600, color: 'var(--color-text-rich)' }}>
-                    {value}
-                  </p>
+            <div className="grid grid-cols-4 gap-3">
+              {item.photos?.slice(1, 5).map((photo, idx) => (
+                <div key={idx} className="card overflow-hidden cursor-pointer hover:opacity-75">
+                  <img
+                    src={photo}
+                    alt={`${item.title} - ${idx + 2}`}
+                    className="w-full h-24 object-cover"
+                  />
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Bidding rules */}
-          <div className="detail-grid-rules" style={{
-            background: 'rgba(0,35,102,0.03)',
-            border: '1px solid rgba(0,35,102,0.1)',
-            borderRadius: '14px',
-            padding: '1.25rem',
-          }}>
-            <h4 style={{ margin: '0 0 0.75rem', fontSize: '0.88rem', fontWeight: 700, display: 'flex', alignItems: 'center', color: 'var(--color-brand-primary)' }}>
-              <span><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                {/* Document Body - Primary Navy */}
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke="var(--color-brand-primary)" />
-                <polyline points="14 2 14 8 20 8" stroke="var(--color-brand-primary)" />
+          {/* Right: Details & Bidding */}
+          <aside className="lg:col-span-1 space-y-6">
+            {/* Status Badge */}
+            {item.status === 'ACTIVE' && (
+              <div className="badge-success flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-success-pulse animate-pulse-soft"></span>
+                LIVE AUCTION
+              </div>
+            )}
 
-                {/* Rule Lines - Accent Gold */}
-                <line x1="8" y1="13" x2="16" y2="13" stroke="var(--color-brand-accent-dark)" />
-                <line x1="8" y1="17" x2="16" y2="17" stroke="var(--color-brand-accent-dark)" />
-              </svg></span> Bidding Rules
-            </h4>
-            <ul style={{ margin: 0, padding: '0 0 0 1.25rem', display: 'flex', flexDirection: 'column', gap: '0.45rem' }}>
-              {[
-                'A 10% refundable deposit is required to enter the bidding console.',
-                'Your bid must be higher than the current highest bid.',
-                'The auction closes at the exact end time — no extensions.',
-                'Winner has 48 hours to complete the escrow payment.',
-                'KYC verification required before placing any bid.',
-              ].map((rule, i) => (
-                <li key={i} style={{ fontSize: '0.82rem', color: 'var(--color-text-muted)', lineHeight: 1.5 }}>
-                  {rule}
-                </li>
-              ))}
-            </ul>
-          </div>
+            {/* Title */}
+            <div>
+              <h1 className="text-headline-lg mb-2">{item.title}</h1>
+              <p className="text-on-surface-variant text-body-md">{item.description}</p>
+            </div>
 
-          {/* Right: Bid stats + seller + CTA */}
-          <div className="detail-grid-sidebar">
-            <BiddingStatsCard item={item} />
-            <BidConsoleButton item={item} currentBid={currentBid} />
-            <SellerCredibilityCard seller={seller} item={item} />
+            {/* Seller Info */}
+            <div className="card">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-on-surface-variant mb-1">Seller</p>
+                  <p className="font-body-md font-bold text-primary">
+                    {item.seller?.username}
+                  </p>
+                </div>
+                {item.seller?.kycStatus === 'Verified' && (
+                  <span className="material-symbols-outlined text-success-pulse">verified</span>
+                )}
+              </div>
+              <div className="mt-3 pt-3 border-t border-border-subtle">
+                <span className="text-xs text-on-surface-variant">Rating</span>
+                <p className="font-body-md font-bold text-primary">
+                  {item.seller?.averageRating} / 5.0
+                </p>
+              </div>
+            </div>
+
+            {/* Bid Info */}
+            <div className="card space-y-4 bg-primary-fixed/10 border border-primary">
+              <div>
+                <p className="text-xs text-on-surface-variant mb-1">Starting Price</p>
+                <p className="font-data-tabular text-data-tabular font-bold text-primary">
+                  ${item.startingPrice?.toLocaleString()}
+                </p>
+              </div>
+
+              <div className="border-t border-border-subtle pt-4">
+                <p className="text-xs text-on-surface-variant mb-1">Current Highest Bid</p>
+                <p className="text-bid">${item.currentHighestBid?.toLocaleString()}</p>
+                {item.currentHighestBidder && (
+                  <p className="text-xs text-on-surface-variant mt-1">
+                    by {item.currentHighestBidder.username}
+                  </p>
+                )}
+              </div>
+
+              <div className="border-t border-border-subtle pt-4">
+                <p className="text-xs text-on-surface-variant mb-1">Bids Placed</p>
+                <p className="font-data-tabular text-data-tabular font-bold text-primary">
+                  {item.bidsCount}
+                </p>
+              </div>
+            </div>
+
+            {/* Timer */}
+            <div className={`card text-center ${isEnding ? 'bg-timer-urgent/10 border-timer-urgent' : 'bg-timer-warning/10 border-timer-warning'}`}>
+              <p className="text-xs text-on-surface-variant mb-1">Time Remaining</p>
+              <p className={`font-display-bid text-display-bid ${isEnding ? 'text-timer-urgent' : 'text-timer-warning'}`}>
+                {timeRemaining}
+              </p>
+            </div>
+
+            {/* Bidding Form */}
+            {item.status === 'ACTIVE' && (
+              <form onSubmit={handlePlaceBid} className="card space-y-4 bg-surface-container-low">
+                <div>
+                  <label className="text-primary-label">Your Bid Amount</label>
+                  <input
+                    type="number"
+                    value={bidAmount}
+                    onChange={(e) => setBidAmount(e.target.value)}
+                    placeholder="0"
+                    className="input-field"
+                    min={item.currentHighestBid + 1}
+                    required
+                  />
+                  <p className="text-xs text-on-surface-variant mt-1">
+                    Minimum: ${(item.currentHighestBid + 1).toLocaleString()}
+                  </p>
+                </div>
+
+                {walletBalance !== null && (
+                  <p className="text-xs">
+                    <span className="text-on-surface-variant">Wallet Balance: </span>
+                    <span className="font-bold text-primary">
+                      ${walletBalance?.toLocaleString()}
+                    </span>
+                  </p>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={isBidding || !user}
+                  className="btn-bid w-full disabled:opacity-50"
+                >
+                  {isBidding ? 'Placing Bid...' : 'Place Bid'}
+                </button>
+
+                {!user && (
+                  <p className="text-xs text-timer-urgent text-center">
+                    Please log in to bid
+                  </p>
+                )}
+              </form>
+            )}
+
+            {/* Item Details */}
+            <div className="card space-y-4">
+              <h3 className="font-body-lg font-bold text-primary">Item Details</h3>
+              <div className="space-y-3 text-sm">
+                <div>
+                  <p className="text-xs text-on-surface-variant mb-1">Category</p>
+                  <p className="text-primary font-medium">{item.category}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-on-surface-variant mb-1">Condition</p>
+                  <p className="text-primary font-medium">{item.condition}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-on-surface-variant mb-1">Location</p>
+                  <p className="text-primary font-medium">{item.location}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-on-surface-variant mb-1">Auction Type</p>
+                  <p className="text-primary font-medium">{item.auctionType}</p>
+                </div>
+              </div>
+            </div>
+          </aside>
+        </div>
+
+        {/* Bids History */}
+        <div className="mt-12">
+          <h2 className="text-headline-lg mb-6">Bid History</h2>
+          <div className="card">
+            {bids.length > 0 ? (
+              <div className="space-y-4">
+                {bids.map((bid, idx) => (
+                  <div
+                    key={bid.bidId}
+                    className={`flex justify-between items-center pb-4 ${
+                      idx < bids.length - 1 ? 'border-b border-border-subtle' : ''
+                    } ${bid.isHighestBid ? 'bg-success-pulse/5 p-3 rounded' : ''}`}
+                  >
+                    <div>
+                      <p className="font-body-md font-medium text-primary">
+                        {bid.bidderUsername}
+                      </p>
+                      <p className="text-xs text-on-surface-variant">
+                        {formatDistanceToNow(new Date(bid.bidTime), { addSuffix: true })}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-data-tabular text-data-tabular font-bold text-primary">
+                        ${bid.bidAmount?.toLocaleString()}
+                      </p>
+                      {bid.isHighestBid && (
+                        <span className="text-xs text-success-pulse font-bold">Highest</span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-center text-on-surface-variant py-8">
+                No bids yet. Be the first to bid!
+              </p>
+            )}
           </div>
         </div>
       </div>

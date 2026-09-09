@@ -1,313 +1,309 @@
-import React, { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
-import api from '../../Config/Axios';
-import Header from '../Components/Global/Header';
-import SEO from '../Components/Global/SEO';
-import AuthController from '../Components/Global/AuthController';
-import { useAuth } from '../Context/AuthContext';
+import { kycAPI } from '../services/api';
+import toast from 'react-hot-toast';
 
 export default function KYCPage() {
   const navigate = useNavigate();
-  const { setUser } = useAuth();
+  const [kycStatus, setKycStatus] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [step, setStep] = useState('dashboard'); // dashboard, verification, success
+  const [formData, setFormData] = useState({
+    aadhaarNumber: '',
+    otp: '',
+    bankAccountNumber: '',
+    bankIfsc: '',
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Step state: 1 = Aadhaar Input, 2 = OTP Verification, 3 = Completed
-  const [step, setStep] = useState(1);
-  
-  // Aadhaar inputs & API states
-  const [aadhaarNum, setAadhaarNum] = useState('');
-  const [aadhaarOtp, setAadhaarOtp] = useState('');
-  const [verificationId, setVerificationId] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [errorMsg, setErrorMsg] = useState('');
-  const [kycResult, setKycResult] = useState(null);
-
-  // Fetch current user KYC status on mount
   useEffect(() => {
-    api.get('/kyc/status')
-      .then(res => {
-        if (res.data && res.data.kycStatus === 'Verified') {
-          setStep(3);
-          setKycResult({ kycStatus: 'Verified', verifiedAt: res.data.verifiedAt });
-          setUser(prev => ({
-            ...prev,
-            kycStatus: 'Verified',
-            role: 'SELLER'
-          }));
-        }
-      })
-      .catch(() => {});
-  }, [setUser]);
+    fetchKYCStatus();
+  }, []);
 
-  // Aadhaar Submit Step 1: Initiate
-  const handleAadhaarSubmit = async (e) => {
-    e.preventDefault();
-    setErrorMsg('');
-    if (aadhaarNum.length !== 12) {
-      setErrorMsg('Aadhaar must be exactly 12 digits.');
-      return;
-    }
-
-    setIsLoading(true);
+  const fetchKYCStatus = async () => {
     try {
-      const { data } = await api.post('/kyc/initiate', { aadhaarNumber: aadhaarNum });
-      if (data.success) {
-        setVerificationId(data.verificationRequestId);
-        setStep(2);
-      } else {
-        setErrorMsg(data.message || 'Verification initialization failed.');
+      const response = await kycAPI.getStatus();
+      setKycStatus(response.data);
+      if (response.data.kycStatus === 'Verified') {
+        setStep('success');
       }
-    } catch (err) {
-      setErrorMsg(err.response?.data?.message || 'Failed to connect to verification server.');
+    } catch (error) {
+      toast.error('Failed to fetch KYC status');
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Aadhaar Submit Step 2: Verify OTP
-  const handleAadhaarOtpSubmit = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setErrorMsg('');
-    if (aadhaarOtp.length !== 6) {
-      setErrorMsg('OTP must be exactly 6 digits.');
-      return;
-    }
+    setIsSubmitting(true);
 
-    setIsLoading(true);
     try {
-      const { data } = await api.post('/kyc/verify-otp', {
-        verificationRequestId: verificationId,
-        otp: aadhaarOtp
-      });
-      if (data.success) {
-        setUser(prev => ({
-          ...prev,
-          kycStatus: 'Verified',
-          role: 'SELLER'
-        }));
-        setKycResult(data);
-        setStep(3);
-      } else {
-        setErrorMsg(data.message || 'OTP verification failed.');
-      }
-    } catch (err) {
-      setErrorMsg(err.response?.data?.message || 'Failed to verify OTP.');
+      const formDataObj = new FormData();
+      formDataObj.append('aadhaarNumber', formData.aadhaarNumber);
+      formDataObj.append('otp', formData.otp);
+      formDataObj.append('bankAccountNumber', formData.bankAccountNumber);
+      formDataObj.append('bankIfsc', formData.bankIfsc);
+
+      await kycAPI.submitKYC(formDataObj);
+      setStep('success');
+      toast.success('KYC submitted for verification');
+    } catch (error) {
+      toast.error(error.message || 'Failed to submit KYC');
     } finally {
-      setIsLoading(false);
+      setIsSubmitting(false);
     }
   };
 
-  return (
-    <div style={{ minHeight: '100vh', background: 'var(--color-surface-bg)' }}>
-      <SEO
-        title="Bidder Identity Verification & Instant KYC"
-        description="Verify your identity with instant Aadhaar OTP verification on BidKar.in to unlock high-value auctions and seller features."
-      />
-      <AuthController />
-      <Header />
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
+  };
 
-      {/* ── FULL-WIDTH GRADIENT HERO HEADER ── */}
-      <div style={{
-        background: 'linear-gradient(135deg, var(--color-brand-primary-dark) 0%, var(--color-brand-primary) 55%, #1a3c7a 100%)',
-        padding: '4rem 2rem 5rem',
-        position: 'relative',
-        overflow: 'hidden',
-        textAlign: 'center'
-      }}>
-        {/* Dot grid overlay */}
-        <div style={{ position: 'absolute', inset: 0, opacity: 0.05, backgroundImage: 'radial-gradient(#fff 1.5px,transparent 0)', backgroundSize: '22px 22px', pointerEvents: 'none' }} />
-        <div style={{ maxWidth: '600px', margin: '0 auto', position: 'relative', zIndex: 2 }}>
-          <span style={{ fontSize: '3rem', display: 'block', marginBottom: '1rem' }}>🛡️</span>
-          <h1 style={{ margin: 0, fontSize: '2rem', fontWeight: 900, color: '#fff', letterSpacing: '-0.02em' }}>
-            Identity Verification (KYC)
-          </h1>
-          <p style={{ margin: '0.5rem 0 0', fontSize: '0.95rem', color: 'rgba(255,255,255,0.7)' }}>
-            Comply with RBI deposit regulations to authorize active bidding power and seller tools.
-          </p>
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin">
+          <span className="material-symbols-outlined text-4xl">loading</span>
         </div>
       </div>
+    );
+  }
 
-      {/* ── OVERLAPPING CONTENT WRAPPER ── */}
-      <div style={{ maxWidth: '550px', margin: '-2.5rem auto 4rem', padding: '0 1.5rem', position: 'relative', zIndex: 10 }}>
-        
-        {/* Core Card Container */}
-        <div style={{ background: '#fff', border: '1px solid var(--color-border-subtle)', borderRadius: '24px', padding: '2.5rem 2rem', boxShadow: '0 8px 30px rgba(0,35,102,0.06)', color: 'var(--color-text-rich)' }}>
+  return (
+    <div className="min-h-screen bg-background pb-20 md:pb-0">
+      <div className="container-main py-8">
+        {/* Dashboard Step */}
+        {step === 'dashboard' && kycStatus?.kycStatus !== 'Verified' && (
+          <div className="max-w-2xl mx-auto">
+            <h1 className="text-headline-lg mb-2">KYC Verification</h1>
+            <p className="text-body-lg text-on-surface-variant mb-8">
+              Complete your Know Your Customer (KYC) profile to unlock full bidding capabilities
+            </p>
 
-          <AnimatePresence mode="wait">
-            
-            {/* STEP 1: INITIAL AADHAAR ENTRY */}
-            {step === 1 && (
-              <motion.div
-                key="step-entry"
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 10 }}
-                style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}
-              >
-                <div style={{ textAlign: 'center', marginBottom: '0.5rem' }}>
-                  <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 800, color: 'var(--color-brand-primary)' }}>Aadhaar Card OTP Verification</h3>
-                  <p style={{ margin: '0.2rem 0 0', fontSize: '0.78rem', color: 'var(--color-text-muted)' }}>
-                    Verify instantly using the OTP sent to your Aadhaar-registered mobile number
-                  </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Status Card */}
+              <div className="card bg-primary text-on-primary">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-3 h-3 rounded-full bg-timer-warning animate-pulse"></div>
+                  <span className="font-label-caps text-label-caps uppercase">
+                    {kycStatus?.kycStatus || 'Not Started'}
+                  </span>
                 </div>
-
-                <form onSubmit={handleAadhaarSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-                  <div>
-                    <label htmlFor="aadhaar-input" style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, color: 'var(--color-text-muted)', marginBottom: '0.4rem' }}>
-                      12-Digit Aadhaar Card Number
-                    </label>
-                    <input
-                      id="aadhaar-input"
-                      type="text"
-                      maxLength="12"
-                      placeholder="0000 0000 0000"
-                      value={aadhaarNum}
-                      onChange={e => setAadhaarNum(e.target.value.replace(/[^0-9]/g, ''))}
-                      style={{
-                        width: '100%',
-                        boxSizing: 'border-box',
-                        height: '46px',
-                        padding: '0.75rem 1rem',
-                        border: '1.5px solid var(--color-border-subtle)',
-                        borderRadius: '10px',
-                        fontSize: '1rem',
-                        fontWeight: 700,
-                        fontFamily: 'monospace',
-                        outline: 'none',
-                        transition: 'all 0.2s',
-                        textAlign: 'center',
-                        letterSpacing: '0.08em'
-                      }}
-                      onFocus={e => e.currentTarget.style.borderColor = 'var(--color-brand-primary)'}
-                      onBlur={e => e.currentTarget.style.borderColor = 'var(--color-border-subtle)'}
-                    />
-                  </div>
-
-                  {errorMsg && <p style={{ margin: 0, fontSize: '0.78rem', color: '#dc2626', fontWeight: 600 }}>❌ {errorMsg}</p>}
-
-                  <button
-                    type="submit"
-                    disabled={isLoading || aadhaarNum.length !== 12}
-                    style={{
-                      height: '46px', border: 'none', borderRadius: '10px',
-                      background: 'var(--color-brand-primary)', color: '#fff',
-                      fontWeight: 800, fontSize: '0.9rem', cursor: (isLoading || aadhaarNum.length !== 12) ? 'not-allowed' : 'pointer',
-                      opacity: aadhaarNum.length === 12 ? 1 : 0.65, display: 'flex', alignItems: 'center', justifyContent: 'center'
-                    }}
-                  >
-                    {isLoading ? 'Sending Request...' : 'Send Verification OTP'}
-                  </button>
-                </form>
-              </motion.div>
-            )}
-
-            {/* STEP 2: AADHAAR OTP ENTER WINDOW */}
-            {step === 2 && (
-              <motion.div
-                key="step-otp"
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 10 }}
-              >
-                <form onSubmit={handleAadhaarOtpSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-                  <div style={{ textAlign: 'center' }}>
-                    <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 800, color: 'var(--color-brand-primary)' }}>Enter OTP Code</h3>
-                    <p style={{ margin: '0.2rem 0 0', fontSize: '0.78rem', color: 'var(--color-text-muted)' }}>
-                      A 6-digit security code was dispatched to your Aadhaar-registered mobile/email.
-                    </p>
-                  </div>
-
-                  <div>
-                    <label htmlFor="aadhaar-otp-field" style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: 'var(--color-text-muted)', marginBottom: '0.5rem', textAlign: 'center' }}>
-                      Enter 6-Digit Verification Code
-                    </label>
-                    <input
-                      id="aadhaar-otp-field"
-                      type="text"
-                      maxLength="6"
-                      placeholder="0 0 0 0 0 0"
-                      value={aadhaarOtp}
-                      onChange={e => setAadhaarOtp(e.target.value.replace(/[^0-9]/g, ''))}
-                      style={{
-                        width: '100%',
-                        boxSizing: 'border-box',
-                        height: '48px',
-                        textAlign: 'center',
-                        fontSize: '1.25rem',
-                        fontWeight: 900,
-                        fontFamily: 'monospace',
-                        letterSpacing: '0.25em',
-                        border: '1.5px solid var(--color-border-subtle)',
-                        borderRadius: '12px',
-                        outline: 'none',
-                      }}
-                      onFocus={e => e.currentTarget.style.borderColor = 'var(--color-brand-primary)'}
-                      onBlur={e => e.currentTarget.style.borderColor = 'var(--color-border-subtle)'}
-                    />
-                  </div>
-
-                  {errorMsg && <p style={{ margin: 0, fontSize: '0.78rem', color: '#dc2626', fontWeight: 600, textAlign: 'center' }}>❌ {errorMsg}</p>}
-
-                  <div style={{ display: 'flex', gap: '0.75rem' }}>
-                    <button
-                      type="button"
-                      onClick={() => { setStep(1); setErrorMsg(''); }}
-                      style={{ flex: 1, height: '46px', background: '#fff', border: '1.5px solid var(--color-border-subtle)', borderRadius: '10px', fontSize: '0.85rem', fontWeight: 700, cursor: 'pointer' }}
-                    >
-                      ← Back
-                    </button>
-                    <button
-                      type="submit"
-                      disabled={isLoading || aadhaarOtp.length !== 6}
-                      style={{
-                        flex: 2, height: '46px', border: 'none', borderRadius: '10px',
-                        background: 'var(--color-brand-primary)', color: '#fff',
-                        fontWeight: 800, fontSize: '0.9rem', cursor: (isLoading || aadhaarOtp.length !== 6) ? 'not-allowed' : 'pointer',
-                        opacity: aadhaarOtp.length === 6 ? 1 : 0.6
-                      }}
-                    >
-                      {isLoading ? 'Verifying...' : '✓ Complete Verification'}
-                    </button>
-                  </div>
-                </form>
-              </motion.div>
-            )}
-
-            {/* STEP 3: SUCCESS PANEL */}
-            {step === 3 && (
-              <motion.div
-                key="step-success"
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}
-              >
-                <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: '#ecfdf5', border: '2px solid #10b981', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto' }}>
-                  <span style={{ fontSize: '2.5rem', color: '#10b981' }}>✓</span>
-                </div>
-                <div>
-                  <h2 style={{ fontSize: '1.45rem', fontWeight: 800, color: 'var(--color-brand-primary)', margin: 0 }}>KYC Verified successfully</h2>
-                  <p style={{ color: 'var(--color-text-muted)', fontSize: '0.82rem', marginTop: '0.4rem' }}>
-                    Your account is fully compliant. Bidding power and seller tools have been unlocked!
-                  </p>
-                </div>
-
-                <div style={{ background: 'var(--color-surface-bg)', padding: '1rem', borderRadius: '16px', border: '1px solid var(--color-border-subtle)', textAlign: 'left', fontSize: '0.78rem' }}>
-                  <p style={{ margin: 0 }}><strong>Compliance Node ID:</strong> BK-KYC-{kycResult?._id || kycResult?.verificationRequestId || 'verified'}</p>
-                  <p style={{ margin: '0.3rem 0 0' }}><strong>Verified Date:</strong> {new Date(kycResult?.verifiedAt || Date.now()).toLocaleDateString()}</p>
-                  <p style={{ margin: '0.3rem 0 0' }}><strong>Features Authorized:</strong> Wallet Escrows, English/Dutch/Blind bidding terminals.</p>
-                </div>
-
+                <h3 className="text-headline-lg text-on-primary mb-3">
+                  Instant Verification
+                </h3>
+                <p className="text-on-primary/80 mb-6">
+                  Verify your identity using Aadhaar OTP and bank details. Takes about 2 minutes.
+                </p>
                 <button
-                  onClick={() => navigate('/wallet')}
-                  style={{ height: '46px', border: 'none', borderRadius: '10px', background: 'var(--color-brand-primary)', color: '#fff', fontWeight: 800, fontSize: '0.9rem', cursor: 'pointer' }}
+                  onClick={() => setStep('verification')}
+                  className="btn-primary bg-gold-dark text-[#0A0A0A] hover:bg-secondary-container"
                 >
-                  Go to Wallet Dashboard
+                  Start Verification
                 </button>
-              </motion.div>
-            )}
+              </div>
 
-          </AnimatePresence>
-        </div>
+              {/* Requirements Card */}
+              <div className="card">
+                <h3 className="text-headline-lg mb-4">What You'll Need</h3>
+                <ul className="space-y-3">
+                  <li className="flex gap-3">
+                    <span className="material-symbols-outlined text-success-pulse">
+                      check_circle
+                    </span>
+                    <div>
+                      <p className="font-body-md font-medium text-primary">
+                        Aadhaar Number
+                      </p>
+                      <p className="text-xs text-on-surface-variant">
+                        12-digit unique ID
+                      </p>
+                    </div>
+                  </li>
+                  <li className="flex gap-3">
+                    <span className="material-symbols-outlined text-success-pulse">
+                      check_circle
+                    </span>
+                    <div>
+                      <p className="font-body-md font-medium text-primary">
+                        Mobile with OTP
+                      </p>
+                      <p className="text-xs text-on-surface-variant">
+                        Aadhaar-linked phone number
+                      </p>
+                    </div>
+                  </li>
+                  <li className="flex gap-3">
+                    <span className="material-symbols-outlined text-success-pulse">
+                      check_circle
+                    </span>
+                    <div>
+                      <p className="font-body-md font-medium text-primary">
+                        Bank Details
+                      </p>
+                      <p className="text-xs text-on-surface-variant">
+                        Account and IFSC code
+                      </p>
+                    </div>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Verification Form Step */}
+        {step === 'verification' && (
+          <div className="max-w-2xl mx-auto">
+            <button
+              onClick={() => setStep('dashboard')}
+              className="flex items-center gap-2 text-primary font-bold mb-8 hover:underline"
+            >
+              <span className="material-symbols-outlined">arrow_back</span>
+              Back
+            </button>
+
+            <h1 className="text-headline-lg mb-2">Aadhaar Verification</h1>
+            <p className="text-body-lg text-on-surface-variant mb-8">
+              Verify your identity using Aadhaar OTP
+            </p>
+
+            <form onSubmit={handleSubmit} className="card space-y-6">
+              {/* Aadhaar Section */}
+              <div>
+                <h3 className="font-body-lg font-bold text-primary mb-4 pb-2 border-b border-border-subtle">
+                  Aadhaar OTP Verification
+                </h3>
+
+                <div>
+                  <label className="text-primary-label">Aadhaar Number</label>
+                  <input
+                    type="text"
+                    name="aadhaarNumber"
+                    value={formData.aadhaarNumber}
+                    onChange={handleChange}
+                    placeholder="0000 0000 0000"
+                    className="input-field"
+                    pattern="[0-9\s]{12,14}"
+                    required
+                  />
+                </div>
+
+                <div className="mt-4">
+                  <label className="text-primary-label">6-Digit OTP</label>
+                  <input
+                    type="text"
+                    name="otp"
+                    value={formData.otp}
+                    onChange={handleChange}
+                    placeholder="000 000"
+                    className="input-field"
+                    maxLength="6"
+                    pattern="[0-9]{6}"
+                    required
+                  />
+                  <p className="text-xs text-on-surface-variant mt-1">
+                    OTP sent to your registered mobile number
+                  </p>
+                </div>
+
+                <button type="button" className="text-primary font-bold text-sm mt-3 hover:underline">
+                  Resend OTP
+                </button>
+              </div>
+
+              {/* Bank Details Section */}
+              <div>
+                <h3 className="font-body-lg font-bold text-primary mb-4 pb-2 border-b border-border-subtle border-t pt-4">
+                  Bank Account Details
+                </h3>
+
+                <div>
+                  <label className="text-primary-label">Account Number</label>
+                  <input
+                    type="text"
+                    name="bankAccountNumber"
+                    value={formData.bankAccountNumber}
+                    onChange={handleChange}
+                    placeholder="1234567890123456"
+                    className="input-field"
+                    required
+                  />
+                </div>
+
+                <div className="mt-4">
+                  <label className="text-primary-label">IFSC Code</label>
+                  <input
+                    type="text"
+                    name="bankIfsc"
+                    value={formData.bankIfsc}
+                    onChange={handleChange}
+                    placeholder="SBIN0001234"
+                    className="input-field"
+                    pattern="[A-Z]{4}0[A-Z0-9]{6}"
+                    required
+                  />
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="flex gap-4 justify-end pt-6 border-t border-border-subtle">
+                <button
+                  type="button"
+                  onClick={() => setStep('dashboard')}
+                  className="btn-secondary"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="btn-bid"
+                >
+                  {isSubmitting ? 'Verifying...' : 'Verify & Submit'}
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
+
+        {/* Success Step */}
+        {step === 'success' && (
+          <div className="max-w-md mx-auto text-center">
+            <div className="relative flex items-center justify-center w-24 h-24 md:w-32 md:h-32 mx-auto mb-8">
+              <div className="absolute inset-0 rounded-full bg-success-pulse/10 animate-ping"></div>
+              <div className="relative z-10 w-16 h-16 md:w-20 md:h-20 bg-surface rounded-full border border-success-pulse/30 flex items-center justify-center shadow-sm">
+                <span className="material-symbols-outlined text-4xl md:text-5xl text-success-pulse">
+                  check_circle
+                </span>
+              </div>
+            </div>
+
+            <h1 className="text-headline-lg mb-2">Verification Successful</h1>
+            <p className="text-body-lg text-on-surface-variant mb-8">
+              Your identity has been verified. You now have full access to bid on all live auctions.
+            </p>
+
+            <div className="space-y-3">
+              <button
+                onClick={() => navigate('/browse')}
+                className="btn-bid w-full flex items-center justify-center gap-2"
+              >
+                Explore Auctions
+                <span className="material-symbols-outlined">arrow_forward</span>
+              </button>
+              <button
+                onClick={() => navigate('/')}
+                className="btn-secondary w-full"
+              >
+                Back to Dashboard
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
