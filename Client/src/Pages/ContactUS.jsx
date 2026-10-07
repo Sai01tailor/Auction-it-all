@@ -99,33 +99,76 @@ export default function ContactUS() {
       />
       <Header />
 
-      {/* Banner - Full Bleed Hero */}
-      <section style={{
-        background: 'linear-gradient(135deg, var(--color-brand-primary-dark) 0%, var(--color-brand-primary) 60%, #001f5c 100%)',
-        color: '#fff',
-        padding: '2.5rem 0.65rem 4.5rem',
-        textAlign: 'center',
-        position: 'relative',
-        overflow: 'hidden'
-      }}>
-        {/* Grid pattern overlay */}
-        <div style={{
-          position: 'absolute', inset: 0, opacity: 0.04,
-          backgroundImage: 'radial-gradient(#fff 1.5px, transparent 0)',
-          backgroundSize: '24px 24px',
-          pointerEvents: 'none'
-        }} />
+      {/* SVG ClipPath Definition for Tab Notch */}
+      <svg width="0" height="0" className="absolute pointer-events-none" aria-hidden="true">
+        <defs>
+          <clipPath id="tab-right-notch" clipPathUnits="objectBoundingBox">
+            <path d="M 1,0.08 C 1,0.03 0.95,0 0.88,0 L 0.5,0 C 0.44,0 0.4,0.02 0.36,0.045 C 0.32,0.07 0.28,0.08 0.22,0.08 L 0.12,0.08 C 0.05,0.08 0,0.11 0,0.16 L 0,0.92 C 0,0.97 0.05,1 0.12,1 L 0.88,1 C 0.95,1 1,0.97 1,0.92 Z" />
+          </clipPath>
+          <clipPath id="tab-left-notch" clipPathUnits="objectBoundingBox">
+            <path d="M 0,0.08 C 0,0.03 0.05,0 0.12,0 L 0.5,0 C 0.56,0 0.6,0.02 0.64,0.045 C 0.68,0.07 0.72,0.08 0.78,0.08 L 0.88,0.08 C 0.95,0.08 1,0.11 1,0.16 L 1,0.92 C 1,0.97 0.05,1 0.12,1 L 0.88,1 C 0.95,1 1,0.97 1,0.92 Z" />
+          </clipPath>
+        </defs>
+      </svg>
 
-        <div style={{ maxWidth: '800px', margin: '0 auto', position: 'relative', zIndex: 10 }}>
-          <span style={{ fontSize: '0.68rem', fontWeight: 800, color: 'var(--color-brand-accent)', background: 'rgba(254,206,68,0.12)', border: '1px solid rgba(254,206,68,0.25)', padding: '0.3rem 0.75rem', borderRadius: '20px', display: 'inline-block', marginBottom: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-            Official Helpdesk & Support
-          </span>
-          <h1 style={{ color: 'var(--color-brand-accent)', margin: 0, fontSize: 'clamp(1.6rem, 4.5vw, 3rem)', fontWeight: 900, letterSpacing: '-0.03em', lineHeight: 1.15 }}>
-            Help & Support Hub
-          </h1>
-          <p style={{ margin: '0.4rem 0 0', fontSize: '0.82rem', color: 'rgba(255,255,255,0.7)', lineHeight: 1.5 }}>
-            Official customer assistance corridor. Lodge direct support tickets, reach our emergency helpline, connect with the grievance cell, or view physical coordinates.
-          </p>
+      {/* ── 1. Hero Banner with Notched Golden Gavel Showcase ── */}
+      <section
+        className="relative overflow-hidden text-white w-full pt-8 pb-16 sm:pb-20 px-4 sm:px-6 lg:px-12"
+        style={{
+          background: 'linear-gradient(175deg, #001948 0%, var(--color-brand-primary) 50%, #00133a 100%)',
+        }}
+      >
+        {/* Subtle dot matrix texture */}
+        <div
+          className="pointer-events-none absolute inset-0 z-0 opacity-10"
+          style={{
+            backgroundImage: 'radial-gradient(rgba(255,255,255,0.3) 1px, transparent 1px)',
+            backgroundSize: '24px 24px',
+          }}
+        />
+
+        <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-8 relative z-10">
+          {/* Left Column: Eyebrow + Large 2-Line Headline + Subtitle */}
+          <div className="flex-1 text-left">
+            <div className="inline-flex items-center gap-2 mb-3">
+              <span style={{ color: 'var(--color-brand-accent)' }} className="text-xs font-black tracking-widest uppercase">
+                ✦ OFFICIAL HELPDESK & SUPPORT ✦
+              </span>
+            </div>
+
+            <h1 className="text-white font-black tracking-tight leading-[0.95] text-3xl sm:text-4xl md:text-5xl lg:text-6xl uppercase mb-4">
+              HELP & <br />
+              <span style={{ color: 'var(--color-brand-accent)' }}>SUPPORT</span>
+            </h1>
+
+            <p className="text-slate-300 text-sm sm:text-base max-w-lg leading-relaxed mb-6">
+              Official customer assistance corridor. Lodge direct support tickets, reach our emergency helpline, connect with the grievance cell, or view physical coordinates.
+            </p>
+
+            {/* Quick action buttons */}
+
+          </div>
+
+          {/* Right Column: Golden Notched Showcase Folder Card */}
+          <div className="w-full md:w-[380px] lg:w-[420px] flex-shrink-0 flex justify-center md:justify-end">
+            <div
+              className="relative w-[280px] sm:w-[320px] md:w-[340px] h-[220px] sm:h-[240px] overflow-hidden shadow-2xl transition-transform duration-300 hover:scale-[1.02]"
+              style={{
+                background: '#f59e0b',
+                clipPath: 'url(#tab-right-notch)',
+                WebkitClipPath: 'url(#tab-right-notch)',
+                borderRadius: '0 0 24px 24px',
+              }}
+            >
+              <img
+                src="/hero/gavel.jpg"
+                alt="Support & Legal Gavel"
+                className="w-full h-full object-cover object-center transition-transform duration-700 hover:scale-105"
+                loading="eager"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-transparent pointer-events-none" />
+            </div>
+          </div>
         </div>
       </section>
 

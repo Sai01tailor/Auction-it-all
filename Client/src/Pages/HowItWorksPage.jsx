@@ -160,93 +160,99 @@ export default function HowItWorksPage() {
       />
       <Header />
 
-      {/* ── 1. Modern Hero Section ── */}
-      <section style={{
-        background: 'linear-gradient(135deg, var(--color-brand-primary-dark) 0%, var(--color-brand-primary) 60%, #001f5c 100%)',
-        color: '#fff',
-        padding: '5rem 1.5rem 6.5rem',
-        textAlign: 'center',
-        position: 'relative',
-        overflow: 'hidden'
-      }}>
-        {/* Subtle background decoration grid */}
-        <div style={{
-          position: 'absolute', inset: 0, opacity: 0.04,
-          backgroundImage: 'radial-gradient(#fff 1.5px, transparent 0)',
-          backgroundSize: '24px 24px',
-          pointerEvents: 'none'
-        }} />
+      {/* SVG ClipPath Definition for Tab Notch */}
+      <svg width="0" height="0" className="absolute pointer-events-none" aria-hidden="true">
+        <defs>
+          <clipPath id="tab-right-notch" clipPathUnits="objectBoundingBox">
+            <path d="M 1,0.08 C 1,0.03 0.95,0 0.88,0 L 0.5,0 C 0.44,0 0.4,0.02 0.36,0.045 C 0.32,0.07 0.28,0.08 0.22,0.08 L 0.12,0.08 C 0.05,0.08 0,0.11 0,0.16 L 0,0.92 C 0,0.97 0.05,1 0.12,1 L 0.88,1 C 0.95,1 1,0.97 1,0.92 Z" />
+          </clipPath>
+          <clipPath id="tab-left-notch" clipPathUnits="objectBoundingBox">
+            <path d="M 0,0.08 C 0,0.03 0.05,0 0.12,0 L 0.5,0 C 0.56,0 0.6,0.02 0.64,0.045 C 0.68,0.07 0.72,0.08 0.78,0.08 L 0.88,0.08 C 0.95,0.08 1,0.11 1,0.16 L 1,0.92 C 1,0.97 0.95,1 0.88,1 L 0.12,1 C 0.05,1 0,0.97 0,0.92 Z" />
+          </clipPath>
+        </defs>
+      </svg>
 
-        <div style={{ maxWidth: '800px', margin: '0 auto', position: 'relative', zIndex: 10 }}>
-          <span style={{
-            fontSize: '0.72rem', fontWeight: 800, color: 'var(--color-brand-accent)',
-            background: 'rgba(254,206,68,0.12)', border: '1px solid rgba(254,206,68,0.25)',
-            padding: '0.35rem 0.85rem', borderRadius: '20px', display: 'inline-block',
-            marginBottom: '1.25rem', textTransform: 'uppercase', letterSpacing: '0.08em'
-          }}>
-            Complete Storefront Walkthrough
-          </span>
-          <h1 style={{ color: 'var(--color-brand-accent)', margin: 0, fontSize: 'clamp(2.2rem, 5vw, 3.2rem)', fontWeight: 900, letterSpacing: '-0.03em', lineHeight: 1.1 }}>
-            Mastering the BidKar Marketplace
-          </h1>
-          <p style={{ margin: '1rem auto 2.25rem', fontSize: 'clamp(0.95rem, 2vw, 1.1rem)', color: 'rgba(255,255,255,0.7)', lineHeight: 1.6, maxWidth: '640px' }}>
-            Whether buying rare assets or selling verified goods, understand how our 10x leverage engine and escrow protection streamline safe deals.
-          </p>
+      {/* ── 1. Hero Banner with Notched Golden Gavel Showcase ── */}
+      <section
+        className="relative overflow-hidden text-white w-full pt-8 pb-16 sm:pb-20 px-4 sm:px-6 lg:px-12"
+        style={{
+          background: 'linear-gradient(175deg, #001948 0%, var(--color-brand-primary) 50%, #00133a 100%)',
+        }}
+      >
+        {/* Subtle dot matrix texture */}
+        <div
+          className="pointer-events-none absolute inset-0 z-0 opacity-10"
+          style={{
+            backgroundImage: 'radial-gradient(rgba(255,255,255,0.3) 1px, transparent 1px)',
+            backgroundSize: '24px 24px',
+          }}
+        />
 
-          {/* Quick Role Selection CTA Blocks */}
-          <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', justifyContent: 'center' }}>
-            <button
-              onClick={() => {
-                setRole('bidder');
-                document.getElementById('journey-section')?.scrollIntoView({ behavior: 'smooth' });
-              }}
+        <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-8 relative z-10">
+          {/* Left Column: Eyebrow + Large 2-Line Headline + Subtitle */}
+          <div className="flex-1 text-left">
+            <div className="inline-flex items-center gap-2 mb-3">
+              <span style={{ color: 'var(--color-brand-accent)' }} className="text-xs font-black tracking-widest uppercase">
+                ✦ LIVE AUCTION MARKETPLACE ✦
+              </span>
+            </div>
+
+            <h1 className="text-white font-black tracking-tight leading-[0.95] text-3xl sm:text-4xl md:text-5xl lg:text-6xl uppercase mb-4">
+              HOW IT <br />
+              <span style={{ color: 'var(--color-brand-accent)' }}>WORKS</span>
+            </h1>
+
+            <p className="text-slate-300 text-sm sm:text-base max-w-lg leading-relaxed mb-6">
+              Learn how real-time English, Dutch, and Blind auction engines operate, leverage 10x bidding power, and stay protected with institutional escrow.
+            </p>
+
+            {/* Quick action buttons */}
+            <div className="flex flex-wrap items-center gap-3">
+              <button
+                onClick={() => {
+                  setRole('bidder');
+                  document.getElementById('journey-section')?.scrollIntoView({ behavior: 'smooth' });
+                }}
+                className="px-6 py-3 rounded-xl font-extrabold text-sm transition-all"
+                style={{
+                  background: 'var(--color-brand-accent)',
+                  color: 'var(--color-brand-primary-dark)',
+                  boxShadow: '0 4px 14px rgba(254,206,68,0.35)',
+                }}
+              >
+                I want to Buy / Bid
+              </button>
+              <button
+                onClick={() => {
+                  setRole('seller');
+                  document.getElementById('journey-section')?.scrollIntoView({ behavior: 'smooth' });
+                }}
+                className="px-6 py-3 rounded-xl font-bold text-sm text-white bg-white/10 hover:bg-white/20 transition-all border border-white/20"
+              >
+                I want to Sell / List
+              </button>
+            </div>
+          </div>
+
+          {/* Right Column: Golden Notched Showcase Folder Card */}
+          <div className="w-full md:w-[380px] lg:w-[420px] flex-shrink-0 flex justify-center md:justify-end">
+            <div
+              className="relative w-[280px] sm:w-[320px] md:w-[340px] h-[220px] sm:h-[240px] overflow-hidden shadow-2xl transition-transform duration-300 hover:scale-[1.02]"
               style={{
-                padding: '1rem 1.75rem',
-                borderRadius: '16px',
-                background: role === 'bidder' ? 'var(--color-brand-accent)' : 'rgba(255,255,255,0.08)',
-                color: role === 'bidder' ? 'var(--color-brand-primary-dark)' : '#fff',
-                border: role === 'bidder' ? 'none' : '1px solid rgba(255,255,255,0.25)',
-                fontWeight: 800,
-                fontSize: '0.95rem',
-                cursor: 'pointer',
-                transition: 'all 0.25s',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '0.5rem',
-                boxShadow: role === 'bidder' ? '0 8px 24px rgba(254,206,68,0.25)' : 'none',
+                background: '#f59e0b',
+                clipPath: 'url(#tab-right-notch)',
+                WebkitClipPath: 'url(#tab-right-notch)',
+                borderRadius: '0 0 24px 24px',
               }}
             >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="12" cy="8" r="5" /><path d="M3 21v-2a7 7 0 0 1 14 0v2" />
-              </svg>
-              I want to Buy / Bid
-            </button>
-            <button
-              onClick={() => {
-                setRole('seller');
-                document.getElementById('journey-section')?.scrollIntoView({ behavior: 'smooth' });
-              }}
-              style={{
-                padding: '1rem 1.75rem',
-                borderRadius: '16px',
-                background: role === 'seller' ? 'var(--color-brand-accent)' : 'rgba(255,255,255,0.08)',
-                color: role === 'seller' ? 'var(--color-brand-primary-dark)' : '#fff',
-                border: role === 'seller' ? 'none' : '1px solid rgba(255,255,255,0.25)',
-                fontWeight: 800,
-                fontSize: '0.95rem',
-                cursor: 'pointer',
-                transition: 'all 0.25s',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '0.5rem',
-                boxShadow: role === 'seller' ? '0 8px 24px rgba(254,206,68,0.25)' : 'none',
-              }}
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="3" y="3" width="18" height="18" rx="2" ry="2" /><line x1="9" y1="3" x2="9" y2="21" />
-              </svg>
-              I want to Sell / List
-            </button>
+              <img
+                src="/hero/gavel.jpg"
+                alt="Golden Auction Gavel"
+                className="w-full h-full object-cover object-center transition-transform duration-700 hover:scale-105"
+                loading="eager"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-transparent pointer-events-none" />
+            </div>
           </div>
         </div>
       </section>
@@ -254,25 +260,25 @@ export default function HowItWorksPage() {
       {/* ── 2. Interactive Journey Walkthrough (Role-Based Onboarding) ── */}
       <section id="journey-section" style={{
         maxWidth: '1000px',
-        margin: '-3.5rem auto 4rem',
+        margin: '-2.5rem auto 4rem',
         padding: '0 1.5rem',
         position: 'relative',
         zIndex: 20
       }}>
-        {/* Sticky Role Selector Header */}
+        {/* Role Selector Header */}
         <div style={{
           background: '#fff',
           border: '1px solid var(--color-border-subtle)',
-          borderRadius: '20px',
-          padding: '0.5rem',
+          borderRadius: '16px',
+          padding: '0.4rem',
           display: 'flex',
-          boxShadow: '0 10px 30px rgba(0,35,102,0.04)',
+          boxShadow: '0 10px 30px rgba(0,35,102,0.06)',
           marginBottom: '2.5rem'
         }}>
           <button
             onClick={() => setRole('bidder')}
             style={{
-              flex: 1, padding: '1rem', borderRadius: '16px', border: 'none',
+              flex: 1, padding: '0.9rem', borderRadius: '12px', border: 'none',
               background: role === 'bidder' ? 'var(--color-brand-primary)' : 'transparent',
               color: role === 'bidder' ? '#fff' : 'var(--color-text-muted)',
               fontWeight: 800, fontSize: '0.95rem', cursor: 'pointer', transition: 'all 0.2s'
@@ -283,7 +289,7 @@ export default function HowItWorksPage() {
           <button
             onClick={() => setRole('seller')}
             style={{
-              flex: 1, padding: '1rem', borderRadius: '16px', border: 'none',
+              flex: 1, padding: '0.9rem', borderRadius: '12px', border: 'none',
               background: role === 'seller' ? 'var(--color-brand-primary)' : 'transparent',
               color: role === 'seller' ? '#fff' : 'var(--color-text-muted)',
               fontWeight: 800, fontSize: '0.95rem', cursor: 'pointer', transition: 'all 0.2s'
@@ -299,7 +305,7 @@ export default function HowItWorksPage() {
             /* ==================== BIDDER STEPS ==================== */
             <>
               {/* Step 1: Account & Calculator */}
-              <div style={{
+              <div id="calculator-section" style={{
                 background: '#fff', border: '1px solid var(--color-border-subtle)',
                 borderRadius: '24px', padding: '2.25rem 2rem',
                 boxShadow: '0 8px 30px rgba(0,35,102,0.01)',
@@ -357,7 +363,7 @@ export default function HowItWorksPage() {
               </div>
 
               {/* Step 2: Auction Types workspace */}
-              <div style={{
+              <div id="engines-section" style={{
                 background: '#fff', border: '1px solid var(--color-border-subtle)',
                 borderRadius: '24px', padding: '2.25rem 2rem',
                 boxShadow: '0 8px 30px rgba(0,35,102,0.01)',

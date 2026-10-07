@@ -74,7 +74,7 @@ function SearchBar({ onSearch, collapsed }) {
       onSubmit={handleSubmit}
       style={{
         flex: 1,
-        maxWidth: '480px',
+        minWidth: 0,
         position: 'relative',
       }}
     >
@@ -149,12 +149,12 @@ function AuthSection({ user, mobile = false }) {
         <Link to="/login">
           <button id="header-sign-in" style={{
             padding: mobile ? '0.35rem 0.8rem' : '0.45rem 1.1rem',
-            background: 'var(--color-brand-primary)',
-            color: '#fff',
+            background: 'var(--color-brand-accent)',
+            color: 'var(--color-brand-primary-dark)',
             border: 'none',
             borderRadius: '8px',
             fontSize: mobile ? '0.78rem' : '0.875rem',
-            fontWeight: 600,
+            fontWeight: 700,
             cursor: 'pointer',
             whiteSpace: 'nowrap',
             transition: 'background 0.2s',
@@ -629,7 +629,7 @@ export default function Header() {
         <SearchBar collapsed={mobile} />
 
         {/* Right Side Alignment Wrapper */}
-        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: mobile ? '0.45rem' : '1rem', flexShrink: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: mobile ? '0.45rem' : '1rem', flexShrink: 0 }}>
           {/* Wallet Balance Badge */}
           {user && (
             <Link

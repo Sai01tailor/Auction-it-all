@@ -4,7 +4,7 @@ import Header from '../Components/Global/Header';
 import SEO from '../Components/Global/SEO';
 import FilterSidebar, { MobileFilterSheet } from '../Components/Listing/FilterSidebar';
 import AuctionGrid from '../Components/Listing/AuctionGrid';
-import SearchBar from '../Components/Listing/SearchBar';
+// SearchBar removed — search is handled via URL params from the global Header
 import { getActiveAuctions } from '../services/auctionService';
 
 /* ─────────────────────────────────────────────────────────────
@@ -39,6 +39,129 @@ const ENGINES = [
 
 
 const PAGE_SIZE = 16;
+
+/* ── Auctions page hero: luxurious text left + gavel card right ── */
+const HERO_IMAGES = { gavel: '/hero/gavel.jpg' };
+
+function AuctionsHero() {
+  return (
+    <section style={{
+      background: 'linear-gradient(160deg, #00102e 0%, #001f55 40%, #002366 70%, #001540 100%)',
+      position: 'relative',
+      overflow: 'hidden',
+      minHeight: '25vh',
+      display: 'flex',
+      alignItems: 'center',
+      padding: '1.5rem 1.5rem 4.5rem',
+    }}>
+
+      {/* Ambient gold glow — top left */}
+      <div style={{
+        pointerEvents: 'none', position: 'absolute',
+        top: '-40%', left: '-10%',
+        width: '55%', height: '200%',
+        background: 'radial-gradient(ellipse, rgba(254,206,68,0.07) 0%, transparent 65%)',
+      }} />
+
+      {/* Ambient blue-white glow — bottom right */}
+      <div style={{
+        pointerEvents: 'none', position: 'absolute',
+        bottom: '-60%', right: '5%',
+        width: '45%', height: '180%',
+        background: 'radial-gradient(ellipse, rgba(147,197,253,0.05) 0%, transparent 60%)',
+      }} />
+
+      {/* Diagonal gold shimmer line */}
+      <div style={{
+        pointerEvents: 'none', position: 'absolute',
+        top: 0, left: 0, right: 0, bottom: 0,
+        background: 'linear-gradient(118deg, transparent 30%, rgba(254,206,68,0.04) 45%, transparent 60%)',
+      }} />
+
+      {/* SVG clip path for card shape */}
+      <svg width="0" height="0" style={{ position: 'absolute', pointerEvents: 'none' }} aria-hidden="true">
+        <defs>
+          <clipPath id="lgp-card-notch" clipPathUnits="objectBoundingBox">
+            <path d="M 1,0.08 C 1,0.03 0.95,0 0.88,0 L 0.5,0 C 0.44,0 0.4,0.02 0.36,0.045 C 0.32,0.07 0.28,0.08 0.22,0.08 L 0.12,0.08 C 0.05,0.08 0,0.11 0,0.16 L 0,0.92 C 0,0.97 0.05,1 0.12,1 L 0.88,1 C 0.95,1 1,0.97 1,0.92 Z" />
+          </clipPath>
+        </defs>
+      </svg>
+
+      {/* Two-column layout */}
+      <div style={{
+        maxWidth: '1280px', margin: '0 auto', width: '100%',
+        position: 'relative', zIndex: 1,
+        display: 'flex', alignItems: 'center',
+        gap: '2rem',
+      }}>
+
+        {/* LEFT: Text */}
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <p style={{
+            margin: '0 0 0.35rem',
+            fontSize: '0.6rem', fontWeight: 700,
+            letterSpacing: '0.22em', textTransform: 'uppercase',
+            color: 'var(--color-brand-accent)',
+            opacity: 0.8,
+          }}>
+            ✦ &nbsp; Live Auction Marketplace &nbsp; ✦
+          </p>
+          <h1 style={{
+            margin: 0,
+            fontFamily: "Impact, 'Arial Narrow', 'Franklin Gothic Medium', Arial, sans-serif",
+            fontSize: 'clamp(1.8rem, 4vw, 3.6rem)',
+            fontWeight: 500,
+            letterSpacing: '0.03em',
+            lineHeight: 0.95,
+            textTransform: 'uppercase',
+          }}>
+            <span style={{ color: '#ffffff', display: 'block' }}>Browse &amp;</span>
+            <span style={{
+              display: 'block',
+              background: 'linear-gradient(90deg, #fece44 0%, #feda75 50%, #e5b630 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+            }}>Bid</span>
+          </h1>
+        </div>
+
+        {/* RIGHT: Gavel card — desktop only */}
+        <div className="hidden md:block" style={{
+          flex: '0 0 clamp(180px, 25vw, 340px)',
+          height: 'clamp(160px, 22vw, 300px)',
+          position: 'relative',
+        }}>
+          {/* Gold accent strip */}
+          <div style={{
+            position: 'absolute', left: -5, top: '15%', bottom: '15%',
+            width: '7px',
+            background: 'linear-gradient(180deg, #feda75, #fece44, #e5b630)',
+            borderRadius: '4px',
+            zIndex: 2,
+            boxShadow: '0 0 12px rgba(254,206,68,0.5)',
+          }} />
+          {/* Card */}
+          <div style={{
+            width: '100%', height: '100%',
+            overflow: 'hidden',
+            boxShadow: '0 12px 50px rgba(0,0,0,0.55), 0 0 0 1px rgba(254,206,68,0.12)',
+            clipPath: 'url(#lgp-card-notch)',
+            WebkitClipPath: 'url(#lgp-card-notch)',
+          }}>
+            <img
+              src={HERO_IMAGES.gavel}
+              alt="Premium Auction Gavel"
+              style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center', display: 'block' }}
+            />
+          </div>
+        </div>
+
+      </div>
+    </section>
+  );
+}
+
 
 export default function ListingGridPage() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -131,8 +254,8 @@ export default function ListingGridPage() {
   const pageTitle = filters.search
     ? `Search "${filters.search}" — Live Auctions`
     : filters.category !== 'all'
-    ? `${filters.category.charAt(0).toUpperCase() + filters.category.slice(1)} Auctions`
-    : 'Browse All Live Auctions & Drops';
+      ? `${filters.category.charAt(0).toUpperCase() + filters.category.slice(1)} Auctions`
+      : 'Browse All Live Auctions & Drops';
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--color-surface-bg)', paddingBottom: '3.5rem' }}>
@@ -142,50 +265,8 @@ export default function ListingGridPage() {
       />
       <Header />
 
-      {/* ── Page Header Band ── */}
-      <div style={{
-        background: 'linear-gradient(160deg, var(--color-brand-primary-dark) 0%, var(--color-brand-primary) 100%)',
-        padding: '2rem 0 4.5rem',
-        position: 'relative',
-        overflow: 'hidden',
-      }}>
-        {/* Subtle decorative dot pattern */}
-        <div style={{ position: 'absolute', inset: 0, opacity: 0.04, backgroundImage: 'radial-gradient(#fff 1.5px,transparent 0)', backgroundSize: '20px 20px', pointerEvents: 'none' }} />
-        <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 0.65rem', position: 'relative', zIndex: 2 }}>
-          <p style={{ margin: '0 0 0.4rem', fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(254,206,68,0.9)' }}>
-            Live Auction Marketplace
-          </p>
-          <h1 style={{
-            margin: '0 0 1.25rem',
-            fontSize: 'clamp(1.3rem, 3vw, 2rem)',
-            fontWeight: 800, color: '#fff',
-            letterSpacing: '-0.03em',
-          }}>
-            Browse & Bid
-            {total > 0 && (
-              <span style={{
-                marginLeft: '0.75rem',
-                fontSize: '0.85rem',
-                fontWeight: 600,
-                background: 'rgba(255,255,255,0.15)',
-                color: 'rgba(255,255,255,0.85)',
-                padding: '0.2rem 0.7rem',
-                borderRadius: '20px',
-                verticalAlign: 'middle',
-              }}>
-                {total.toLocaleString()} items
-              </span>
-            )}
-          </h1>
-
-          {/* Search bar in the hero band */}
-          <SearchBar
-            onSearch={handleSearch}
-            total={total}
-            placeholder="Search by title, description…"
-          />
-        </div>
-      </div>
+      {/* ── 5-column editorial Hero ── */}
+      <AuctionsHero />
 
       {/* ── Upper Bidding Engine Navigation: Desktop Buttons & Mobile Dropdown ── */}
       <div style={{ maxWidth: '1280px', margin: '-2rem auto 0', padding: '0 0.65rem', position: 'relative', zIndex: 10 }}>

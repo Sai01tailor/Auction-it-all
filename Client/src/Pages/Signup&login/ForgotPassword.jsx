@@ -5,6 +5,7 @@ import { toast } from 'react-toastify'
 import { useNavigate } from 'react-router-dom'
 import { deleteCookie } from '../../Components/Global/CookieIT'
 import LongLogo from '../../assets/LongLogo.png'
+import OtpInput from 'react-otp-input'
 
 /* ─── tokens (mirrors index.css) ────────── */
 const C = {

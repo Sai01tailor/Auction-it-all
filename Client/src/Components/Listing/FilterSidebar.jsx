@@ -33,7 +33,7 @@ const PRICE_PRESETS = [
 
 /* ── Section wrapper ── */
 function Section({ title, children }) {
-  const [open, setOpen] = useState(true);
+  const [open, setOpen] = useState(false);
   return (
     <div style={{ borderBottom: '1px solid var(--color-border-subtle)', paddingBottom: '1.25rem', marginBottom: '1.25rem' }}>
       <button
@@ -264,7 +264,7 @@ export default function FilterSidebar({ filters, onFilterChange }) {
       id="filter-sidebar"
       className="hidden md:block"
       style={{
-        width: '240px',
+        width: '280px',
         flexShrink: 0,
         background: '#fff',
         border: '1px solid var(--color-border-subtle)',
@@ -285,10 +285,11 @@ export default function FilterSidebar({ filters, onFilterChange }) {
           id="filter-clear-all"
           onClick={() => onFilterChange({ priceRange: [0, 10_00_000], type: 'ACTIVE', condition: [], category: 'all' })}
           style={{
-            border: 'none', background: 'none', cursor: 'pointer',
-            fontSize: '0.75rem', fontWeight: 600,
-            color: 'var(--color-brand-accent-dark)',
-            padding: '2px 6px', borderRadius: '4px',
+            border: 'none', background: 'rgba(0,35,102,0.07)', cursor: 'pointer',
+            fontSize: '0.75rem', fontWeight: 700,
+            color: 'var(--color-brand-primary)',
+            padding: '3px 9px', borderRadius: '6px',
+            transition: 'background 0.15s',
           }}
         >
           Clear all
@@ -321,7 +322,7 @@ export function MobileFilterSheet({ isOpen, onClose, filters, onFilterChange }) 
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
             <button
               onClick={() => onFilterChange({ priceRange: [0, 10_00_000], type: 'ACTIVE', condition: [], category: 'all' })}
-              style={{ border: 'none', background: 'none', color: '#ef4444', fontSize: '0.78rem', fontWeight: 700, cursor: 'pointer' }}
+              style={{ border: 'none', background: 'rgba(0,35,102,0.08)', borderRadius: '6px', padding: '3px 9px', color: 'var(--color-brand-primary)', fontSize: '0.78rem', fontWeight: 700, cursor: 'pointer' }}
             >
               Clear All
             </button>

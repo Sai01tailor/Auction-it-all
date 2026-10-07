@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-/* ─────────────────────────────────────────
+/* -----------------------------------------
    HELPERS
-───────────────────────────────────────── */
+----------------------------------------- */
 function formatINR(n) {
-  if (n == null) return '—';
+  if (n == null) return '�';
   return new Intl.NumberFormat('en-IN', {
     style: 'currency',
     currency: 'INR',
@@ -22,7 +22,7 @@ function getTimer(startTime, endTime) {
     const diff = start - now;
     const h = Math.floor(diff / 3_600_000);
     const m = Math.floor((diff % 3_600_000) / 60_000);
-    return { phase: 'upcoming', text: `Starts in ${h}h ${m}m`, pct: 0 };
+    return { phase: 'upcoming', text: `${h}H ${m}M`, pct: 0 };
   }
   if (now >= end) {
     return { phase: 'ended', text: 'Ended', pct: 100 };
@@ -34,43 +34,49 @@ function getTimer(startTime, endTime) {
 
   let text;
   if (remaining >= 86_400_000) {
-    const d = Math.floor(remaining / 86_400_000)
+    const d = Math.floor(remaining / 86_400_000);
     const h = Math.floor((remaining % 86_400_000) / 3_600_000);
-    text = `${d}d ${h}h left`;
+    text = `${d}D ${h}H`;
   } else if (remaining >= 3_600_000) {
     const h = Math.floor(remaining / 3_600_000);
     const m = Math.floor((remaining % 3_600_000) / 60_000);
-    text = `${h}h ${m}m left`;
+    text = `${h}H ${m}M`;
   } else if (remaining >= 60_000) {
     const m = Math.floor(remaining / 60_000);
     const s = Math.floor((remaining % 60_000) / 1_000);
-    text = `${m}m ${s}s left`;
+    text = `${m}M ${s}S`;
   } else {
     const s = Math.floor(remaining / 1_000);
-    text = `${s}s left`;
+    text = `${s}S`;
   }
 
   return { phase: 'live', text, pct, urgent: remaining < 5 * 60_000 };
 }
 
-/* ─────────────────────────────────────────
+/* -- Derive a short lot identifier from the item ID -- */
+function lotNumber(id) {
+  if (!id) return 'LOT �';
+  return 'LOT ' + id.toString().slice(-4).toUpperCase();
+}
+
+/* -----------------------------------------
    STATUS CONFIG  (matches Item schema enum)
-───────────────────────────────────────── */
+----------------------------------------- */
 const STATUS = {
-  ACTIVE: { label: 'Live', bg: '#10b981', text: '#fff' },
+  ACTIVE: { label: 'Live', bg: '#002366', text: '#fff' },
   SOLD: { label: 'Sold', bg: '#6b7280', text: '#fff' },
   CANCELLED: { label: 'Cancelled', bg: '#ef4444', text: '#fff' },
   DRAFT: { label: 'Draft', bg: '#f59e0b', text: '#fff' },
 };
 
-/* ─────────────────────────────────────────
+/* -----------------------------------------
    PRODUCT CARD
    Props from Item schema:
      item._id, item.title, item.description,
      item.startingPrice, item.currentHighestBid,
-     item.photos[], item.status,
+     item.photos[], item.status, item.category,
      item.startTime, item.endTime
-───────────────────────────────────────── */
+----------------------------------------- */
 export default function ProductCard({ item = {} }) {
   const navigate = useNavigate();
   const prevBid = useRef(item.currentHighestBid);
@@ -78,7 +84,7 @@ export default function ProductCard({ item = {} }) {
   const [timer, setTimer] = useState(() => getTimer(item.startTime, item.endTime));
   const [bidPulse, setBidPulse] = useState(false);
 
-  // Live countdown
+  // Live countdown � unchanged
   useEffect(() => {
     const id = setInterval(
       () => setTimer(getTimer(item.startTime, item.endTime)),
@@ -87,7 +93,7 @@ export default function ProductCard({ item = {} }) {
     return () => clearInterval(id);
   }, [item.startTime, item.endTime]);
 
-  // Bid price pulse when updated via socket / prop change
+  // Bid price pulse when updated via socket / prop change � unchanged
   useEffect(() => {
     if (item.currentHighestBid !== prevBid.current) {
       prevBid.current = item.currentHighestBid;
@@ -103,11 +109,21 @@ export default function ProductCard({ item = {} }) {
   const isSold = item.status === 'SOLD';
   const canBid = isActive && timer.phase === 'live';
 
-  /* ── timer colour ── */
-  let timerColor = '#10b981';                           // green  — plenty of time
+  /* -- timer colour � unchanged logic -- */
+  let timerColor = '#10b981';
   if (timer.phase === 'ended' || isSold) timerColor = '#9ca3af';
-  else if (timer.urgent) timerColor = '#ef4444'; // red < 5 min
-  else if (timer.pct >= 70) timerColor = '#f59e0b'; // orange
+  else if (timer.urgent) timerColor = '#ef4444';
+  else if (timer.pct >= 70) timerColor = '#f59e0b';
+
+  /* -- timer phase label -- */
+  const timerPhaseLabel =
+    timer.phase === 'live' ? 'Live Auction' :
+      timer.phase === 'upcoming' ? 'Upcoming' : 'Closed';
+
+  /* -- category label from data field, not hardcoded -- */
+  const categoryLabel = item.category
+    ? item.category.replace(/_/g, ' ').toUpperCase()
+    : null;
 
   const go = () => navigate(`/auction/${item._id}`);
 
@@ -117,7 +133,7 @@ export default function ProductCard({ item = {} }) {
       style={{ boxShadow: '0 2px 10px rgba(0,35,102,0.06)' }}
       onClick={go}
     >
-      {/* ── Image ── */}
+      {/* -- Image -- */}
       <div className="relative overflow-hidden bg-[var(--color-surface-bg)]">
         {photo ? (
           <img
@@ -136,22 +152,38 @@ export default function ProductCard({ item = {} }) {
           </div>
         )}
 
-        {/* Status pill */}
+        {/* Status pill � unchanged */}
         <span
           className="absolute top-2.5 left-2.5 text-[0.62rem] font-bold tracking-wider uppercase px-2.5 py-0.5 rounded-full flex items-center gap-1"
           style={{ background: status.bg, color: status.text }}
         >
           {status.label === 'Live' && (
             <span
-              className="inline-block w-1.5 h-1.5 rounded-full bg-white"
-              style={{ animation: 'bid-pulse 1s ease-out infinite' }}
+              className="inline-block w-1.5 h-1.5 rounded-full"
+              style={{ background: '#FECE44', animation: 'bid-pulse 1s ease-out infinite' }}
             />
           )}
           {status.label}
         </span>
+
+        {/* Lot number � auction-house catalog identifier */}
+        {/* <span style={{
+          position: 'absolute', top: '0.6rem', right: '0.6rem',
+          fontSize: '0.58rem', fontWeight: 700,
+          letterSpacing: '0.12em', textTransform: 'uppercase',
+          color: 'rgba(255,255,255,0.92)',
+          background: 'rgba(0,15,40,0.55)',
+          backdropFilter: 'blur(6px)',
+          WebkitBackdropFilter: 'blur(6px)',
+          padding: '2px 7px',
+          borderRadius: '4px',
+          pointerEvents: 'none',
+        }}>
+          {lotNumber(item._id)}
+        </span> */}
       </div>
 
-      {/* ── Time progress bar ── */}
+      {/* -- Time progress bar � unchanged -- */}
       <div className="h-[3px] bg-[var(--color-border-subtle)]">
         <div
           className="h-full transition-all duration-1000 ease-linear"
@@ -163,28 +195,57 @@ export default function ProductCard({ item = {} }) {
         />
       </div>
 
-      {/* ── Body ── */}
+      {/* -- Body -- */}
       <div className="p-3.5 flex flex-col flex-1 gap-2" onClick={go}>
 
-        {/* Timer label */}
-        <p
-          className="text-[0.68rem] font-bold uppercase tracking-wider m-0"
-          style={{ color: timerColor }}
-        >
-          {timer.phase === 'live' && '⏱ '}
-          {timer.phase === 'upcoming' && '🕐 '}
-          {timer.phase === 'ended' && '● '}
-          {timer.text}
-        </p>
+        {/* Timer row � SVG clock icon, no emoji; phase label right-aligned */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '6px' }}>
+          <p
+            className="text-[0.68rem] font-bold uppercase tracking-wider m-0"
+            style={{ color: timerColor, display: 'flex', alignItems: 'center', gap: '4px' }}
+          >
+            {timer.phase !== 'ended' && (
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
+              </svg>
+            )}
+            {timer.phase === 'ended' ? 'Closed' : `${timer.text} Left`}
+          </p>
+          <span style={{
+            fontSize: '0.58rem', fontWeight: 700,
+            letterSpacing: '0.09em', textTransform: 'uppercase',
+            color: 'var(--color-text-muted)',
+            whiteSpace: 'nowrap',
+          }}>
+            {timerPhaseLabel}
+          </span>
+        </div>
 
-        {/* Title */}
-        <h3
-          className="text-[0.9rem] font-bold text-[var(--color-text-rich)] m-0 leading-snug line-clamp-2"
-        >
+        {/* Category micro-label with thin gold accent line */}
+        {categoryLabel && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '7px' }}>
+            <div style={{
+              width: '14px', height: '1px',
+              background: 'var(--color-brand-accent)',
+              flexShrink: 0,
+            }} />
+            <span style={{
+              fontSize: '0.58rem', fontWeight: 700,
+              letterSpacing: '0.13em', textTransform: 'uppercase',
+              color: 'var(--color-text-muted)',
+            }}>
+              {categoryLabel}
+            </span>
+          </div>
+        )}
+
+        {/* Title � unchanged */}
+        <h3 className="text-[0.9rem] font-bold text-[var(--color-text-rich)] m-0 leading-snug line-clamp-2">
           {item.title}
         </h3>
 
-        {/* Description */}
+        {/* Description � unchanged */}
         <p className="text-[0.75rem] text-[var(--color-text-muted)] m-0 leading-relaxed line-clamp-2">
           {item.description}
         </p>
@@ -196,7 +257,7 @@ export default function ProductCard({ item = {} }) {
         >
           <div>
             <div className="text-[0.6rem] text-[var(--color-text-muted)] uppercase tracking-wider mb-0.5">
-              Starting
+              Starting Bid
             </div>
             <div className="text-[0.88rem] font-semibold text-[var(--color-text-rich)]">
               {formatINR(item.startingPrice)}
@@ -206,7 +267,7 @@ export default function ProductCard({ item = {} }) {
           {item.currentHighestBid > 0 && (
             <div className="text-right">
               <div className="text-[0.6rem] text-[var(--color-text-muted)] uppercase tracking-wider mb-0.5">
-                Top bid
+                Current Bid
               </div>
               <div
                 className="text-[0.88rem] font-extrabold transition-all duration-300"
@@ -217,31 +278,45 @@ export default function ProductCard({ item = {} }) {
               >
                 {formatINR(item.currentHighestBid)}
               </div>
+              {canBid && (
+                <div style={{
+                  fontSize: '0.55rem', fontWeight: 700,
+                  letterSpacing: '0.1em', textTransform: 'uppercase',
+                  color: 'var(--color-brand-accent)',
+                  marginTop: '2px',
+                  display: 'flex', alignItems: 'center', gap: '3px', justifyContent: 'flex-end',
+                }}>
+                  <span style={{
+                    display: 'inline-block', width: '5px', height: '5px',
+                    borderRadius: '50%', background: 'var(--color-brand-accent)',
+                    animation: 'bid-pulse 1s ease-out infinite',
+                  }} />
+                  Live Bidding
+                </div>
+              )}
             </div>
           )}
         </div>
 
-        {/* CTA */}
+        {/* CTA � unchanged logic; arrow only when canBid */}
         <button
           onClick={e => { e.stopPropagation(); go(); }}
           disabled={!canBid && !isSold}
           id={`bid-btn-${item._id}`}
           className="w-full py-2 rounded-lg text-[0.8rem] font-bold tracking-wide transition-all duration-200 mt-1"
           style={{
-            background: canBid
-              ? 'var(--color-brand-primary)'
-              : '#f3f4f6',
+            background: canBid ? 'var(--color-brand-primary)' : '#f3f4f6',
             color: canBid ? '#fff' : 'var(--color-text-muted)',
             cursor: canBid ? 'pointer' : 'default',
           }}
         >
           {isSold
-            ? ' Sold'
+            ? 'Sold'
             : timer.phase === 'ended'
-              ? ' Auction Closed'
+              ? 'Auction Closed'
               : timer.phase === 'upcoming'
-                ? ' Not Started'
-                : ' Place Bid'}
+                ? 'Not Started'
+                : 'Place Bid '}
         </button>
       </div>
     </article>
