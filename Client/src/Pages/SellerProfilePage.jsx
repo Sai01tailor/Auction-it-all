@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { getSellerProfile } from '../services/auctionService';
 import Header from '../Components/Global/Header';
+import SEO from '../Components/Global/SEO';
 
 export default function SellerProfilePage() {
   const { id } = useParams();
@@ -50,118 +51,228 @@ export default function SellerProfilePage() {
     );
   }
 
-
-
   return (
     <div style={{ minHeight: '100vh', background: 'var(--color-surface-bg)' }}>
+      <SEO
+        title={`${profile.username}'s Verified Showroom | BidKar.in`}
+        description={`Explore verified auctions and seller reputation track records for ${profile.username} on BidKar.in.`}
+      />
       <Header />
 
-      {/* Hero Storefront Background Banner */}
-      <div style={{
-        height: '240px',
-        background: 'linear-gradient(150deg, #00153d 0%, #002366 50%, #0a2540 100%)',
+      {/* ── 1. SOLID NAVY HERO BANNER (With Gavel Image Showcase as in HowItWorksPage) ── */}
+      <section style={{
+        background: 'linear-gradient(160deg, #00102e 0%, #001948 40%, #002366 100%)',
         position: 'relative',
-        display: 'flex',
-        alignItems: 'flex-end',
+        padding: '2.5rem 1.5rem 3rem',
       }}>
-        {/* Subtle grid pattern overlay */}
+        {/* SVG clip path for card shape */}
+        <svg width="0" height="0" style={{ position: 'absolute', pointerEvents: 'none' }} aria-hidden="true">
+          <defs>
+            <clipPath id="dashboard-card-notch" clipPathUnits="objectBoundingBox">
+              <path d="M 1,0.08 C 1,0.03 0.95,0 0.88,0 L 0.5,0 C 0.44,0 0.4,0.02 0.36,0.045 C 0.32,0.07 0.28,0.08 0.22,0.08 L 0.12,0.08 C 0.05,0.08 0,0.11 0,0.16 L 0,0.92 C 0,0.97 0.05,1 0.12,1 L 0.88,1 C 0.95,1 1,0.97 1,0.92 Z" />
+            </clipPath>
+          </defs>
+        </svg>
+
         <div style={{
-          position: 'absolute', inset: 0,
-          backgroundImage: 'radial-gradient(rgba(254,206,68,0.1) 1px, transparent 0)',
-          backgroundSize: '24px 24px',
-          opacity: 0.75
-        }} />
-      </div>
+          maxWidth: '1200px', margin: '0 auto', width: '100%',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: '2rem',
+        }}>
 
-      {/* Main Container - Asymmetrical layouts */}
-      <div className="seller-profile-grid">
-        
-        {/* Left Side Column: Seller Info card & trust stats */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-          
-          {/* Seller Card */}
-          <div style={{
-            background: '#fff',
-            border: '1px solid var(--color-border-subtle)',
-            borderRadius: '24px',
-            padding: '2rem',
-            textAlign: 'center',
-            boxShadow: '0 10px 30px rgba(0,35,102,0.02)',
-            position: 'relative',
-            zIndex: 5,
-          }}>
-            {/* Avatar circle */}
-            <div style={{
-              width: '100px',
-              height: '100px',
-              borderRadius: '50%',
-              background: 'linear-gradient(135deg, var(--color-brand-primary), #1a3c7a)',
-              color: '#fff',
-              fontSize: '2.2rem',
-              fontWeight: 800,
-              border: '4px solid #fff',
-              boxShadow: '0 8px 20px rgba(0,35,102,0.15)',
-              margin: '-70px auto 1rem',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
+          {/* LEFT: Text & Eyebrow & Badges */}
+          <div className="dashboard-hero-left" style={{ flex: 1, minWidth: '280px' }}>
+            <p className="dashboard-hero-eyebrow" style={{
+              margin: '0 0 0.45rem',
+              fontSize: '0.65rem', fontWeight: 800,
+              letterSpacing: '0.2em', textTransform: 'uppercase',
+              color: 'var(--color-brand-accent)',
             }}>
-              {profile.username.slice(0, 2).toUpperCase()}
-            </div>
-
-            <h2 style={{ fontSize: '1.4rem', fontWeight: 900, color: 'var(--color-brand-primary)', margin: '0.5rem 0' }}>
-              {profile.username}
-            </h2>
-            <p style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', margin: '0 0 1.25rem' }}>
-              {profile.joinedDate}
+              ✦ VERIFIED SELLER SHOWROOM ✦
+            </p>
+            <h1 className="dashboard-hero-title" style={{
+              margin: 0,
+              fontFamily: "Impact, 'Arial Narrow', 'Franklin Gothic Medium', Arial, sans-serif",
+              fontSize: 'clamp(2rem, 4.2vw, 3.4rem)',
+              fontWeight: 500,
+              letterSpacing: '0.03em',
+              lineHeight: 0.95,
+              textTransform: 'uppercase',
+              marginBottom: '0.65rem',
+            }}>
+              <span style={{ color: '#ffffff', display: 'block' }}>{profile.username ? `${profile.username}'s` : 'Seller'}</span>
+              <span style={{
+                display: 'block',
+                background: 'linear-gradient(90deg, #fece44 0%, #feda75 50%, #e5b630 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
+              }}>Showroom</span>
+            </h1>
+            <p className="dashboard-hero-desc" style={{ margin: '0 0 1.5rem', fontSize: '0.88rem', color: '#94a3b8', maxWidth: '520px', lineHeight: 1.5 }}>
+              Browse verified inventory, escrow-backed auctions, reputation track records, and authenticated settlements.
             </p>
 
-            {/* Badges Stack */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', alignItems: 'center' }}>
-              {profile.kycStatus === 'VERIFIED' && (
-                <div style={{
-                  background: 'rgba(16, 185, 129, 0.08)',
-                  color: '#10b981',
-                  border: '1px solid rgba(16, 185, 129, 0.25)',
-                  borderRadius: '20px',
-                  padding: '0.4rem 1rem',
-                  fontSize: '0.75rem',
-                  fontWeight: 800,
-                  letterSpacing: '0.05em',
-                  textTransform: 'uppercase',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '0.4rem',
-                }}>
-                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                    <path d="m9 12 2 2 4-4" />
-                  </svg>
-                  KYC Verified
-                </div>
-              )}
-
-              <div style={{
-                background: 'rgba(254, 206, 68, 0.08)',
-                color: 'var(--color-brand-accent-dark)',
-                border: '1.5px solid rgba(254, 206, 68, 0.3)',
-                borderRadius: '20px',
-                padding: '0.4rem 1rem',
+            {/* Quick Badges / Action Links */}
+            <div className="dashboard-hero-actions" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.75rem' }}>
+              <span style={{
+                background: 'rgba(254, 206, 68, 0.12)',
+                color: 'var(--color-brand-accent)',
+                border: '1px solid rgba(254, 206, 68, 0.3)',
+                padding: '0.45rem 0.9rem',
+                borderRadius: '8px',
                 fontSize: '0.75rem',
                 fontWeight: 800,
-                letterSpacing: '0.05em',
+                letterSpacing: '0.04em',
                 textTransform: 'uppercase',
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: '0.4rem',
               }}>
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-                </svg>
-                Top Rated • {profile.reputation} ★
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg>
+                {profile.reputation} ★ Top Rated
+              </span>
+
+              {profile.kycStatus === 'VERIFIED' && (
+                <span style={{
+                  background: 'rgba(16, 185, 129, 0.15)',
+                  color: '#34d399',
+                  border: '1px solid rgba(16, 185, 129, 0.35)',
+                  padding: '0.45rem 0.9rem',
+                  borderRadius: '8px',
+                  fontSize: '0.75rem',
+                  fontWeight: 800,
+                  letterSpacing: '0.04em',
+                  textTransform: 'uppercase',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.4rem',
+                }}>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /><polyline points="9 11 11 13 15 9" /></svg>
+                  KYC Verified
+                </span>
+              )}
+
+              <span style={{
+                background: 'rgba(255, 255, 255, 0.08)',
+                color: '#cbd5e1',
+                border: '1px solid rgba(255, 255, 255, 0.15)',
+                padding: '0.45rem 0.9rem',
+                borderRadius: '8px',
+                fontSize: '0.75rem',
+                fontWeight: 700,
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.4rem',
+              }}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
+                Member since {profile.joinedDate}
+              </span>
+            </div>
+          </div>
+
+          {/* RIGHT: Solid Opaque Seller Profile Card with Notched Clip Path (like BidderDashboardPage) */}
+          <div className="dashboard-hero-right" style={{
+            flex: '0 0 clamp(240px, 28vw, 320px)',
+            position: 'relative',
+          }}>
+            {/* Deep navy vertical accent strip */}
+            <div style={{
+              position: 'absolute', left: -4, top: '15%', bottom: '10%',
+              width: '5px',
+              background: 'var(--color-brand-accent-dark)',
+              borderRadius: '4px',
+              zIndex: 2,
+            }} />
+
+            {/* Solid Gold Card Container with Clip Path */}
+            <div style={{
+              width: '100%',
+              background: 'linear-gradient(135deg, #fece44 0%, #feda75 50%, #e5b630 100%)',
+              border: '1px solid rgba(229, 182, 48, 0.4)',
+              clipPath: 'url(#dashboard-card-notch)',
+              WebkitClipPath: 'url(#dashboard-card-notch)',
+              padding: '1.75rem 1.25rem 1.5rem',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              textAlign: 'center',
+              position: 'relative',
+              boxShadow: '0 8px 24px rgba(0,0,0,0.35)',
+            }}>
+              {/* Clean Circular Avatar with Deep Blue Background */}
+              <div style={{
+                width: '54px', height: '54px', borderRadius: '50%',
+                background: 'var(--color-brand-primary)',
+                color: 'var(--color-brand-accent)',
+                fontSize: '1.25rem', fontWeight: 900,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                marginBottom: '0.75rem',
+                border: '2.5px solid #ffffff',
+                boxShadow: '0 2px 8px rgba(0,35,102,0.25)',
+              }}>
+                {profile.username ? profile.username.slice(0, 2).toUpperCase() : 'SL'}
+              </div>
+
+              <h3 className="dashboard-profile-name" style={{ margin: 0, fontSize: '0.98rem', fontWeight: 900, color: 'var(--color-brand-primary-dark)', letterSpacing: '-0.01em' }}>
+                {profile.username || 'Verified Seller'}
+              </h3>
+              <p className="dashboard-profile-email" style={{ margin: '0.2rem 0 0.85rem', fontSize: '0.75rem', color: 'rgba(0, 21, 61, 0.8)', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '100%' }}>
+                {profile.joinedDate ? `Member since ${profile.joinedDate}` : 'Verified Merchant'}
+              </p>
+
+              {/* Solid Status Badges */}
+              <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', justifyContent: 'center' }}>
+                {profile.kycStatus === 'VERIFIED' ? (
+                  <span style={{
+                    display: 'inline-flex', alignItems: 'center', gap: '0.3rem',
+                    background: '#065f46', color: '#ffffff',
+                    padding: '0.25rem 0.65rem', borderRadius: '6px',
+                    fontSize: '0.65rem', fontWeight: 800,
+                    border: '1px solid #047857',
+                    textTransform: 'uppercase', letterSpacing: '0.04em',
+                  }}>
+                    <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /><polyline points="9 11 11 13 15 9" /></svg>
+                    KYC Verified
+                  </span>
+                ) : (
+                  <span style={{
+                    display: 'inline-flex', alignItems: 'center', gap: '0.3rem',
+                    background: '#991b1b', color: '#ffffff',
+                    padding: '0.25rem 0.65rem', borderRadius: '6px',
+                    fontSize: '0.65rem', fontWeight: 800,
+                    border: '1px solid #7f1d1d',
+                    textTransform: 'uppercase', letterSpacing: '0.04em',
+                  }}>
+                    <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>
+                    KYC Pending
+                  </span>
+                )}
+
+                <span style={{
+                  display: 'inline-flex', alignItems: 'center', gap: '0.3rem',
+                  background: 'var(--color-brand-primary)', color: '#ffffff',
+                  padding: '0.25rem 0.65rem', borderRadius: '6px',
+                  fontSize: '0.65rem', fontWeight: 800,
+                  border: '1px solid var(--color-brand-primary-dark)',
+                  textTransform: 'uppercase', letterSpacing: '0.04em',
+                }}>
+                  <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg>
+                  {profile.reputation} ★
+                </span>
               </div>
             </div>
           </div>
+
+        </div>
+      </section>
+
+      {/* Main Container - Asymmetrical layouts */}
+      <div className="seller-profile-grid">
+        
+        {/* Left Side Column: Trust Stats */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
 
           {/* Trust Performance Metrics Card */}
           <div style={{

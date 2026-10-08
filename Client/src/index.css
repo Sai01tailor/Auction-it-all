@@ -552,13 +552,23 @@
   }
 
   @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
+    from {
+      opacity: 0;
+    }
+
+    to {
+      opacity: 1;
+    }
   }
 
   @keyframes slideUp {
-    from { transform: translateY(100%); }
-    to { transform: translateY(0); }
+    from {
+      transform: translateY(100%);
+    }
+
+    to {
+      transform: translateY(0);
+    }
   }
 
   /* =========================================
@@ -569,7 +579,7 @@
     grid-template-columns: 1fr;
     gap: 2.5rem;
     max-width: 1200px;
-    margin: -80px auto 4rem;
+    margin: 2rem auto 4rem;
     padding: 0 1.5rem;
     position: relative;
     z-index: 10;
@@ -640,33 +650,94 @@
   .bidder-dashboard-layout {
     display: flex;
     flex-direction: column;
-    gap: 1.25rem;
+    gap: 1.5rem;
   }
 
-  .dashboard-profile-card { order: 1; }
-  .dashboard-main-content { order: 2; }
-  .dashboard-stats-card   { order: 3; }
-  .dashboard-wallet-card  { order: 4; }
-  .dashboard-quick-links  { order: 5; }
+  .dashboard-sidebar {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    gap: 0;
+  }
+
+  .dashboard-main-content {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
 
   @media (min-width: 900px) {
     .bidder-dashboard-layout {
       display: grid;
       grid-template-columns: 280px 1fr;
-      grid-template-areas:
-        "profile main"
-        "stats   main"
-        "wallet  main"
-        "links   main";
       gap: 1.75rem;
       align-items: start;
     }
+  }
 
-    .dashboard-profile-card { grid-area: profile; order: unset; }
-    .dashboard-stats-card   { grid-area: stats;   order: unset; }
-    .dashboard-wallet-card  { grid-area: wallet;  order: unset; }
-    .dashboard-quick-links  { grid-area: links;   order: unset; }
-    .dashboard-main-content { grid-area: main;    order: unset; }
+  /* Mobile: <= 767px */
+  @media (max-width: 767px) {
+    .dashboard-hero-title {
+      font-size: clamp(1.6rem, 7vw, 2.3rem) !important;
+      line-height: 1 !important;
+    }
+
+    .dashboard-hero-desc {
+      font-size: 0.8rem !important;
+      line-height: 1.45 !important;
+      margin-bottom: 1.15rem !important;
+    }
+
+    .dashboard-hero-eyebrow {
+      font-size: 0.58rem !important;
+      letter-spacing: 0.16em !important;
+    }
+
+    .dashboard-profile-name {
+      font-size: 0.92rem !important;
+    }
+
+    .dashboard-profile-email {
+      font-size: 0.7rem !important;
+    }
+
+    .dashboard-balance-amount {
+      font-size: 1.5rem !important;
+    }
+
+    .dashboard-stat-title {
+      font-size: 0.72rem !important;
+    }
+
+    .dashboard-stat-label {
+      font-size: 0.68rem !important;
+    }
+
+    .dashboard-stat-value {
+      font-size: 0.88rem !important;
+    }
+
+    .dashboard-tab-btn {
+      font-size: 0.8rem !important;
+      padding: 0.45rem 0.6rem !important;
+    }
+
+    .dashboard-tab-badge {
+      font-size: 0.6rem !important;
+      padding: 0.08rem 0.35rem !important;
+    }
+
+    .dashboard-card-title {
+      font-size: 0.82rem !important;
+    }
+
+    .dashboard-card-price {
+      font-size: 0.82rem !important;
+    }
+
+    .dashboard-btn-action {
+      font-size: 0.75rem !important;
+    }
   }
 
   /* =========================================
@@ -676,7 +747,7 @@
     display: flex;
     flex-direction: column-reverse;
     gap: 0.85rem;
-    border-bottom: 1px solid rgba(255,255,255,0.1);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     padding-bottom: 1rem;
   }
 
@@ -810,10 +881,21 @@
     gap: 1.25rem;
   }
 
-  .seller-profile-card { order: 1; }
-  .seller-main-content { order: 2; }
-  .seller-quick-links  { order: 3; }
-  .seller-tips-card    { order: 4; }
+  .seller-profile-card {
+    order: 1;
+  }
+
+  .seller-main-content {
+    order: 2;
+  }
+
+  .seller-quick-links {
+    order: 3;
+  }
+
+  .seller-tips-card {
+    order: 4;
+  }
 
   @media (min-width: 900px) {
     .seller-dashboard-layout {
@@ -827,10 +909,25 @@
       align-items: start;
     }
 
-    .seller-profile-card { grid-area: profile; order: unset; }
-    .seller-quick-links  { grid-area: links;   order: unset; }
-    .seller-tips-card    { grid-area: tips;    order: unset; }
-    .seller-main-content { grid-area: main;    order: unset; }
+    .seller-profile-card {
+      grid-area: profile;
+      order: unset;
+    }
+
+    .seller-quick-links {
+      grid-area: links;
+      order: unset;
+    }
+
+    .seller-tips-card {
+      grid-area: tips;
+      order: unset;
+    }
+
+    .seller-main-content {
+      grid-area: main;
+      order: unset;
+    }
   }
 
   /* =========================================
@@ -857,10 +954,12 @@
     .contact-sidebar {
       grid-template-columns: repeat(4, 1fr);
     }
+
     .contact-tab-btn {
       padding: 1rem 0.85rem !important;
       border-radius: 14px !important;
     }
+
     .contact-workspace {
       padding: 1.75rem 1.5rem !important;
     }
@@ -874,13 +973,133 @@
       position: sticky !important;
       top: 90px;
     }
+
     .contact-tab-btn {
       padding: 1.25rem !important;
       border-radius: 16px !important;
     }
+
     .contact-workspace {
       padding: 2.5rem !important;
       border-radius: 24px !important;
+    }
+  }
+
+  /* =========================================
+     BIDDER DASHBOARD RESPONSIVE LAYOUT & TEXT SIZES
+     ========================================= */
+  .bidder-dashboard-layout {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .dashboard-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  @media (min-width: 900px) {
+    .bidder-dashboard-layout {
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      gap: 1.75rem;
+      align-items: start;
+    }
+  }
+
+  /* Small devices & Mobile text resizing (<= 767px) */
+  @media (max-width: 767px) {
+    .dashboard-hero-title {
+      font-size: clamp(1.6rem, 6.8vw, 2.3rem) !important;
+      line-height: 1.05 !important;
+    }
+
+    .dashboard-hero-desc {
+      font-size: 0.8rem !important;
+      margin-bottom: 1.15rem !important;
+      line-height: 1.45 !important;
+    }
+
+    .dashboard-hero-eyebrow {
+      font-size: 0.6rem !important;
+      letter-spacing: 0.15em !important;
+    }
+
+    .dashboard-btn-action {
+      font-size: 0.74rem !important;
+      padding: 0.5rem 0.85rem !important;
+    }
+
+    .dashboard-profile-name {
+      font-size: 0.9rem !important;
+    }
+
+    .dashboard-profile-email {
+      font-size: 0.7rem !important;
+    }
+
+    .dashboard-stat-title {
+      font-size: 0.7rem !important;
+    }
+
+    .dashboard-stat-label {
+      font-size: 0.68rem !important;
+    }
+
+    .dashboard-stat-value {
+      font-size: 0.88rem !important;
+    }
+
+    .dashboard-balance-amount {
+      font-size: 1.4rem !important;
+    }
+
+    .dashboard-tab-btn {
+      font-size: 0.78rem !important;
+      padding: 0.45rem 0.6rem !important;
+    }
+
+    .dashboard-tab-badge {
+      font-size: 0.6rem !important;
+    }
+
+    .dashboard-card-title {
+      font-size: 0.82rem !important;
+    }
+
+    .dashboard-card-desc {
+      font-size: 0.7rem !important;
+    }
+
+    .dashboard-card-price {
+      font-size: 0.82rem !important;
+    }
+  }
+
+  /* Extra small devices (<= 480px) */
+  @media (max-width: 480px) {
+    .dashboard-hero-title {
+      font-size: clamp(1.45rem, 6.5vw, 1.85rem) !important;
+    }
+
+    .dashboard-hero-desc {
+      font-size: 0.75rem !important;
+    }
+
+    .dashboard-btn-action {
+      font-size: 0.7rem !important;
+      padding: 0.45rem 0.75rem !important;
+    }
+
+    .dashboard-balance-amount {
+      font-size: 1.25rem !important;
+    }
+
+    .dashboard-tab-btn {
+      font-size: 0.74rem !important;
+      padding: 0.4rem 0.5rem !important;
     }
   }
 }

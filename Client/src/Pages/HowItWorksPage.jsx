@@ -234,8 +234,8 @@ export default function HowItWorksPage() {
             </div>
           </div>
 
-          {/* Right Column: Golden Notched Showcase Folder Card */}
-          <div className="w-full md:w-[380px] lg:w-[420px] flex-shrink-0 flex justify-center md:justify-end">
+          {/* Right Column: Golden Notched Showcase Folder Card (Desktop / Tablet only) */}
+          <div className="hidden md:flex w-full md:w-[380px] lg:w-[420px] flex-shrink-0 justify-center md:justify-end">
             <div
               className="relative w-[280px] sm:w-[320px] md:w-[340px] h-[220px] sm:h-[240px] overflow-hidden shadow-2xl transition-transform duration-300 hover:scale-[1.02]"
               style={{
