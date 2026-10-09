@@ -136,6 +136,7 @@ function SearchBar({ onSearch, collapsed }) {
 function AuthSection({ user, mobile = false }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
+  const { logout } = useAuth();
 
   useEffect(() => {
     const handler = (e) => { if (!ref.current?.contains(e.target)) setOpen(false); };
@@ -216,7 +217,7 @@ function AuthSection({ user, mobile = false }) {
           borderRadius: '12px',
           boxShadow: '0 12px 40px rgba(0,35,102,0.12)',
           padding: '0.5rem',
-          minWidth: '200px',
+          minWidth: '210px',
           zIndex: 100,
         }}>
           <div style={{ padding: '0.5rem 0.75rem', borderBottom: '1px solid var(--color-border-subtle)', marginBottom: '0.25rem' }}>
@@ -228,9 +229,10 @@ function AuthSection({ user, mobile = false }) {
             </p>
           </div>
           {[
-            { label: ' My Profile', to: '/dashboard' },
-            { label: ' My Bids', to: '/dashboard' },
-            { label: ' Settings', to: '/settings' },
+            { label: 'My Profile', to: '/dashboard' },
+            { label: 'My Bids', to: '/dashboard' },
+            { label: 'Seller Studio', to: '/seller/studio' },
+            { label: 'Settings', to: '/settings' },
           ].map(({ label, to }, idx) => (
             <Link key={idx} to={to} onClick={() => setOpen(false)} style={{
               display: 'block',
@@ -248,6 +250,28 @@ function AuthSection({ user, mobile = false }) {
               {label}
             </Link>
           ))}
+          <div style={{ borderTop: '1px solid var(--color-border-subtle)', margin: '0.25rem 0' }} />
+          <button
+            onClick={() => { logout(); setOpen(false); }}
+            style={{
+              width: '100%',
+              display: 'block',
+              padding: '0.5rem 0.75rem',
+              fontSize: '0.82rem',
+              color: '#dc2626',
+              background: 'transparent',
+              border: 'none',
+              borderRadius: '8px',
+              fontWeight: 600,
+              cursor: 'pointer',
+              textAlign: 'left',
+              transition: 'background 0.15s',
+            }}
+            onMouseEnter={e => e.currentTarget.style.background = '#fef2f2'}
+            onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+          >
+            Sign Out
+          </button>
         </div>
       )}
     </div>
@@ -263,6 +287,7 @@ function MobileDrawer({ open, onClose }) {
     { label: 'Auctions', to: '/auctions' },
     { label: 'Ending Soon', to: '/auctions?sort=ending' },
     { label: 'Bidder Dashboard', to: '/dashboard' },
+    { label: 'Seller Studio', to: '/seller/studio' },
     { label: 'TopUP Wallet', to: '/wallet' },
     { label: 'Disputes', to: '/disputes' },
     { label: 'How It Works', to: '/how-it-works' },

@@ -196,39 +196,110 @@ export default function TransactionLedgerPage() {
       <AuthController />
       <Header />
 
-      {/* ── HERO BANNER (same as BidderDashboardPage) ── */}
-      <div style={{
-        background: 'linear-gradient(135deg,var(--color-brand-primary-dark) 0%,var(--color-brand-primary) 55%,#1a3c7a 100%)',
-        padding: '1.5rem 0.65rem 3.5rem',
-        position: 'relative', overflow: 'hidden',
-      }}>
-        <div style={{ position: 'absolute', inset: 0, opacity: 0.05, backgroundImage: 'radial-gradient(#fff 1.5px,transparent 0)', backgroundSize: '22px 22px', pointerEvents: 'none' }} />
-        <div style={{ maxWidth: '1100px', margin: '0 auto', position: 'relative', zIndex: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
-          <div>
-            <h1 style={{ margin: 0, fontSize: 'clamp(1.2rem, 3.5vw, 1.8rem)', fontWeight: 900, color: '#fff', letterSpacing: '-0.02em' }}>Transaction Ledger</h1>
-            <p style={{ margin: '0.25rem 0 0', fontSize: '0.78rem', color: 'rgba(255,255,255,0.65)' }}>Real-time audit log for all escrow, top-up, and refund operations</p>
+      {/* SVG ClipPath Definition for Tab Notch */}
+      <svg width="0" height="0" className="absolute pointer-events-none" aria-hidden="true">
+        <defs>
+          <clipPath id="tab-right-notch" clipPathUnits="objectBoundingBox">
+            <path d="M 1,0.08 C 1,0.03 0.95,0 0.88,0 L 0.5,0 C 0.44,0 0.4,0.02 0.36,0.045 C 0.32,0.07 0.28,0.08 0.22,0.08 L 0.12,0.08 C 0.05,0.08 0,0.11 0,0.16 L 0,0.92 C 0,0.97 0.05,1 0.12,1 L 0.88,1 C 0.95,1 1,0.97 1,0.92 Z" />
+          </clipPath>
+          <clipPath id="tab-left-notch" clipPathUnits="objectBoundingBox">
+            <path d="M 0,0.08 C 0,0.03 0.05,0 0.12,0 L 0.5,0 C 0.56,0 0.6,0.02 0.64,0.045 C 0.68,0.07 0.72,0.08 0.78,0.08 L 0.88,0.08 C 0.95,0.08 1,0.11 1,0.16 L 1,0.92 C 1,0.97 0.95,1 0.88,1 L 0.12,1 C 0.05,1 0,0.97 0,0.92 Z" />
+          </clipPath>
+        </defs>
+      </svg>
+
+      {/* ── 1. Hero Banner with Notched Showcase (Matching HowItWorksPage) ── */}
+      <section
+        className="relative overflow-hidden text-white w-full pt-8 pb-16 sm:pb-20 px-4 sm:px-6 lg:px-12"
+        style={{
+          background: 'linear-gradient(175deg, #001948 0%, var(--color-brand-primary) 50%, #00133a 100%)',
+        }}
+      >
+        {/* Subtle dot matrix texture */}
+        <div
+          className="pointer-events-none absolute inset-0 z-0 opacity-10"
+          style={{
+            backgroundImage: 'radial-gradient(rgba(255,255,255,0.3) 1px, transparent 1px)',
+            backgroundSize: '24px 24px',
+          }}
+        />
+
+        <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-8 relative z-10">
+          {/* Left Column: Eyebrow + Large 2-Line Headline + Subtitle */}
+          <div className="flex-1 text-left">
+            <div className="inline-flex items-center gap-2 mb-3">
+              <span style={{ color: 'var(--color-brand-accent)' }} className="text-xs font-black tracking-widest uppercase">
+                ✦ LIVE AUCTION MARKETPLACE ✦
+              </span>
+            </div>
+
+            <h1 className="text-white font-black tracking-tight leading-[0.95] text-3xl sm:text-4xl md:text-5xl lg:text-6xl uppercase mb-4">
+              TRANSACTION <br />
+              <span style={{ color: 'var(--color-brand-accent)' }}>LEDGER</span>
+            </h1>
+
+            <p className="text-slate-300 text-sm sm:text-base max-w-lg leading-relaxed mb-6">
+              Real-time audit log for all escrow deposits, wallet top-ups, bid holds, and verified refund operations.
+            </p>
+
+            {/* Quick action buttons: My Profile & Wallet */}
+            <div className="flex flex-wrap items-center gap-3">
+              <button
+                onClick={() => navigate('/dashboard')}
+                className="px-6 py-3 rounded-xl font-extrabold text-sm transition-all inline-flex items-center gap-2"
+                style={{
+                  background: 'var(--color-brand-accent)',
+                  color: 'var(--color-brand-primary-dark)',
+                  boxShadow: '0 4px 14px rgba(254,206,68,0.35)',
+                  cursor: 'pointer',
+                  border: 'none',
+                }}
+              >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                  <circle cx="12" cy="7" r="4" />
+                </svg>
+                My Profile
+              </button>
+              <button
+                onClick={() => navigate('/wallet')}
+                className="px-6 py-3 rounded-xl font-bold text-sm text-white bg-white/10 hover:bg-white/20 transition-all border border-white/20 inline-flex items-center gap-2"
+                style={{ cursor: 'pointer' }}
+              >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <rect x="2" y="5" width="20" height="14" rx="2" />
+                  <line x1="2" y1="10" x2="22" y2="10" />
+                </svg>
+                Wallet
+              </button>
+            </div>
           </div>
-          <button
-            onClick={() => navigate('/wallet')}
-            style={{
-              padding: '0.55rem 1.1rem',
-              background: 'rgba(255,255,255,0.1)', color: '#fff',
-              border: '1px solid rgba(255,255,255,0.2)', borderRadius: '12px',
-              fontSize: '0.78rem', fontWeight: 700, cursor: 'pointer',
-              display: 'inline-flex', alignItems: 'center', gap: '0.45rem',
-              transition: 'background 0.15s', backdropFilter: 'blur(8px)',
-            }}
-            onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.15)'}
-            onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
-          >
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="19" y1="12" x2="5" y2="12" /><polyline points="12 19 5 12 12 5" /></svg>
-            Back to Wallet
-          </button>
+
+          {/* Right Column: Golden Notched Showcase Folder Card (Desktop / Tablet only) */}
+          <div className="hidden md:flex w-full md:w-[380px] lg:w-[420px] flex-shrink-0 justify-center md:justify-end">
+            <div
+              className="relative w-[280px] sm:w-[320px] md:w-[340px] h-[220px] sm:h-[240px] overflow-hidden shadow-2xl transition-transform duration-300 hover:scale-[1.02]"
+              style={{
+                background: '#f59e0b',
+                clipPath: 'url(#tab-right-notch)',
+                WebkitClipPath: 'url(#tab-right-notch)',
+                borderRadius: '0 0 24px 24px',
+              }}
+            >
+              <img
+                src="/hero/gavel.jpg"
+                alt="Golden Auction Gavel"
+                className="w-full h-full object-cover object-center transition-transform duration-700 hover:scale-105"
+                loading="eager"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-transparent pointer-events-none" />
+            </div>
+          </div>
         </div>
-      </div>
+      </section>
 
       {/* ── MAIN CONTENT (overlaps hero) ── */}
-      <div style={{ maxWidth: '1100px', margin: '-1.75rem auto 4rem', padding: '0 0.65rem', position: 'relative', zIndex: 10 }}>
+      <div style={{ maxWidth: '1100px', margin: '-2.5rem auto 4rem', padding: '0 0.65rem', position: 'relative', zIndex: 10 }}>
 
         {/* STATS STRIP */}
         <div className="wallet-stats-strip">

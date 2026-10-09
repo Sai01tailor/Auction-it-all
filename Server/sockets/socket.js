@@ -237,10 +237,10 @@ const initSockets = (server) => {
           // B. Save to Database Inbox (Always save for history)
           await Notification.create({
             userId: previousHighestBidderId,
-            type: 'OUTBID',
+            type: 'Bids',
             title: "You've been outbid!",
             message: outbidMessage,
-            auctionId: auctionId
+            link: `/auction/${auctionId}/console`
           });
 
           // C. Check if offline, if yes -> Send Email
