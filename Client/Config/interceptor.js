@@ -9,7 +9,7 @@ import { deleteCookie } from '../src/Components/Global/CookieIT';
    ───────────────────────────────────────────── */
 api.interceptors.request.use(
   (config) => {
-    const token = getCookie('auth_token');
+    const token = getCookie('auth_token') || (typeof localStorage !== 'undefined' ? localStorage.getItem('auth_token') : null);
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -28,6 +28,7 @@ api.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       deleteCookie('auth_token');
+      try { localStorage.removeItem('auth_token'); } catch (_) {}
       
       const url = error.config?.url || '';
       const isAuthRoute = url.includes('/auth/') || 

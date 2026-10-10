@@ -13,8 +13,9 @@ export default function GoogleSuccess() {
 
   useEffect(() => {
     if (token) {
-      // 1. Set the cookie
+      // 1. Set the cookie and localStorage fallback
       setCookie('auth_token', token, { days: 7 });
+      try { localStorage.setItem('auth_token', token); } catch (_) {}
 
       // 2. Fetch the profile details to sync the AuthContext session state
       api.get('/auth/profile')

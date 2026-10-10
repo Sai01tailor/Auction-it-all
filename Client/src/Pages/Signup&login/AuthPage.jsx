@@ -263,6 +263,7 @@ const LoginView = ({ go }) => {
       .then((r) => {
         if (r.data?.token) {
           setCookie('auth_token', r.data.token, { days: 7 })
+          try { localStorage.setItem('auth_token', r.data.token) } catch (_) {}
           setUser(r.data.user ?? null)
         }
         toast.success('Welcome back! 🎉')
@@ -614,6 +615,7 @@ const VerifyView = ({ go }) => {
         toast.success('Email verified! 🎉')
         if (r.data?.token) {
           setCookie('auth_token', r.data.token, { days: 7 })
+          try { localStorage.setItem('auth_token', r.data.token) } catch (_) {}
           setUser(r.data.user ?? null)
         }
         deleteCookie('Otp_Email')

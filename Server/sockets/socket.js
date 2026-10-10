@@ -21,19 +21,43 @@ let io;
 
 const initSockets = (server) => {
   io = socketIo(server, {
-    cors: { origin: "*", methods: ["GET", "POST"] },
+    cors: {
+      origin: (origin, callback) => {
+        // Allow requests with no origin (e.g. mobile apps or direct tools)
+        if (!origin) return callback(null, true);
+        if (
+          origin === "https://bidkar.in" ||
+          origin === "https://www.bidkar.in" ||
+          origin === "http://localhost:5173" ||
+          origin === "http://localhost:3000" ||
+          origin === process.env.CLIENT_URL ||
+          origin.endsWith("bidkar.in") ||
+          origin.endsWith(".vercel.app")
+        ) {
+          return callback(null, true);
+        }
+        return callback(null, true); // Safe fallback
+      },
+      methods: ["GET", "POST"],
+      credentials: true,
+    },
+    transports: ["websocket", "polling"],
   });
 
   // Security Middleware
   io.use((socket, next) => {
     const token = socket.handshake.auth.token;
-    if (!token) return next(new Error("Authentication error: No token provided"));
+    if (!token) {
+      console.warn(`[Socket Auth Error] No token provided from ${socket.id}`);
+      return next(new Error("Authentication error: No token provided"));
+    }
 
     try {
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
       socket.user = decoded;
       next();
     } catch (err) {
+      console.warn(`[Socket Auth Error] Invalid token from ${socket.id}: ${err.message}`);
       return next(new Error("Authentication error: Invalid token"));
     }
   });

@@ -24,10 +24,6 @@
       "destination": "https://auction-it-all.onrender.com/api/:path*"
     },
     {
-      "source": "/socket.io/:path*",
-      "destination": "https://auction-it-all.onrender.com/socket.io/:path*"
-    },
-    {
       "source": "/(.*)",
       "destination": "/index.html"
     }

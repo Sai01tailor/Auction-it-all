@@ -21,7 +21,8 @@ export default function EnglishConsole({ item }) {
     socketError,
     setSocketError,
     bidHistoryList,
-    viewerCount
+    viewerCount,
+    isConnected,
   } = useSocket(item._id, item.currentHighestBid, 'ENGLISH', item);
 
   const bidderName = typeof lastBidder === 'object' ? lastBidder?.username : lastBidder;
@@ -115,6 +116,12 @@ export default function EnglishConsole({ item }) {
     setShake(false);
 
     // 1. Validation checks
+    if (!isConnected) {
+      setErrorMsg('Not connected to live bidding server. Please wait a moment while connection is established.');
+      setShake(true);
+      return;
+    }
+
     if (isHighestBidder) {
       setErrorMsg('You are already the highest bidder! Bidding is locked until you are outbid.');
       setShake(true);
@@ -217,7 +224,30 @@ export default function EnglishConsole({ item }) {
           </button>
           <div className="console-header-title-box">
             <h2 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 800, color: '#fff' }}>{item.title}</h2>
-            <p style={{ margin: 0, fontSize: '0.78rem', color: 'rgba(255,255,255,0.5)' }}>English Bidding Console · Live Room</p>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '2px' }}>
+              <p style={{ margin: 0, fontSize: '0.78rem', color: 'rgba(255,255,255,0.5)' }}>English Bidding Console · Live Room</p>
+              <span style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '5px',
+                padding: '2px 8px',
+                borderRadius: '999px',
+                fontSize: '0.7rem',
+                fontWeight: 700,
+                background: isConnected ? 'rgba(16, 185, 129, 0.15)' : 'rgba(245, 158, 11, 0.15)',
+                color: isConnected ? '#10b981' : '#f59e0b',
+                border: `1px solid ${isConnected ? 'rgba(16, 185, 129, 0.3)' : 'rgba(245, 158, 11, 0.3)'}`
+              }}>
+                <span style={{
+                  width: '6px',
+                  height: '6px',
+                  borderRadius: '50%',
+                  backgroundColor: isConnected ? '#10b981' : '#f59e0b',
+                  boxShadow: isConnected ? '0 0 6px #10b981' : 'none'
+                }} />
+                {isConnected ? 'LIVE' : 'CONNECTING...'}
+              </span>
+            </div>
           </div>
         </div>
 

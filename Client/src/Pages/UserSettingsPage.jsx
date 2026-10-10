@@ -20,6 +20,7 @@ export default function UserSettingsPage() {
       console.warn('Backend logout failed:', e.message);
     }
     deleteCookie('auth_token');
+    try { localStorage.removeItem('auth_token'); } catch (_) {}
     setUser(null);
     toast.success('Logged out successfully.');
     navigate('/login', { replace: true });

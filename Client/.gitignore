@@ -26,7 +26,7 @@ dist-ssr
 BidKar_Frontend_API_Reference.docx
 context.md
 router.md 
-
+BidKar_Technical_Documentation.md 
 # Environment variables — never commit secrets
 .env
 .env.local

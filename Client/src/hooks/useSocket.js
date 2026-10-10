@@ -66,27 +66,58 @@ export function useSocket(auctionId, initialBid = 0, auctionType = 'ENGLISH', it
   useEffect(() => {
     if (!auctionId) return;
 
-    const token = getCookie('auth_token');
+    const token = getCookie('auth_token') || (typeof localStorage !== 'undefined' ? localStorage.getItem('auth_token') : null);
     if (!token) {
+      console.warn('[useSocket] No auth token found. Socket connection skipped.');
       return;
     }
 
-    const socketUrl = import.meta.env.VITE_API_BASE_URL.replace(/\/api$/, '').replace(/\/api\/$/, '');
+    // In production (bidkar.in or vercel preview), websockets must connect directly
+    // to the backend server (Render) because Vercel rewrites do not support WebSockets.
+    let socketUrl = import.meta.env.VITE_SOCKET_URL;
+    if (!socketUrl) {
+      const apiBase = import.meta.env.VITE_API_BASE_URL || '';
+      const isLiveDeployment = typeof window !== 'undefined' && (
+        window.location.hostname.includes('bidkar.in') ||
+        window.location.hostname.includes('vercel.app')
+      );
+      if (isLiveDeployment || apiBase.includes('bidkar.in') || apiBase.includes('vercel.app')) {
+        socketUrl = 'https://auction-it-all.onrender.com';
+      } else if (apiBase.startsWith('http')) {
+        socketUrl = apiBase.replace(/\/api\/?$/, '');
+      } else {
+        socketUrl = 'http://localhost:3000';
+      }
+    }
 
     // Connect to Socket.io server with authentication payload
     const socket = io(socketUrl, {
       auth: { token },
       transports: ['websocket', 'polling'],
+      reconnection: true,
+      reconnectionAttempts: 10,
+      reconnectionDelay: 1000,
+      timeout: 10000,
     });
     socketRef.current = socket;
 
     socket.on('connect', () => {
       setIsConnected(true);
+      setSocketError(null);
       socket.emit('join_auction', auctionId);
     });
 
-    socket.on('disconnect', () => {
+    socket.on('connect_error', (err) => {
+      console.error('[useSocket] Connect error:', err?.message || err);
       setIsConnected(false);
+      setSocketError('Connecting to live bidding engine... Please wait.');
+    });
+
+    socket.on('disconnect', (reason) => {
+      setIsConnected(false);
+      if (reason === 'io server disconnect') {
+        socket.connect();
+      }
     });
 
     socket.on('room_viewers_update', (payload) => {
@@ -253,8 +284,10 @@ export function useSocket(auctionId, initialBid = 0, auctionType = 'ENGLISH', it
 
   const placeBidSocket = useCallback((amount) => {
     setSocketError(null);
-    if (socketRef.current) {
+    if (socketRef.current && socketRef.current.connected) {
       socketRef.current.emit('place_bid', { auctionId, amount });
+    } else {
+      setSocketError('Unable to broadcast bid: Connection to live bidding engine is offline. Reconnecting...');
     }
   }, [auctionId]);
 

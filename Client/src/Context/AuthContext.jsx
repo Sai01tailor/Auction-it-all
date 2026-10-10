@@ -11,7 +11,7 @@ export const AuthProvider = ({ children }) => {
     const [isInitializing, setIsInitializing] = useState(true);
 
     useEffect(() => {
-        const token = getCookie('auth_token');
+        const token = getCookie('auth_token') || (typeof localStorage !== 'undefined' ? localStorage.getItem('auth_token') : null);
 
         if (!token) {
             // No token at all — skip the network call
@@ -27,6 +27,7 @@ export const AuthProvider = ({ children }) => {
             .catch(() => {
                 // Token is expired / tampered — clear it so the app stays clean
                 deleteCookie('auth_token');
+                try { localStorage.removeItem('auth_token'); } catch (_) {}
                 setUser(null);
             })
             .finally(() => {

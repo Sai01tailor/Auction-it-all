@@ -9,6 +9,11 @@ class DistributedLock {
    */
   static async acquireLock(resourceKey, ttl = 500) {
     try {
+      if (!redisClient || !redisClient.isOpen) {
+        console.warn("[DistributedLock] Redis is not connected. Proceeding with fallback lock token.");
+        return `fallback-lock-${Math.random().toString(36).substring(2, 10)}`;
+      }
+
       // Create a random token so we know exactly WHO locked the door
       const token = Math.random().toString(36).substring(2, 15);
 
@@ -21,8 +26,9 @@ class DistributedLock {
       // If Redis says "OK", you got the lock. If null, someone else is bidding.
       return result === "OK" ? token : null;
     } catch (error) {
-      console.error("Redis Lock Error:", error);
-      return null;
+      console.error("[DistributedLock] Redis Lock Error (proceeding with fallback):", error.message || error);
+      // Fail-open fallback token so transient Redis network glitches don't freeze all bidding
+      return `fallback-lock-${Math.random().toString(36).substring(2, 10)}`;
     }
   }
 
@@ -30,7 +36,10 @@ class DistributedLock {
    * Releases the lock safely using a Lua script to ensure we only delete OUR lock.
    */
   static async releaseLock(resourceKey, token) {
+    if (!token || token.startsWith("fallback-lock-")) return;
     try {
+      if (!redisClient || !redisClient.isOpen) return;
+
       const script = `
         if redis.call("get", KEYS[1]) == ARGV[1] then
             return redis.call("del", KEYS[1])
@@ -44,7 +53,7 @@ class DistributedLock {
         arguments: [token],
       });
     } catch (error) {
-      console.error("Redis Unlock Error:", error);
+      console.error("[DistributedLock] Redis Unlock Error:", error.message || error);
     }
   }
 }
